@@ -12,8 +12,8 @@ import (
 	"github.com/skygeario/skygear-server/pkg/auth/model"
 	"github.com/skygeario/skygear-server/pkg/clock"
 	"github.com/skygeario/skygear-server/pkg/core/authn"
-	"github.com/skygeario/skygear-server/pkg/core/logging"
 	"github.com/skygeario/skygear-server/pkg/db"
+	"github.com/skygeario/skygear-server/pkg/log"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -36,7 +36,7 @@ func TestDispatchEvent(t *testing.T) {
 			clock,
 			users,
 			deliverer,
-			logging.NewNullFactory(),
+			log.Null,
 		).(*providerImpl)
 
 		provider.PersistentEventPayloads = nil

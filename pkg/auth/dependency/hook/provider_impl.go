@@ -5,17 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/skygeario/skygear-server/pkg/auth/dependency/auth"
 	"github.com/skygeario/skygear-server/pkg/auth/event"
 	"github.com/skygeario/skygear-server/pkg/auth/model"
 	"github.com/skygeario/skygear-server/pkg/clock"
 	"github.com/skygeario/skygear-server/pkg/core/authn"
 	"github.com/skygeario/skygear-server/pkg/core/errors"
-	"github.com/skygeario/skygear-server/pkg/core/logging"
 	"github.com/skygeario/skygear-server/pkg/core/skyerr"
 	"github.com/skygeario/skygear-server/pkg/db"
+	"github.com/skygeario/skygear-server/pkg/log"
 )
 
 //go:generate mockgen -source=provider_impl.go -destination=provider_impl_mock_test.go -package hook
@@ -33,7 +31,7 @@ type providerImpl struct {
 	Users                   UserProvider
 	Deliverer               Deliverer
 	PersistentEventPayloads []event.Payload
-	Logger                  *logrus.Entry
+	Logger                  *log.Logger
 
 	txHooked bool
 }
