@@ -1,2 +1,4 @@
 golang 1.15
 nodejs 12.18.3
+kubectl 1.18.9
+helm 3.3.3
