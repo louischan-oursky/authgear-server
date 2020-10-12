@@ -1,7 +1,9 @@
 import { ApolloError } from "@apollo/client";
+import { Values } from "@oursky/react-messageformat";
 import { GraphQLError } from "graphql";
-import { nonNullable } from "./types";
-import { Violation } from "./validation";
+
+// throw this if unrecognized error encountered
+class UnrecognizedError extends Error {}
 
 // expected data shape of error extension from backend
 interface RequiredErrorCauseDetails {
@@ -70,7 +72,7 @@ interface MaximumErrorCause {
 }
 
 // union type of cause details, depend on kind
-type ErrorCause =
+type ValidationErrorCause =
   | RequiredErrorCause
   | GeneralErrorCause
   | FormatErrorCause
@@ -79,7 +81,7 @@ type ErrorCause =
   | MaximumErrorCause;
 
 interface ValidationErrorInfo {
-  causes: ErrorCause[];
+  causes: ValidationErrorCause[];
 }
 
 interface APIValidationError {
@@ -144,94 +146,280 @@ function isAPIError(value?: { [key: string]: any }): value is APIError {
   return "errorName" in value && "reason" in value;
 }
 
-function extractViolationFromErrorCause(cause: ErrorCause): Violation | null {
+interface FieldErrorHandlingRule {
+  errorMessageID: string;
+  jsonPointer: RegExp | string;
+  fieldName: string;
+  fieldNameMessageID?: string;
+  violationType: ValidationErrorCause["kind"]; // violation type in JSON schema
+}
+
+interface GenericErrorHandlingRule {
+  errorMessageID: string;
+  reason: APIError["reason"];
+  kind?: string;
+  cause?: string;
+}
+
+export function constructErrorMessageFromGenericGraphQLError(
+  renderToString: (messageID: string, values?: Values) => string,
+  error: GraphQLError,
+  rules: GenericErrorHandlingRule[]
+): string | null {
+  if (!isAPIError(error.extensions)) {
+    return null;
+  }
+
+  const { extensions } = error;
+  for (const rule of rules) {
+    if (extensions.reason !== rule.reason) {
+      continue;
+    }
+    // some error reason need special handling
+    // depends on error info
+    if (extensions.reason === "InvariantViolated") {
+      const cause = extensions.info.cause;
+      if (cause.kind === rule.cause) {
+        return renderToString(rule.errorMessageID);
+      }
+      continue;
+    }
+    if (extensions.reason === "PasswordPolicyViolated") {
+      const causes = extensions.info.causes;
+      const causeNames = causes.map((cause) => cause.Name);
+      if (rule.cause != null && causeNames.includes(rule.cause)) {
+        return renderToString(rule.errorMessageID);
+      }
+      continue;
+    }
+    // for other error reason, only need to match reason
+    return rule.errorMessageID;
+  }
+
+  // no matching rules
+  return null;
+}
+
+// Final error boundary, return fallback error message if error unrecognized
+// NOTE: This can be constructed by custom hook?
+// so don't need to pass renderToString, and pass rules to hook as it is static
+export function handleGenericError(
+  error: unknown,
+  rules: GenericErrorHandlingRule[],
+  renderToString: (messageID: string, values?: Values) => string,
+  fallbackErrorMessageID: string = "error.unknownError"
+): string | undefined {
+  if (error == null) {
+    return undefined;
+  }
+
+  const fallbackErrorMessage = renderToString(fallbackErrorMessageID);
+  if (!(error instanceof ApolloError)) {
+    console.warn("[Handle generic error]: Unhandled error\n", error);
+    return fallbackErrorMessage;
+  }
+
+  const errorMessageList: string[] = [];
+  let containUnrecognizedError = false;
+  for (const graphQLError of error.graphQLErrors) {
+    const errorMessage = constructErrorMessageFromGenericGraphQLError(
+      renderToString,
+      graphQLError,
+      rules
+    );
+    if (errorMessage != null) {
+      errorMessageList.push(errorMessage);
+    } else {
+      console.warn(
+        "[Handle generic error]: Contains unrecognized graphQL error \n",
+        graphQLError
+      );
+      containUnrecognizedError = true;
+    }
+  }
+  if (containUnrecognizedError) {
+    errorMessageList.push(fallbackErrorMessage);
+  }
+
+  return errorMessageList.join("\n");
+}
+
+function isLocationMatchWithJSONPointer(
+  jsonPointer: RegExp | string,
+  location: string
+) {
+  if (typeof jsonPointer === "string") {
+    return location.startsWith(jsonPointer);
+  }
+  return jsonPointer.test(location);
+}
+
+// pass violation specific data by values in renderToString
+function getMessageValuesFromValidationErrorCause(
+  cause: ValidationErrorCause
+): Values {
   switch (cause.kind) {
+    // special handle required violation, not used for now
     case "required":
       return {
-        kind: cause.kind,
-        missingField: cause.details.missing,
-        location: cause.location,
+        missingFields: cause.details.missing.join(", "),
       };
     case "general":
-      return {
-        kind: cause.kind,
-        location: cause.location,
-      };
+      return {};
     case "format":
       return {
-        kind: cause.kind,
-        location: cause.location,
-        detail: cause.details.format,
+        format: cause.details.format,
       };
     case "minItems":
       return {
-        kind: cause.kind,
-        location: cause.location,
         minItems: cause.details.expected,
       };
     case "minimum":
       return {
-        kind: cause.kind,
-        location: cause.location,
         minimum: cause.details.minimum,
       };
     case "maximum":
       return {
-        kind: cause.kind,
-        location: cause.location,
         maximum: cause.details.maximum,
       };
     default:
-      return { kind: "Unknown" };
+      throw new UnrecognizedError();
   }
 }
 
-export function handleUpdateAppConfigError(error: GraphQLError): Violation[] {
-  const unknownViolation: Violation[] = [{ kind: "Unknown" }];
-  if (!isAPIError(error.extensions)) {
-    return unknownViolation;
-  }
-  const { extensions } = error;
-  switch (extensions.reason) {
-    case "ValidationFailed": {
-      const causes = extensions.info.causes;
-      return causes.map(extractViolationFromErrorCause).filter(nonNullable);
-    }
-    case "InvariantViolated": {
-      const cause = extensions.info.cause;
-      return [{ kind: cause.kind }];
-    }
-    case "Invalid": {
-      return [{ kind: "Invalid" }];
-    }
-    case "DuplicatedIdentity": {
-      return [{ kind: "DuplicatedIdentity" }];
-    }
-    case "PasswordPolicyViolated": {
-      const causes = extensions.info.causes;
-      const causeNames = causes.map((cause) => cause.Name);
-      return [{ kind: "PasswordPolicyViolated", causes: causeNames }];
-    }
-    default:
-      return unknownViolation;
-  }
+function addErrorMessageToErrorMap<K extends string>(
+  errorMessageList: Partial<Record<K, string[]>>,
+  newErrorMessage: string,
+  fieldName: K
+) {
+  errorMessageList[fieldName] = errorMessageList[fieldName] ?? [];
+  errorMessageList[fieldName]?.push(newErrorMessage);
 }
 
-export function parseError(error: unknown): Violation[] {
-  if (error == null) {
-    return [];
-  }
-  if (error instanceof ApolloError) {
-    const violations: Violation[] = [];
-    for (const graphQLError of error.graphQLErrors) {
-      const errorViolations = handleUpdateAppConfigError(graphQLError);
-      for (const violation of errorViolations) {
-        violations.push(violation);
+function constructErrorMessageFromValidationErrorCause(
+  renderToString: (messageID: string, values?: Values) => string,
+  cause: ValidationErrorCause,
+  rules: FieldErrorHandlingRule[],
+  errorMessageList: Record<string, string[]>
+): boolean {
+  for (const rule of rules) {
+    // check violation type
+    if (rule.violationType === cause.kind) {
+      // check JSON pointer
+      if (isLocationMatchWithJSONPointer(rule.jsonPointer, cause.location)) {
+        // special handle required violation, needs to match missing field
+        if (cause.kind === "required") {
+          if (cause.details.missing.includes(rule.fieldName)) {
+            // fallback to raw field name if field name message ID not exist
+            let localizedFieldName = rule.fieldName;
+            if (rule.fieldNameMessageID != null) {
+              localizedFieldName = renderToString(rule.fieldNameMessageID);
+            } else {
+              console.warn(
+                "[Construct validation error message]: Expect fieldNameMessageID in rules for `required` violation error"
+              );
+            }
+            addErrorMessageToErrorMap(
+              errorMessageList,
+              renderToString(rule.errorMessageID, {
+                fieldName: localizedFieldName,
+              }),
+              rule.fieldName
+            );
+            return true;
+          }
+          continue;
+        }
+        // other than required violation, matching json pointer => matching field
+        // unrecognized error kind (violation type) => throw error in get message value
+        try {
+          const errorMessageValues = getMessageValuesFromValidationErrorCause(
+            cause
+          );
+          addErrorMessageToErrorMap(
+            errorMessageList,
+            renderToString(rule.errorMessageID, errorMessageValues),
+            rule.fieldName
+          );
+          return true;
+        } catch {
+          console.warn(
+            "[Unhandled validation error cause]: Unrecognized cause kind\n",
+            cause
+          );
+          return false;
+        }
       }
     }
-    return violations;
+  }
+  // no matching rules
+  console.warn(
+    "[Unhandled validation error cause]: No matching rule provided\n",
+    cause
+  );
+  return false;
+}
+
+// handle error which is passed to form, throw if error cannot be
+// handled within form (not field specific error)
+export function parseFormError(
+  error: unknown
+): {
+  validationErrorCauses: ValidationErrorCause[];
+  containsUnhandledViolation: boolean;
+} {
+  let containsUnhandledViolation = false;
+  const validationErrorCauses: ValidationErrorCause[] = [];
+  if (error == null) {
+    return { validationErrorCauses: [], containsUnhandledViolation: false };
+  }
+  if (!(error instanceof ApolloError)) {
+    return { validationErrorCauses, containsUnhandledViolation: true };
   }
 
-  // unrecognized error
-  return [{ kind: "Unknown" }];
+  for (const graphQLError of error.graphQLErrors) {
+    if (!isAPIError(graphQLError.extensions)) {
+      containsUnhandledViolation = true;
+      continue;
+    }
+    const { extensions } = graphQLError;
+    if (extensions.reason === "ValidationFailed") {
+      const { causes } = extensions.info;
+      validationErrorCauses.push(...causes);
+      continue;
+    }
+    containsUnhandledViolation = true;
+  }
+
+  // unhandled error
+  return { validationErrorCauses, containsUnhandledViolation };
+}
+
+// NOTE: This can be constructed by custom hook?
+// so don't need to pass renderToString, and pass rules to hook as it is static
+export function handleFormError(
+  error: unknown,
+  rules: FieldErrorHandlingRule[],
+  errorMessageList: Record<string, string[]>,
+  renderToString: (messageID: string, values?: Values) => string
+): void {
+  const { validationErrorCauses, containsUnhandledViolation } = parseFormError(
+    error
+  );
+  let containsUnhandledValidationErrorCause = false;
+  for (const validationErrorCause of validationErrorCauses) {
+    const handled = constructErrorMessageFromValidationErrorCause(
+      renderToString,
+      validationErrorCause,
+      rules,
+      errorMessageList
+    );
+    containsUnhandledValidationErrorCause =
+      containsUnhandledValidationErrorCause || !handled;
+  }
+
+  if (containsUnhandledViolation || containsUnhandledValidationErrorCause) {
+    // Cannot handle error, throw to next layer (generic error)
+    throw error;
+  }
 }
