@@ -110,39 +110,6 @@ function isLocationMatchWithJSONPointer(
   return jsonPointer.test(location);
 }
 
-// pass violation specific data by values in renderToString
-function getMessageValuesFromValidationErrorCause(
-  cause: ValidationErrorCause
-): Values {
-  switch (cause.kind) {
-    // special handle required violation, not used for now
-    case "required":
-      return {
-        missingFields: cause.details.missing.join(", "),
-      };
-    case "general":
-      return {};
-    case "format":
-      return {
-        format: cause.details.format,
-      };
-    case "minItems":
-      return {
-        minItems: cause.details.expected,
-      };
-    case "minimum":
-      return {
-        minimum: cause.details.minimum,
-      };
-    case "maximum":
-      return {
-        maximum: cause.details.maximum,
-      };
-    default:
-      throw new UnrecognizedError();
-  }
-}
-
 function addErrorMessageToErrorMap<K extends string>(
   errorMessageList: Partial<Record<K, string[]>>,
   newErrorMessage: string,
