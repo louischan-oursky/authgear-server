@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	"github.com/authgear/authgear-server/pkg/util/clock"
 	"github.com/authgear/authgear-server/pkg/util/httputil"
 	"github.com/authgear/authgear-server/pkg/util/log"
@@ -296,7 +297,7 @@ func MakeAppFS(secret *corev1.Secret) (resource.Fs, error) {
 		create(path, data)
 	}
 
-	return &resource.AferoFs{Fs: appFs}, nil
+	return &resource.AferoLeveledFs{Fs: appFs, FsLevel: libresource.FsLevelApp}, nil
 }
 
 type k8sApp struct {

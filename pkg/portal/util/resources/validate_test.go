@@ -24,8 +24,8 @@ func TestValidate(t *testing.T) {
 
 		baseFs := afero.NewMemMapFs()
 		appFs := afero.NewMemMapFs()
-		baseResourceFs := &resource.AferoFs{Fs: baseFs}
-		appResourceFs := &resource.AferoFs{Fs: appFs}
+		baseResourceFs := &resource.AferoLeveledFs{Fs: baseFs}
+		appResourceFs := &resource.AferoLeveledFs{Fs: appFs}
 		resMgr := resource.NewManager(resource.DefaultRegistry, []resource.Fs{
 			baseResourceFs,
 			appResourceFs,

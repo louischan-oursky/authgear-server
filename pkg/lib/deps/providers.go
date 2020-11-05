@@ -11,6 +11,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/infra/db"
 	"github.com/authgear/authgear-server/pkg/lib/infra/redis"
 	"github.com/authgear/authgear-server/pkg/lib/infra/task"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/log"
 	"github.com/authgear/authgear-server/pkg/util/resource"
@@ -64,7 +65,11 @@ func NewRootProvider(
 		DatabasePool:       dbPool,
 		RedisPool:          redisPool,
 		TaskQueueFactory:   taskQueueFactory,
-		BaseResources:      NewResourceManager(builtinResourceDirectory, customResourceDirectory),
+		BaseResources: libresource.NewResourceManager(
+			resource.DefaultRegistry,
+			builtinResourceDirectory,
+			customResourceDirectory,
+		),
 	}
 	return &p, nil
 }

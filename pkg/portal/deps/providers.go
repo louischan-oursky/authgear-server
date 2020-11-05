@@ -7,8 +7,10 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/config/configsource"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	portalconfig "github.com/authgear/authgear-server/pkg/portal/config"
 	"github.com/authgear/authgear-server/pkg/portal/db"
+	portalresource "github.com/authgear/authgear-server/pkg/portal/resource"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/log"
 	"github.com/authgear/authgear-server/pkg/util/resource"
@@ -78,8 +80,16 @@ func NewRootProvider(
 		LoggerFactory:      loggerFactory,
 		SentryHub:          sentryHub,
 		Database:           db.NewPool(dbConfig),
-		Resources:          NewPortalResourceManager(builtinResourceDirectory, customResourceDirectory),
-		AppBaseResources:   NewAppResourceManager(appBuiltinResourceDirectory, appCustomResourceDirectory),
+		Resources: libresource.NewResourceManager(
+			portalresource.PortalRegistry,
+			builtinResourceDirectory,
+			customResourceDirectory,
+		),
+		AppBaseResources: libresource.NewResourceManager(
+			resource.DefaultRegistry,
+			appBuiltinResourceDirectory,
+			appCustomResourceDirectory,
+		),
 		SecretKeyAllowlist: secretKeyAllowlist,
 	}, nil
 }

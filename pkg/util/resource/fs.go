@@ -23,23 +23,33 @@ type File interface {
 	Readdirnames(n int) ([]string, error)
 }
 
+type FsLevel int
+
 // Fs is a read-only filesystem.
 type Fs interface {
 	Open(name string) (File, error)
 	Stat(name string) (os.FileInfo, error)
+	Level() FsLevel
 }
 
 // AferoFs is a Fs backed by a afero.Fs.
-type AferoFs struct {
-	Fs afero.Fs
+type AferoLeveledFs struct {
+	Fs      afero.Fs
+	FsLevel FsLevel
 }
 
-func (f AferoFs) Open(name string) (File, error) {
+var _ Fs = AferoLeveledFs{}
+
+func (f AferoLeveledFs) Open(name string) (File, error) {
 	return f.Fs.Open(name)
 }
 
-func (f AferoFs) Stat(name string) (os.FileInfo, error) {
+func (f AferoLeveledFs) Stat(name string) (os.FileInfo, error) {
 	return f.Fs.Stat(name)
+}
+
+func (f AferoLeveledFs) Level() FsLevel {
+	return f.FsLevel
 }
 
 // ReadFile is a shorthand to read path of fs into bytes.

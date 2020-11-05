@@ -14,6 +14,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/api/apierrors"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/config/configsource"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	portalconfig "github.com/authgear/authgear-server/pkg/portal/config"
 	"github.com/authgear/authgear-server/pkg/portal/db"
 	"github.com/authgear/authgear-server/pkg/portal/deps"
@@ -253,7 +254,7 @@ func (s *AppService) generateConfig(appHost string, appID string) (opts *CreateA
 		_ = afero.WriteFile(fs, p, data, 0666)
 	}
 
-	appFs := resource.AferoFs{Fs: fs}
+	appFs := resource.AferoLeveledFs{Fs: fs, FsLevel: libresource.FsLevelApp}
 	resMgr := (*resource.Manager)(s.AppBaseResources).Overlay(appFs)
 	err = resources.Validate(appID, appFs, resMgr, nil)
 	if err != nil {

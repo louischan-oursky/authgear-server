@@ -16,8 +16,8 @@ func TestTemplateResource(t *testing.T) {
 		fsB := afero.NewMemMapFs()
 		r := &resource.Registry{}
 		manager := resource.NewManager(r, []resource.Fs{
-			resource.AferoFs{Fs: fsA},
-			resource.AferoFs{Fs: fsB},
+			resource.AferoLeveledFs{Fs: fsA},
+			resource.AferoLeveledFs{Fs: fsB},
 		})
 
 		txt := &template.HTML{Name: "resource.txt"}

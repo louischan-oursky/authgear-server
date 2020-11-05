@@ -10,6 +10,7 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/config/configsource"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	"github.com/authgear/authgear-server/pkg/util/resource"
 )
 
@@ -157,7 +158,7 @@ func constructResources(resources *resource.Manager, appFs resource.Fs, updates 
 		}
 	}
 
-	newAppFs := resource.Fs(&resource.AferoFs{Fs: newFs})
+	newAppFs := resource.Fs(&resource.AferoLeveledFs{Fs: newFs, FsLevel: libresource.FsLevelApp})
 	var newResFs []resource.Fs
 	for _, fs := range resources.Fs {
 		if fs == appFs {

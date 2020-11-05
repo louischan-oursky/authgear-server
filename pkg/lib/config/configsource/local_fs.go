@@ -10,6 +10,7 @@ import (
 	"gopkg.in/fsnotify.v1"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	"github.com/authgear/authgear-server/pkg/util/log"
 	"github.com/authgear/authgear-server/pkg/util/resource"
 )
@@ -38,7 +39,7 @@ func (s *LocalFS) Open() error {
 	}
 
 	s.Fs = afero.NewBasePathFs(afero.NewOsFs(), dir)
-	appFs := &resource.AferoFs{Fs: s.Fs}
+	appFs := &resource.AferoLeveledFs{Fs: s.Fs, FsLevel: libresource.FsLevelApp}
 
 	resources := s.BaseResources.Overlay(appFs)
 	cfg, err := LoadConfig(resources)
