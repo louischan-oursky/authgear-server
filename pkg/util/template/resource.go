@@ -30,7 +30,7 @@ type HTML struct {
 
 func (t *HTML) templateResource() {}
 
-func (t *HTML) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
+func (t *HTML) ReadResource(fs resource.Fs) ([]resource.FsFile, error) {
 	return readTemplates(fs, t.Name)
 }
 
@@ -38,7 +38,7 @@ func (t *HTML) MatchResource(path string) bool {
 	return matchTemplatePath(path, t.Name)
 }
 
-func (t *HTML) Merge(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func (t *HTML) Merge(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	return mergeTemplates(layers, args)
 }
 
@@ -62,7 +62,7 @@ type PlainText struct {
 
 func (t *PlainText) templateResource() {}
 
-func (t *PlainText) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
+func (t *PlainText) ReadResource(fs resource.Fs) ([]resource.FsFile, error) {
 	return readTemplates(fs, t.Name)
 }
 
@@ -70,7 +70,7 @@ func (t *PlainText) MatchResource(path string) bool {
 	return matchTemplatePath(path, t.Name)
 }
 
-func (t *PlainText) Merge(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func (t *PlainText) Merge(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	return mergeTemplates(layers, args)
 }
 
@@ -101,7 +101,7 @@ func matchTemplatePath(path string, templateName string) bool {
 	return regexp.MustCompile(r).MatchString(path)
 }
 
-func readTemplates(fs resource.Fs, templateName string) ([]resource.LayerFile, error) {
+func readTemplates(fs resource.Fs, templateName string) ([]resource.FsFile, error) {
 	templatesDir, err := fs.Open("templates")
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -115,7 +115,7 @@ func readTemplates(fs resource.Fs, templateName string) ([]resource.LayerFile, e
 		return nil, err
 	}
 
-	var files []resource.LayerFile
+	var files []resource.FsFile
 	for _, langTag := range langTagDirs {
 		p := path.Join("templates", langTag, templateName)
 		data, err := resource.ReadFile(fs, p)
@@ -124,9 +124,10 @@ func readTemplates(fs resource.Fs, templateName string) ([]resource.LayerFile, e
 		} else if err != nil {
 			return nil, err
 		}
-		files = append(files, resource.LayerFile{
+		files = append(files, resource.FsFile{
 			Path: p,
 			Data: data,
+			Fs:   fs,
 		})
 	}
 
@@ -144,7 +145,7 @@ func (t languageTemplate) GetLanguageTag() string {
 
 var templateLanguageTagRegex = regexp.MustCompile("^templates/([a-zA-Z0-9-_]+)/")
 
-func mergeTemplates(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func mergeTemplates(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	preferredLanguageTags, _ := args[ResourceArgPreferredLanguageTag].([]string)
 	defaultLanguageTag, _ := args[ResourceArgDefaultLanguageTag].(string)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
+// File is a read-only file.
 type File interface {
 	io.Closer
 	io.Reader
@@ -22,11 +23,13 @@ type File interface {
 	Readdirnames(n int) ([]string, error)
 }
 
+// Fs is a read-only filesystem.
 type Fs interface {
 	Open(name string) (File, error)
 	Stat(name string) (os.FileInfo, error)
 }
 
+// AferoFs is a Fs backed by a afero.Fs.
 type AferoFs struct {
 	Fs afero.Fs
 }
@@ -39,6 +42,7 @@ func (f AferoFs) Stat(name string) (os.FileInfo, error) {
 	return f.Fs.Stat(name)
 }
 
+// ReadFile is a shorthand to read path of fs into bytes.
 func ReadFile(fs Fs, path string) ([]byte, error) {
 	file, err := fs.Open(path)
 	if err != nil {
@@ -49,6 +53,7 @@ func ReadFile(fs Fs, path string) ([]byte, error) {
 	return ioutil.ReadAll(file)
 }
 
+// ReadDirNames is a shorthand to read directory entries in dir of fs.
 func ReadDirNames(fs Fs, dir string) ([]string, error) {
 	f, err := fs.Open(dir)
 	if err != nil {
@@ -59,6 +64,7 @@ func ReadDirNames(fs Fs, dir string) ([]string, error) {
 	return f.Readdirnames(0)
 }
 
+// ListFiles enumerates all paths of fs.
 func ListFiles(fs Fs) ([]string, error) {
 	var paths []string
 

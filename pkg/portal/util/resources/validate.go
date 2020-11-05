@@ -59,11 +59,12 @@ func Validate(appID string, appFs resource.Fs, resources *resource.Manager, upda
 		return err
 	}
 	for _, res := range resFiles {
-		var layers []resource.LayerFile
-		for _, f := range res.Files {
-			layers = append(layers, resource.LayerFile{
+		var layers []resource.FsFile
+		for _, f := range res.FsFiles {
+			layers = append(layers, resource.FsFile{
 				Path: res.Path,
 				Data: f.Data,
+				Fs:   appFs,
 			})
 		}
 

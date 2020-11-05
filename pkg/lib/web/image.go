@@ -35,7 +35,7 @@ type imageAsset struct {
 	Name string
 }
 
-func (a imageAsset) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
+func (a imageAsset) ReadResource(fs resource.Fs) ([]resource.FsFile, error) {
 	staticDir, err := fs.Open("static")
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -49,7 +49,7 @@ func (a imageAsset) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
 		return nil, err
 	}
 
-	var files []resource.LayerFile
+	var files []resource.FsFile
 	for _, langTag := range langTagDirs {
 		stat, err := fs.Stat(path.Join("static", langTag))
 		if err != nil {
@@ -67,9 +67,10 @@ func (a imageAsset) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
 			} else if err != nil {
 				return nil, err
 			}
-			files = append(files, resource.LayerFile{
+			files = append(files, resource.FsFile{
 				Path: p,
 				Data: data,
+				Fs:   fs,
 			})
 		}
 	}
@@ -85,7 +86,7 @@ func (a imageAsset) MatchResource(path string) bool {
 	return matches[2] == a.Name
 }
 
-func (a imageAsset) Merge(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func (a imageAsset) Merge(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	preferredLanguageTags, _ := args[ResourceArgPreferredLanguageTag].([]string)
 	defaultLanguageTag, _ := args[ResourceArgDefaultLanguageTag].(string)
 	// If user requested static asset at a specific path, always use the

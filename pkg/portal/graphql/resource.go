@@ -24,7 +24,7 @@ var appResource = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.String,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				r := p.Source.(*model.AppResource)
-				for _, f := range r.Files {
+				for _, f := range r.FsFiles {
 					if f.Fs == r.Context.AppFs {
 						return string(f.Data), nil
 					}
@@ -40,16 +40,8 @@ var appResource = graphql.NewObject(graphql.ObjectConfig{
 					return nil, apierrors.NewForbidden("cannot access effective secrets")
 				}
 
-				var layers []resource.LayerFile
-				for _, f := range r.Files {
-					layers = append(layers, resource.LayerFile{
-						Path: r.Path,
-						Data: f.Data,
-					})
-				}
-
 				// Expose raw representation of merged data in API
-				merged, err := r.Descriptor.Merge(layers, map[string]interface{}{
+				merged, err := r.Descriptor.Merge(r.FsFiles, map[string]interface{}{
 					resource.ArgMergeRaw: true,
 				})
 				if err != nil {

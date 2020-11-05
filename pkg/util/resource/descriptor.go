@@ -10,9 +10,11 @@ const (
 	ArgMergeRaw = "merge_raw"
 )
 
-type LayerFile struct {
+// FsFile is loaded file with its fs.
+type FsFile struct {
 	Path string
 	Data []byte
+	Fs   Fs
 }
 
 type MergedFile struct {
@@ -21,33 +23,33 @@ type MergedFile struct {
 }
 
 type Descriptor interface {
-	ReadResource(fs Fs) ([]LayerFile, error)
+	ReadResource(fs Fs) ([]FsFile, error)
 	MatchResource(path string) bool
-	Merge(layers []LayerFile, args map[string]interface{}) (*MergedFile, error)
+	Merge(files []FsFile, args map[string]interface{}) (*MergedFile, error)
 	Parse(merged *MergedFile) (interface{}, error)
 }
 
 type SimpleFile struct {
 	Name    string
-	MergeFn func(layers []LayerFile) ([]byte, error)
+	MergeFn func(layers []FsFile) ([]byte, error)
 	ParseFn func(data []byte) (interface{}, error)
 }
 
-func (f SimpleFile) ReadResource(fs Fs) ([]LayerFile, error) {
+func (f SimpleFile) ReadResource(fs Fs) ([]FsFile, error) {
 	data, err := ReadFile(fs, f.Name)
 	if os.IsNotExist(err) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
-	return []LayerFile{{Path: f.Name, Data: data}}, nil
+	return []FsFile{{Path: f.Name, Data: data, Fs: fs}}, nil
 }
 
 func (f SimpleFile) MatchResource(path string) bool {
 	return path == f.Name
 }
 
-func (f SimpleFile) Merge(layers []LayerFile, args map[string]interface{}) (*MergedFile, error) {
+func (f SimpleFile) Merge(layers []FsFile, args map[string]interface{}) (*MergedFile, error) {
 	if f.MergeFn != nil {
 		data, err := f.MergeFn(layers)
 		if err != nil {
@@ -72,21 +74,21 @@ type JoinedFile struct {
 	ParseFn   func(data []byte) (interface{}, error)
 }
 
-func (f JoinedFile) ReadResource(fs Fs) ([]LayerFile, error) {
+func (f JoinedFile) ReadResource(fs Fs) ([]FsFile, error) {
 	data, err := ReadFile(fs, f.Name)
 	if os.IsNotExist(err) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
-	return []LayerFile{{Path: f.Name, Data: data}}, nil
+	return []FsFile{{Path: f.Name, Data: data, Fs: fs}}, nil
 }
 
 func (f JoinedFile) MatchResource(path string) bool {
 	return path == f.Name
 }
 
-func (f JoinedFile) Merge(layers []LayerFile, args map[string]interface{}) (*MergedFile, error) {
+func (f JoinedFile) Merge(layers []FsFile, args map[string]interface{}) (*MergedFile, error) {
 	var data [][]byte
 	for _, layer := range layers {
 		data = append(data, layer.Data)

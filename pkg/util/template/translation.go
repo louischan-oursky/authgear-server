@@ -23,7 +23,7 @@ type translationJSON struct{}
 
 var TranslationJSON = resource.RegisterResource(&translationJSON{})
 
-func (t *translationJSON) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
+func (t *translationJSON) ReadResource(fs resource.Fs) ([]resource.FsFile, error) {
 	return readTemplates(fs, TranslationJSONName)
 }
 
@@ -31,7 +31,7 @@ func (t *translationJSON) MatchResource(path string) bool {
 	return matchTemplatePath(path, TranslationJSONName)
 }
 
-func (t *translationJSON) Merge(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func (t *translationJSON) Merge(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	return mergeTranslations(layers, args)
 }
 
@@ -43,7 +43,7 @@ func (t *translationJSON) Parse(merged *resource.MergedFile) (interface{}, error
 	return translations, nil
 }
 
-func mergeTranslations(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func mergeTranslations(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	preferredLanguageTags, _ := args[ResourceArgPreferredLanguageTag].([]string)
 	defaultLanguageTag, _ := args[ResourceArgDefaultLanguageTag].(string)
 

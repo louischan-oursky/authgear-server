@@ -47,12 +47,7 @@ func List(r *resource.Manager) ([]string, error) {
 type Resource struct {
 	Descriptor resource.Descriptor
 	Path       string
-	Files      []File
-}
-
-type File struct {
-	Fs   resource.Fs
-	Data []byte
+	FsFiles    []resource.FsFile
 }
 
 func Load(r *resource.Manager, paths ...string) ([]Resource, error) {
@@ -84,7 +79,7 @@ func Load(r *resource.Manager, paths ...string) ([]Resource, error) {
 	// Load resource file layers for each match
 	var resources []Resource
 	for _, match := range matches {
-		var files []File
+		var files []resource.FsFile
 		for _, fs := range r.Fs {
 			layers, err := match.Descriptor.ReadResource(fs)
 			if err != nil {
@@ -95,14 +90,14 @@ func Load(r *resource.Manager, paths ...string) ([]Resource, error) {
 				if l.Path != match.Path {
 					continue
 				}
-				files = append(files, File{Fs: fs, Data: l.Data})
+				files = append(files, l)
 			}
 		}
 
 		resources = append(resources, Resource{
 			Descriptor: match.Descriptor,
 			Path:       match.Path,
-			Files:      files,
+			FsFiles:    files,
 		})
 	}
 

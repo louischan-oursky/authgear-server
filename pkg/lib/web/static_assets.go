@@ -26,7 +26,7 @@ type StaticAsset struct {
 
 var WebJS = resource.RegisterResource(resource.SimpleFile{
 	Name: StaticAssetResourcePrefix + webJSName,
-	MergeFn: func(layers []resource.LayerFile) ([]byte, error) {
+	MergeFn: func(layers []resource.FsFile) ([]byte, error) {
 		// Concat JS by wrapping each one in an IIFE
 		output := bytes.Buffer{}
 		for _, layer := range layers {
@@ -46,7 +46,7 @@ var WebJS = resource.RegisterResource(resource.SimpleFile{
 
 var WebCSS = resource.RegisterResource(resource.SimpleFile{
 	Name: StaticAssetResourcePrefix + webCSSName,
-	MergeFn: func(layers []resource.LayerFile) ([]byte, error) {
+	MergeFn: func(layers []resource.FsFile) ([]byte, error) {
 		// Concat CSS by simply joining together
 		output := bytes.Buffer{}
 		for _, layer := range layers {

@@ -30,21 +30,21 @@ var SecretConfig = resource.RegisterResource(SecretConfigResourceType{})
 
 type SecretConfigResourceType struct{}
 
-func (f SecretConfigResourceType) ReadResource(fs resource.Fs) ([]resource.LayerFile, error) {
+func (f SecretConfigResourceType) ReadResource(fs resource.Fs) ([]resource.FsFile, error) {
 	data, err := resource.ReadFile(fs, AuthgearSecretYAML)
 	if os.IsNotExist(err) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
-	return []resource.LayerFile{{Path: AuthgearSecretYAML, Data: data}}, nil
+	return []resource.FsFile{{Path: AuthgearSecretYAML, Data: data, Fs: fs}}, nil
 }
 
 func (f SecretConfigResourceType) MatchResource(path string) bool {
 	return path == AuthgearSecretYAML
 }
 
-func (f SecretConfigResourceType) Merge(layers []resource.LayerFile, args map[string]interface{}) (*resource.MergedFile, error) {
+func (f SecretConfigResourceType) Merge(layers []resource.FsFile, args map[string]interface{}) (*resource.MergedFile, error) {
 	var layerConfigs []*config.SecretConfig
 	for _, layer := range layers {
 		var layerConfig config.SecretConfig

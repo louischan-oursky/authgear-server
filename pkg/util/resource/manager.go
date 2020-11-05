@@ -7,6 +7,7 @@ import (
 var ErrResourceNotFound = apierrors.NotFound.WithReason("ResourceNotFound").
 	New("specified resource is not configured")
 
+// Manager is a registry with layered filesystems.
 type Manager struct {
 	Registry *Registry
 	Fs       []Fs
@@ -16,6 +17,7 @@ func NewManager(registry *Registry, fs []Fs) *Manager {
 	return &Manager{Registry: registry, Fs: fs}
 }
 
+// Overlay returns a new manaager overlaid with fs.
 func (m *Manager) Overlay(fs Fs) *Manager {
 	newFs := make([]Fs, len(m.Fs)+1)
 	copy(newFs, m.Fs)
@@ -23,20 +25,21 @@ func (m *Manager) Overlay(fs Fs) *Manager {
 	return NewManager(m.Registry, newFs)
 }
 
+// Read reads merged file from all FSs of m.
 func (m *Manager) Read(desc Descriptor, args map[string]interface{}) (*MergedFile, error) {
-	var layers []LayerFile
+	var fsFiles []FsFile
 	for _, fs := range m.Fs {
 		files, err := desc.ReadResource(fs)
 		if err != nil {
 			return nil, err
 		}
-		layers = append(layers, files...)
+		fsFiles = append(fsFiles, files...)
 	}
-	if len(layers) == 0 {
+	if len(fsFiles) == 0 {
 		return nil, ErrResourceNotFound
 	}
 
-	merged, err := desc.Merge(layers, args)
+	merged, err := desc.Merge(fsFiles, args)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +47,7 @@ func (m *Manager) Read(desc Descriptor, args map[string]interface{}) (*MergedFil
 	return merged, nil
 }
 
+// Resolve finds the first descriptor for path.
 func (m *Manager) Resolve(path string) (Descriptor, bool) {
 	for _, desc := range m.Registry.Descriptors {
 		if ok := desc.MatchResource(path); ok {
