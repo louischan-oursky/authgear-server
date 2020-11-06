@@ -188,6 +188,50 @@ func (s *AppService) Create(userID string, id string) error {
 	return nil
 }
 
+func (s *AppService) LoadRawAppConfig(app *model.App) (*config.AppConfig, error) {
+	manager := app.Context.Resources
+	descriptor, ok := manager.Resolve(configsource.AuthgearYAML)
+	if !ok {
+		return nil, fmt.Errorf("resource '%s' not found", configsource.AuthgearYAML)
+	}
+
+	merged, err := manager.Read(descriptor, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg *config.AppConfig
+	err = yaml.Unmarshal(merged.Data, &cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func (s *AppService) LoadRawSecretConfig(app *model.App) (*config.SecretConfig, error) {
+	manager := app.Context.Resources
+	descriptor, ok := manager.Resolve(configsource.AuthgearSecretYAML)
+	if !ok {
+		return nil, fmt.Errorf("resource '%s' not found", configsource.AuthgearSecretYAML)
+	}
+
+	merged, err := manager.Read(descriptor, map[string]interface{}{
+		portalresource.ArgMergeForClientRead: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg *config.SecretConfig
+	err = yaml.Unmarshal(merged.Data, &cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
 func (s *AppService) UpdateResources(app *model.App, updates []resources.Update) error {
 	err := resources.Validate(app.ID, app.Context.AppFs, app.Context.Resources, updates)
 	if err != nil {

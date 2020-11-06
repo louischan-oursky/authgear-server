@@ -127,12 +127,7 @@ func constructResources(resources *resource.Manager, appFs resource.Fs, updates 
 
 	newAppFs := resource.AferoLeveledFs{Fs: newFs, FsLevel: libresource.FsLevelApp}
 	var newResFs []resource.Fs
-	for _, fs := range resources.Fs {
-		if fs.Level() == libresource.FsLevelApp {
-			newResFs = append(newResFs, newAppFs)
-		} else {
-			newResFs = append(newResFs, fs)
-		}
-	}
+	newResFs = append(newResFs, resources.Fs...)
+	newResFs = append(newResFs, newAppFs)
 	return resource.NewManager(resources.Registry, newResFs), newAppFs, nil
 }

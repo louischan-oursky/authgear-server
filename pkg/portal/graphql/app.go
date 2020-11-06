@@ -65,15 +65,17 @@ var nodeApp = node(
 			"rawAppConfig": &graphql.Field{
 				Type: graphql.NewNonNull(AppConfig),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					ctx := GQLContext(p.Context)
 					app := p.Source.(*model.App)
-					return app.LoadRawAppConfig()
+					return ctx.AppService.LoadRawAppConfig(app)
 				},
 			},
 			"rawSecretConfig": &graphql.Field{
 				Type: graphql.NewNonNull(SecretConfig),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					ctx := GQLContext(p.Context)
 					app := p.Source.(*model.App)
-					return app.LoadRawSecretConfig()
+					return ctx.AppService.LoadRawSecretConfig(app)
 				},
 			},
 			"effectiveAppConfig": &graphql.Field{
