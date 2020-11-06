@@ -86,12 +86,30 @@ func NewRootProvider(
 			customResourceDirectory,
 		),
 		AppBaseResources: libresource.NewResourceManager(
-			resource.DefaultRegistry,
+			patchDefaultRegistry(resource.DefaultRegistry, secretKeyAllowlist),
 			appBuiltinResourceDirectory,
 			appCustomResourceDirectory,
 		),
 		SecretKeyAllowlist: secretKeyAllowlist,
 	}, nil
+}
+
+func patchDefaultRegistry(registry *resource.Registry, secretKeyAllowlist portalconfig.SecretKeyAllowlist) *resource.Registry {
+	newRegistry := &resource.Registry{}
+
+	newSecretConfigDescriptor := portalresource.SecretConfigResourceType{
+		SecretKeyAllowlist: secretKeyAllowlist,
+	}
+	for _, d := range registry.Descriptors {
+		if d == configsource.SecretConfig {
+			// Skip this.
+		} else {
+			newRegistry.Register(d)
+		}
+	}
+
+	newRegistry.Register(newSecretConfigDescriptor)
+	return newRegistry
 }
 
 type RequestProvider struct {

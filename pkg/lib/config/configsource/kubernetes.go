@@ -297,7 +297,7 @@ func MakeAppFS(secret *corev1.Secret) (resource.Fs, error) {
 		create(path, data)
 	}
 
-	return &resource.AferoLeveledFs{Fs: appFs, FsLevel: libresource.FsLevelApp}, nil
+	return resource.AferoLeveledFs{Fs: appFs, FsLevel: libresource.FsLevelApp}, nil
 }
 
 type k8sApp struct {

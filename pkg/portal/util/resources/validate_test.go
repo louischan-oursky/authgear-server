@@ -9,6 +9,7 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	configtest "github.com/authgear/authgear-server/pkg/lib/config/test"
+	libresource "github.com/authgear/authgear-server/pkg/lib/resource"
 	"github.com/authgear/authgear-server/pkg/portal/util/resources"
 	"github.com/authgear/authgear-server/pkg/util/resource"
 )
@@ -24,8 +25,8 @@ func TestValidate(t *testing.T) {
 
 		baseFs := afero.NewMemMapFs()
 		appFs := afero.NewMemMapFs()
-		baseResourceFs := &resource.AferoLeveledFs{Fs: baseFs}
-		appResourceFs := &resource.AferoLeveledFs{Fs: appFs}
+		baseResourceFs := &resource.AferoLeveledFs{Fs: baseFs, FsLevel: libresource.FsLevelBuiltin}
+		appResourceFs := &resource.AferoLeveledFs{Fs: appFs, FsLevel: libresource.FsLevelApp}
 		resMgr := resource.NewManager(resource.DefaultRegistry, []resource.Fs{
 			baseResourceFs,
 			appResourceFs,
@@ -111,17 +112,6 @@ func TestValidate(t *testing.T) {
 				Data: nil,
 			}})
 			So(err, ShouldBeError, `invalid resource 'unknown.txt': unknown resource path`)
-		})
-
-		Convey("forbid overriding base secrets", func() {
-			secretConfigYAML, _ := yaml.Marshal(cfg.SecretConfig)
-			_ = afero.WriteFile(baseFs, "authgear.secrets.yaml", secretConfigYAML, 0666)
-
-			err := validate([]resources.Update{{
-				Path: "authgear.secrets.yaml",
-				Data: []byte("secrets: [{data: {redis_url: redis://localhost}, key: redis}]"),
-			}})
-			So(err, ShouldBeError, `invalid resource 'authgear.secrets.yaml': cannot override secret 'redis' defined in base config`)
 		})
 	})
 }
