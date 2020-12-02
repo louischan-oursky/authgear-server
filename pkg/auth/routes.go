@@ -21,6 +21,14 @@ func NewRouter(p *deps.RootProvider, configSource *configsource.ConfigSource, st
 		PathPattern: "/healthz",
 	}, http.HandlerFunc(httputil.HealthCheckHandler))
 
+	// Uncomment the following if you want to verify Wechat 公眾平台測試號
+	// router.Add(httproute.Route{
+	// 	Methods:     []string{"GET"},
+	// 	PathPattern: "/wechat/verify",
+	// }, &wechat.VerifyHandler{
+	// 	Token: "token",
+	// })
+
 	rootChain := httproute.Chain(
 		p.RootMiddleware(newPanicEndMiddleware),
 		p.RootMiddleware(newBodyLimitMiddleware),
