@@ -75,6 +75,7 @@
   "oauth-branding-facebook": "Login with Facebook",
   "oauth-branding-linkedin": "Sign in with LinkedIn",
   "oauth-branding-azureadv2": "Sign in with Microsoft",
+  "oauth-branding-wechat": "Login with Wechat",
 
   "sso-login-id-separator": "or",
 
@@ -184,6 +185,7 @@
   "settings-identity-oauth-facebook": "Facebook",
   "settings-identity-oauth-linkedin": "LinkedIn",
   "settings-identity-oauth-azureadv2": "Azure AD",
+  "settings-identity-oauth-wechat": "Wechat",
   "settings-identity-login-id-email": "Email Address",
   "settings-identity-login-id-phone": "Phone Number",
   "settings-identity-login-id-username": "Username",

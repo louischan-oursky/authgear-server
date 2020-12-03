@@ -228,7 +228,8 @@ var _ = Schema.Add("OAuthSSOProviderType", `
 		"facebook",
 		"linkedin",
 		"azureadv2",
-		"apple"
+		"apple",
+		"wechat"
 	]
 }
 `)
@@ -253,6 +254,8 @@ func (t OAuthSSOProviderType) Scope() string {
 		return "openid profile email"
 	case OAuthSSOProviderTypeApple:
 		return "email"
+	case OAuthSSOProviderTypeWechat:
+		return "snsapi_userinfo"
 	}
 
 	panic(fmt.Sprintf("oauth: unknown provider type %s", string(t)))
@@ -264,6 +267,7 @@ const (
 	OAuthSSOProviderTypeLinkedIn  OAuthSSOProviderType = "linkedin"
 	OAuthSSOProviderTypeAzureADv2 OAuthSSOProviderType = "azureadv2"
 	OAuthSSOProviderTypeApple     OAuthSSOProviderType = "apple"
+	OAuthSSOProviderTypeWechat    OAuthSSOProviderType = "wechat"
 )
 
 var _ = Schema.Add("OAuthSSOProviderConfig", `
@@ -353,6 +357,9 @@ func (c *OAuthSSOProviderConfig) ProviderID() ProviderID {
 		// Since Apple has private relay to hide the real email,
 		// the user may not be associate their account.
 		keys["team_id"] = c.TeamID
+	case OAuthSSOProviderTypeWechat:
+		// FIXME: Investigate wechat ID scoping
+		break
 	}
 
 	return ProviderID{
