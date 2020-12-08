@@ -8,9 +8,9 @@ import (
 	"github.com/authgear/authgear-server/pkg/auth/webapp"
 	"github.com/authgear/authgear-server/pkg/lib/authn"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
+	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/lib/infra/mail"
 	"github.com/authgear/authgear-server/pkg/lib/interaction"
-	"github.com/authgear/authgear-server/pkg/lib/interaction/intents"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/phone"
 	"github.com/authgear/authgear-server/pkg/util/template"
@@ -49,10 +49,15 @@ type VerifyIdentityViewModel struct {
 	IdentityDisplayID            string
 }
 
+type VerifyIdentityVerificationService interface {
+	GetCode(id string) (*verification.Code, error)
+}
+
 type VerifyIdentityHandler struct {
 	ControllerFactory ControllerFactory
 	BaseViewModel     *viewmodels.BaseViewModeler
 	Renderer          Renderer
+	Verifications     VerifyIdentityVerificationService
 }
 
 type VerifyIdentityNode interface {
@@ -112,44 +117,30 @@ func (h *VerifyIdentityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 	defer ctrl.Serve()
 
-	opts := webapp.SessionOptions{
-		RedirectURI:     "/verify_identity/success",
-		KeepAfterFinish: true,
-	}
-	intent := intents.NewIntentVerifyIdentityResume(r.Form.Get("id"))
-
 	ctrl.Get(func() error {
-		session, err := ctrl.InteractionSession()
-		if errors.Is(err, webapp.ErrSessionNotFound) ||
-			errors.Is(err, webapp.ErrInvalidSession) {
-			session = nil
+		_, err := ctrl.InteractionSession()
+		if errors.Is(err, webapp.ErrSessionNotFound) || errors.Is(err, webapp.ErrInvalidSession) {
+			verificationCodeID := r.Form.Get("id")
+			code, err := h.Verifications.GetCode(verificationCodeID)
+			if err != nil {
+				return err
+			}
+			ctrl.WebSessionID = code.WebSessionID
+		} else if err != nil {
+			return err
 		}
 
-		if session != nil {
-			graph, err := ctrl.InteractionGet()
-			if err != nil {
-				return err
-			}
-
-			data, err := h.GetData(r, w, graph)
-			if err != nil {
-				return err
-			}
-
-			h.Renderer.RenderHTML(w, r, TemplateWebVerifyIdentityHTML, data)
-		} else {
-			graph, err := ctrl.EntryPointGet(opts, intent)
-			if err != nil {
-				return err
-			}
-
-			data, err := h.GetData(r, w, graph)
-			if err != nil {
-				return err
-			}
-
-			h.Renderer.RenderHTML(w, r, TemplateWebVerifyIdentityHTML, data)
+		graph, err := ctrl.InteractionGet()
+		if err != nil {
+			return err
 		}
+
+		data, err := h.GetData(r, w, graph)
+		if err != nil {
+			return err
+		}
+
+		h.Renderer.RenderHTML(w, r, TemplateWebVerifyIdentityHTML, data)
 		return nil
 	})
 
@@ -190,7 +181,8 @@ func (h *VerifyIdentityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		if session != nil {
 			result, err = ctrl.InteractionPost(inputFn)
 		} else {
-			result, err = ctrl.EntryPointPost(opts, intent, inputFn)
+			// FIXME
+			// result, err = ctrl.EntryPointPost(opts, intent, inputFn)
 		}
 		if err != nil {
 			return err

@@ -126,7 +126,7 @@ type LoginIDNormalizerFactory interface {
 type VerificationService interface {
 	GetIdentityVerificationStatus(i *identity.Info) ([]verification.ClaimStatus, error)
 	GetAuthenticatorVerificationStatus(a *authenticator.Info) (verification.AuthenticatorStatus, error)
-	CreateNewCode(id string, info *identity.Info) (*verification.Code, error)
+	CreateNewCode(id string, info *identity.Info, webSessionID string) (*verification.Code, error)
 	GetCode(id string) (*verification.Code, error)
 	VerifyCode(id string, code string) (*verification.Code, error)
 	NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim
@@ -148,7 +148,7 @@ type RateLimiter interface {
 
 type Context struct {
 	IsCommitting bool   `wire:"-"`
-	WebStateID   string `wire:"-"`
+	WebSessionID string `wire:"-"`
 
 	Request    *http.Request
 	Database   db.SQLExecutor

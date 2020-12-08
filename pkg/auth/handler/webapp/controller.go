@@ -15,6 +15,7 @@ import (
 
 type PageService interface {
 	UpdateSession(session *webapp.Session) error
+	GetSession(id string) (*webapp.Session, error)
 	Get(session *webapp.Session) (*interaction.Graph, error)
 	GetWithIntent(session *webapp.Session, intent interaction.Intent) (*interaction.Graph, error)
 	PostWithIntent(
@@ -65,6 +66,10 @@ func (f *ControllerFactory) New(r *http.Request, rw http.ResponseWriter) (*Contr
 type Controller struct {
 	Log *log.Logger
 	ControllerDeps
+
+	// WebSessionID is used to retrieve web session in an alternative way.
+	// The standard way is to retrieve the session from request context.
+	WebSessionID string
 
 	path     string
 	request  *http.Request
@@ -189,6 +194,10 @@ func (c *Controller) rewindSessionHistory(session *webapp.Session) error {
 }
 
 func (c *Controller) InteractionSession() (*webapp.Session, error) {
+	if c.WebSessionID != "" {
+		return c.Page.GetSession(c.WebSessionID)
+	}
+
 	s := webapp.GetSession(c.request.Context())
 	if s == nil {
 		return nil, webapp.ErrSessionNotFound

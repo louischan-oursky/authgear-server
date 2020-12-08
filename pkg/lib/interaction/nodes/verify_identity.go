@@ -34,22 +34,6 @@ func (e *EdgeVerifyIdentity) Instantiate(ctx *interaction.Context, graph *intera
 	return node, nil
 }
 
-type EdgeVerifyIdentityResume struct {
-	Code     *verification.Code
-	Identity *identity.Info
-}
-
-func (e *EdgeVerifyIdentityResume) Instantiate(ctx *interaction.Context, graph *interaction.Graph, rawInput interface{}) (interaction.Node, error) {
-	r := e.Code.SendResult()
-	return &NodeVerifyIdentity{
-		Identity:     e.Identity,
-		CodeID:       e.Code.ID,
-		Channel:      r.Channel,
-		CodeLength:   r.CodeLength,
-		SendCooldown: r.SendCooldown,
-	}, nil
-}
-
 type NodeVerifyIdentity struct {
 	Identity     *identity.Info `json:"identity"`
 	CodeID       string         `json:"code_id"`
@@ -102,7 +86,7 @@ func (n *NodeVerifyIdentity) SendCode(ctx *interaction.Context) (*otp.CodeSendRe
 	}
 
 	if code == nil || ctx.Clock.NowUTC().After(code.ExpireAt) {
-		code, err = ctx.Verification.CreateNewCode(n.CodeID, n.Identity)
+		code, err = ctx.Verification.CreateNewCode(n.CodeID, n.Identity, ctx.WebSessionID)
 		if err != nil {
 			return nil, err
 		}

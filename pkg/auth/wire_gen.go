@@ -8737,6 +8737,7 @@ func newWebAppVerifyIdentityHandler(p *deps.RequestProvider) http.Handler {
 		ControllerFactory: controllerFactory,
 		BaseViewModel:     baseViewModeler,
 		Renderer:          responseRenderer,
+		Verifications:     verificationService,
 	}
 	return verifyIdentityHandler
 }
