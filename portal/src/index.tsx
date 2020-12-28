@@ -14,9 +14,16 @@ import "./index.scss";
 
 import React from "react";
 import { render } from "react-dom";
-import { initializeIcons } from "@fluentui/react";
+import {
+  initializeIcons,
+  Shade,
+  getColorFromString,
+  getShade,
+  getBackgroundShade,
+  mapEnumByName,
+} from "@fluentui/react";
 
-import ReactApp from "./ReactApp";
+// import ReactApp from "./ReactApp";
 
 initializeIcons();
 
@@ -60,5 +67,98 @@ if (process.env.NODE_ENV === "development") {
   );
 }
 */
+interface ColorPaletteProps {
+  primary: string;
+  foreground: string;
+  background: string;
+  darkMode?: boolean;
+}
 
-render(<ReactApp />, document.getElementById("react-app-root"));
+function ColorPalette(props: ColorPaletteProps) {
+  const { primary, foreground, background, darkMode } = props;
+  const primaryColor = getColorFromString(primary)!;
+  const foregroundColor = getColorFromString(foreground)!;
+  const backgroundColor = getColorFromString(background)!;
+
+  const primaryShades = mapEnumByName(Shade, (_name, value) => {
+    return getShade(primaryColor, value as Shade, darkMode);
+  });
+  const foregroundShades = mapEnumByName(Shade, (_name, value) => {
+    return getShade(foregroundColor, value as Shade, darkMode);
+  });
+  const backgroundShades = mapEnumByName(Shade, (_name, value) => {
+    return getBackgroundShade(backgroundColor, value as Shade, darkMode);
+  });
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+      }}
+    >
+      <div>
+        {primaryShades!.map((color) => {
+          return (
+            <div
+              key={color!.str}
+              style={{
+                width: "50px",
+                height: "50px",
+                backgroundColor: color!.str,
+              }}
+            />
+          );
+        })}
+      </div>
+      <div>
+        {foregroundShades!.map((color) => {
+          return (
+            <div
+              key={color!.str}
+              style={{
+                width: "50px",
+                height: "50px",
+                backgroundColor: color!.str,
+              }}
+            />
+          );
+        })}
+      </div>
+      <div>
+        {backgroundShades!.map((color) => {
+          return (
+            <div
+              key={color!.str}
+              style={{
+                width: "50px",
+                height: "50px",
+                backgroundColor: color!.str,
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ColorApp() {
+  return (
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <ColorPalette
+        primary={"#0078d4"}
+        foreground={"#323130"}
+        background={"#ffffff"}
+      />
+      <ColorPalette
+        primary={"#e50914"}
+        foreground={"#ffffff"}
+        background={"#000000"}
+        darkMode={true}
+      />
+    </div>
+  );
+}
+
+render(<ColorApp />, document.getElementById("react-app-root"));
