@@ -1,6 +1,14 @@
 .root {
   padding: 10px;
   max-width: 635px;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
 }
 
 .titleSection {
@@ -19,8 +27,18 @@
   font-weight: 700;
 }
 
-.colorControlSection {
-  max-width: 350px;
+.presetSection {
+  align-self: flex-start;
+}
+
+.presetWidget {
+  margin: 10px;
+}
+
+.presetTitle {
+  margin: 10px;
+  display: block;
+  font-weight: 600;
 }
 
 .colorControlTitle {
@@ -34,9 +52,10 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  padding: 0 5px;
 }
 
 .colorControlLabel {
-  margin: 10px;
+  margin: 5px;
   padding: 0;
 }

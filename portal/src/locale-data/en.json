@@ -513,10 +513,18 @@
 
   "ThemeConfigurationWidget.light-mode": "Light Mode",
   "ThemeConfigurationWidget.dark-mode": "Dark Mode",
+  "ThemeConfigurationWidget.preset-title": "Theme Color Recommendation",
+  "ThemeConfigurationWidget.sample-text": "Hello",
   "ThemeConfigurationWidget.custom-color": "Custom Color",
   "ThemeConfigurationWidget.primary-color": "Primary Color",
   "ThemeConfigurationWidget.text-color": "Text Color",
   "ThemeConfigurationWidget.background-color": "Background Color",
+  "ThemeConfigurationWidget.preset.0": "Default",
+  "ThemeConfigurationWidget.preset.1": "Tropical",
+  "ThemeConfigurationWidget.preset.2": "Sunrise",
+  "ThemeConfigurationWidget.preset.3": "Contrast",
+  "ThemeConfigurationWidget.preset.4": "Summer",
+  "ThemeConfigurationWidget.preset.5": "Unicorn",
 
   "Locales.af": "Afrikaans",
   "Locales.am": "Amharic",
