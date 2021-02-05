@@ -1,3 +1,5 @@
 {{ define "__header.html" }}
-<div class="banner" style="background-image: url('{{ call $.StaticAssetURL "app-logo" }}')"></div>
+<div class="banner-frame">
+    <img class="banner" src="{{ call $.StaticAssetURL "app-logo" }}">
+</div>
 {{ end }}
