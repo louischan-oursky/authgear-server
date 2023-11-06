@@ -694,7 +694,7 @@ type GetOAuthDataOptions struct {
 	ResponseMode sso.ResponseMode
 }
 
-func getOAuthData(ctx context.Context, deps *authflow.Dependencies, opts GetOAuthDataOptions) (data OAuthData, err error) {
+func getOAuthData(ctx context.Context, deps *authflow.Dependencies, opts GetOAuthDataOptions) (data oauthData, err error) {
 	oauthProvider := deps.OAuthProviderFactory.NewOAuthProvider(opts.Alias)
 	if oauthProvider == nil {
 		err = api.ErrOAuthProviderNotFound
@@ -714,7 +714,7 @@ func getOAuthData(ctx context.Context, deps *authflow.Dependencies, opts GetOAut
 		return
 	}
 
-	data = OAuthData{
+	data = oauthData{
 		Alias:                 opts.Alias,
 		OAuthProviderType:     oauthProvider.Config().Type,
 		OAuthAuthorizationURL: authorizationURL,
