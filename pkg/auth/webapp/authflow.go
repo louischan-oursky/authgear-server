@@ -6,32 +6,23 @@ import (
 	"regexp"
 	"strings"
 
-	authflow "github.com/authgear/authgear-server/pkg/lib/authenticationflow"
-	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/declarative"
+	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/authflowclient"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/util/phone"
 )
 
 var phoneRegexp = regexp.MustCompile(`^\+[0-9]*$`)
 
-func GetIdentificationOptions(f *authflow.FlowResponse) []declarative.IdentificationOption {
-	var options []declarative.IdentificationOption
-	switch data := f.Action.Data.(type) {
-	case declarative.IntentLoginFlowStepIdentifyData:
-		options = data.Options
-	case declarative.IntentSignupFlowStepIdentifyData:
-		options = data.Options
-	case declarative.IntentPromoteFlowStepIdentifyData:
-		options = data.Options
-	case declarative.IntentSignupLoginFlowStepIdentifyData:
-		options = data.Options
-	default:
-		panic(fmt.Errorf("unexpected type of data: %T", f.Action.Data))
+func GetIdentificationOptions(f *authflowclient.FlowResponse) []authflowclient.DataIdentifyOption {
+	var data authflowclient.DataIdentify
+	err := authflowclient.Cast(f.Action.Data, &data)
+	if err != nil {
+		panic(err)
 	}
-	return options
+	return data.Options
 }
 
-func GetMostAppropriateIdentification(f *authflow.FlowResponse, loginID string) config.AuthenticationFlowIdentification {
+func GetMostAppropriateIdentification(f *authflowclient.FlowResponse, loginID string) config.AuthenticationFlowIdentification {
 	lookLikeAPhoneNumber := func(loginID string) bool {
 		err := phone.EnsureE164(loginID)
 		if err == nil {

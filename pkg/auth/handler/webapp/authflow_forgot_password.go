@@ -5,8 +5,7 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp/viewmodels"
 	"github.com/authgear/authgear-server/pkg/auth/webapp"
-	authflow "github.com/authgear/authgear-server/pkg/lib/authenticationflow"
-	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/declarative"
+	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/authflowclient"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/template"
@@ -43,13 +42,14 @@ type AuthFlowForgotPasswordViewModel struct {
 	LoginIDDisabled     bool
 }
 
-func NewAuthFlowForgotPasswordViewModel(r *http.Request, screen *webapp.AuthflowScreenWithFlowResponse) AuthFlowForgotPasswordViewModel {
+func NewAuthFlowForgotPasswordViewModel(r *http.Request, screen *webapp.AuthflowScreenWithFlowResponse) (*AuthFlowForgotPasswordViewModel, error) {
 	loginIDInputType := r.Form.Get("q_login_id_input_type")
 	loginID := r.Form.Get("q_login_id")
 
-	data, ok := screen.StateTokenFlowResponse.Action.Data.(declarative.IntentAccountRecoveryFlowStepIdentifyData)
-	if !ok {
-		panic("authflow webapp: unexpected data")
+	var data authflowclient.DataAccountRecoveryIdentify
+	err := authflowclient.Cast(screen.StateTokenFlowResponse.Action.Data, &data)
+	if err != nil {
+		return nil, err
 	}
 
 	phoneLoginIDEnabled := false
@@ -66,13 +66,13 @@ func NewAuthFlowForgotPasswordViewModel(r *http.Request, screen *webapp.Authflow
 
 	loginIDDisabled := !phoneLoginIDEnabled && !emailLoginIDEnabled
 
-	return AuthFlowForgotPasswordViewModel{
+	return &AuthFlowForgotPasswordViewModel{
 		LoginIDInputType:    loginIDInputType,
 		LoginID:             loginID,
 		PhoneLoginIDEnabled: phoneLoginIDEnabled,
 		EmailLoginIDEnabled: emailLoginIDEnabled,
 		LoginIDDisabled:     loginIDDisabled,
-	}
+	}, nil
 }
 
 type AuthflowForgotPasswordHandler struct {
@@ -87,8 +87,11 @@ func (h *AuthflowForgotPasswordHandler) GetData(w http.ResponseWriter, r *http.R
 	baseViewModel := h.BaseViewModel.ViewModelForAuthFlow(r, w)
 	viewmodels.Embed(data, baseViewModel)
 
-	screenViewModel := NewAuthFlowForgotPasswordViewModel(r, screen)
-	viewmodels.Embed(data, screenViewModel)
+	screenViewModel, err := NewAuthFlowForgotPasswordViewModel(r, screen)
+	if err != nil {
+		return nil, err
+	}
+	viewmodels.Embed(data, *screenViewModel)
 
 	return data, nil
 }
@@ -129,8 +132,8 @@ func (h *AuthflowForgotPasswordHandler) ServeHTTP(w http.ResponseWriter, r *http
 		return nil
 	})
 
-	h.Controller.HandleStartOfFlow(w, r, webapp.SessionOptions{}, authflow.FlowReference{
-		Type: authflow.FlowTypeAccountRecovery,
+	h.Controller.HandleStartOfFlow(w, r, webapp.SessionOptions{}, authflowclient.FlowReference{
+		Type: authflowclient.FlowTypeAccountRecovery,
 		Name: flowName,
 	}, &handlers)
 }

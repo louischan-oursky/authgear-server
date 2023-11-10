@@ -5,7 +5,7 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp/viewmodels"
 	"github.com/authgear/authgear-server/pkg/auth/webapp"
-	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/declarative"
+	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/authflowclient"
 	"github.com/authgear/authgear-server/pkg/lib/authn"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/template"
@@ -54,7 +54,11 @@ func (h *AuthflowCreatePasswordHandler) GetData(w http.ResponseWriter, r *http.R
 
 	index := *screen.Screen.TakenBranchIndex
 	flowResponse := screen.BranchStateTokenFlowResponse
-	screenData := flowResponse.Action.Data.(declarative.IntentSignupFlowStepCreateAuthenticatorData)
+	var screenData authflowclient.DataCreateAuthenticator
+	err := authflowclient.Cast(flowResponse.Action.Data, &screenData)
+	if err != nil {
+		return nil, err
+	}
 	option := screenData.Options[index]
 	authenticationStage := authn.AuthenticationStageFromAuthenticationMethod(option.Authentication)
 	isPrimary := authenticationStage == authn.AuthenticationStagePrimary
@@ -103,7 +107,11 @@ func (h *AuthflowCreatePasswordHandler) ServeHTTP(w http.ResponseWriter, r *http
 
 		index := *screen.Screen.TakenBranchIndex
 		flowResponse := screen.BranchStateTokenFlowResponse
-		data := flowResponse.Action.Data.(declarative.IntentSignupFlowStepCreateAuthenticatorData)
+		var data authflowclient.DataCreateAuthenticator
+		err = authflowclient.Cast(flowResponse.Action.Data, &data)
+		if err != nil {
+			return err
+		}
 		option := data.Options[index]
 
 		newPlainPassword := r.Form.Get("x_password")

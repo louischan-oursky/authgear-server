@@ -6,7 +6,7 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp/viewmodels"
 	"github.com/authgear/authgear-server/pkg/auth/webapp"
-	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/declarative"
+	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/authflowclient"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/template"
 )
@@ -38,7 +38,11 @@ func (h *AuthflowPromptCreatePasskeyHandler) GetData(w http.ResponseWriter, r *h
 	baseViewModel := h.BaseViewModel.ViewModelForAuthFlow(r, w)
 	viewmodels.Embed(data, baseViewModel)
 
-	screenData := screen.StateTokenFlowResponse.Action.Data.(declarative.NodePromptCreatePasskeyData)
+	var screenData authflowclient.DataPromptCreatePasskey
+	err := authflowclient.Cast(screen.StateTokenFlowResponse.Action.Data, &screenData)
+	if err != nil {
+		return nil, err
+	}
 	creationOptionsJSONBytes, err := json.Marshal(screenData.CreationOptions)
 	if err != nil {
 		return nil, err

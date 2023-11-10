@@ -10,7 +10,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/api/apierrors"
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp/viewmodels"
 	"github.com/authgear/authgear-server/pkg/auth/webapp"
-	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/declarative"
+	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/authflowclient"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	coreimage "github.com/authgear/authgear-server/pkg/util/image"
 	"github.com/authgear/authgear-server/pkg/util/template"
@@ -45,7 +45,11 @@ func (h *AuthflowWechatHandler) GetData(w http.ResponseWriter, r *http.Request, 
 	baseViewModel := h.BaseViewModel.ViewModelForAuthFlow(r, w)
 	viewmodels.Embed(data, baseViewModel)
 
-	screenData := screen.StateTokenFlowResponse.Action.Data.(declarative.OAuthData)
+	var screenData authflowclient.DataOAuth
+	err := authflowclient.Cast(screen.StateTokenFlowResponse.Action.Data, &screenData)
+	if err != nil {
+		return nil, err
+	}
 
 	authorizationURL := screenData.OAuthAuthorizationURL
 	img, err := createQRCodeImage(authorizationURL, 512, 512, qr.M)

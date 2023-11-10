@@ -7,7 +7,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp/viewmodels"
 	"github.com/authgear/authgear-server/pkg/auth/webapp"
-	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/declarative"
+	"github.com/authgear/authgear-server/pkg/lib/authenticationflow/authflowclient"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/util/httproute"
 	"github.com/authgear/authgear-server/pkg/util/template"
@@ -52,7 +52,11 @@ func (h *AuthflowSetupOOBOTPHandler) GetData(w http.ResponseWriter, r *http.Requ
 	viewmodels.Embed(data, baseViewModel)
 
 	index := *screen.Screen.TakenBranchIndex
-	screenData := screen.StateTokenFlowResponse.Action.Data.(declarative.IntentSignupFlowStepCreateAuthenticatorData)
+	var screenData authflowclient.DataCreateAuthenticator
+	err := authflowclient.Cast(screen.StateTokenFlowResponse.Action.Data, &screenData)
+	if err != nil {
+		return nil, err
+	}
 	option := screenData.Options[index]
 
 	var oobAuthenticatorType model.AuthenticatorType
@@ -97,7 +101,12 @@ func (h *AuthflowSetupOOBOTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		}
 
 		index := *screen.Screen.TakenBranchIndex
-		screenData := screen.StateTokenFlowResponse.Action.Data.(declarative.IntentSignupFlowStepCreateAuthenticatorData)
+		var screenData authflowclient.DataCreateAuthenticator
+		err = authflowclient.Cast(screen.StateTokenFlowResponse.Action.Data, &screenData)
+		if err != nil {
+			return err
+		}
+
 		option := screenData.Options[index]
 		authentication := option.Authentication
 
