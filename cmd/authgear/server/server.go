@@ -10,6 +10,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/infra/task"
 	"github.com/authgear/authgear-server/pkg/resolver"
 	"github.com/authgear/authgear-server/pkg/util/log"
+	"github.com/authgear/authgear-server/pkg/util/otelutil"
 	"github.com/authgear/authgear-server/pkg/util/server"
 	"github.com/authgear/authgear-server/pkg/version"
 	"github.com/authgear/authgear-server/pkg/worker"
@@ -25,6 +26,12 @@ type Controller struct {
 
 func (c *Controller) Start() {
 	ctx := context.Background()
+
+	shutdownOTel, err := otelutil.SetupOTelSDK(ctx, "authgear", version.Version)
+	if err != nil {
+		golog.Fatalf("failed to setup otel sdk: %v", err)
+	}
+	defer shutdownOTel(ctx)
 
 	cfg, err := LoadConfigFromEnv()
 	if err != nil {
