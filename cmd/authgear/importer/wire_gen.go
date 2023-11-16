@@ -18,7 +18,8 @@ import (
 func NewImporter(ctx context.Context, pool *db.Pool, databaseCredentials *config.DatabaseCredentials, appID config.AppID, loginIDEmailConfig *config.LoginIDEmailConfig) *Importer {
 	databaseEnvironmentConfig := config.NewDefaultDatabaseEnvironmentConfig()
 	factory := NewLoggerFactory()
-	handle := appdb.NewHandle(ctx, pool, databaseEnvironmentConfig, databaseCredentials, factory)
+	tracer := NewNoopTracer()
+	handle := appdb.NewHandle(ctx, pool, databaseEnvironmentConfig, databaseCredentials, factory, tracer)
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	sqlExecutor := appdb.NewSQLExecutor(ctx, handle)
 	importer := &Importer{

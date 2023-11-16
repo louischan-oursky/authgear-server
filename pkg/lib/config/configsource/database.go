@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db"
@@ -66,6 +67,7 @@ func NewDatabaseHandleFactory(
 	credentials *config.GlobalDatabaseCredentialsEnvironmentConfig,
 	cfg *config.DatabaseEnvironmentConfig,
 	lf *log.Factory,
+	tracer trace.Tracer,
 ) DatabaseHandleFactory {
 	factory := func() *globaldb.Handle {
 		return globaldb.NewHandle(
@@ -74,6 +76,7 @@ func NewDatabaseHandleFactory(
 			credentials,
 			cfg,
 			lf,
+			tracer,
 		)
 	}
 	return factory

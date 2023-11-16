@@ -2,6 +2,8 @@ package elasticsearch
 
 import (
 	"github.com/google/wire"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	identityloginid "github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
 	identityoauth "github.com/authgear/authgear-server/pkg/lib/authn/identity/oauth"
@@ -31,11 +33,16 @@ func NewEmptyIdentityConfig() *config.IdentityConfig {
 	}
 }
 
+func NewNoopTracer() trace.Tracer {
+	return noop.NewTracerProvider().Tracer("noop-tracer")
+}
+
 var DependencySet = wire.NewSet(
 	NewLoggerFactory,
 	config.NewDefaultDatabaseEnvironmentConfig,
 	NewGlobalDatabaseCredentials,
 	NewEmptyIdentityConfig,
+	NewNoopTracer,
 	globaldb.DependencySet,
 	appdb.NewHandle,
 	appdb.DependencySet,

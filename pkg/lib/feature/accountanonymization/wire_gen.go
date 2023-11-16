@@ -19,7 +19,8 @@ import (
 // Injectors from wire.go:
 
 func newRunnable(context2 context.Context, pool *db.Pool, globalDBCredentials *config.GlobalDatabaseCredentialsEnvironmentConfig, databaseCfg *config.DatabaseEnvironmentConfig, logFactory *log.Factory, clock2 clock.Clock, appContextResolver AppContextResolver, userServiceFactory UserServiceFactory) backgroundjob.Runnable {
-	handle := globaldb.NewHandle(context2, pool, globalDBCredentials, databaseCfg, logFactory)
+	tracer := NewNoopTracer()
+	handle := globaldb.NewHandle(context2, pool, globalDBCredentials, databaseCfg, logFactory, tracer)
 	sqlBuilder := globaldb.NewSQLBuilder(globalDBCredentials)
 	sqlExecutor := globaldb.NewSQLExecutor(context2, handle)
 	store := &Store{

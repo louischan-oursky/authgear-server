@@ -72,6 +72,7 @@ var DependencySet = wire.NewSet(
 		"ConfigSourceController",
 		"Resources",
 		"FilesystemCache",
+		"Tracer",
 	),
 	wire.FieldsOf(new(*config.EnvironmentConfig),
 		"TrustProxy",

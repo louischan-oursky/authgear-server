@@ -2,6 +2,8 @@ package cmdpricing
 
 import (
 	"github.com/google/wire"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/config/configsource"
@@ -17,7 +19,12 @@ func NewGlobalDatabaseCredentials(dbCredentials *config.DatabaseCredentials) *co
 	}
 }
 
+func NewNoopTracer() trace.Tracer {
+	return noop.NewTracerProvider().Tracer("noop-tracer")
+}
+
 var DependencySet = wire.NewSet(
+	NewNoopTracer,
 	cobrasentry.NewLoggerFactory,
 	config.NewDefaultDatabaseEnvironmentConfig,
 	NewGlobalDatabaseCredentials,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/authgear/authgear-server/pkg/util/errorutil"
 	"github.com/authgear/authgear-server/pkg/util/log"
@@ -13,6 +14,7 @@ import (
 
 type HookHandle struct {
 	Context           context.Context
+	Tracer            trace.Tracer
 	Pool              *Pool
 	ConnectionOptions ConnectionOptions
 	Logger            *log.Logger
@@ -21,9 +23,10 @@ type HookHandle struct {
 	hooks []TransactionHook
 }
 
-func NewHookHandle(ctx context.Context, pool *Pool, opts ConnectionOptions, lf *log.Factory) *HookHandle {
+func NewHookHandle(ctx context.Context, pool *Pool, opts ConnectionOptions, lf *log.Factory, tracer trace.Tracer) *HookHandle {
 	return &HookHandle{
 		Context:           ctx,
+		Tracer:            tracer,
 		Pool:              pool,
 		ConnectionOptions: opts,
 		Logger:            lf.New("db-handle"),

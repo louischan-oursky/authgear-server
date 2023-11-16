@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/wire"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db"
@@ -78,6 +79,7 @@ func NewHandle(
 	cfg *config.DatabaseEnvironmentConfig,
 	credentials *config.DatabaseCredentials,
 	lf *log.Factory,
+	tracer trace.Tracer,
 ) *Handle {
 	opts := db.ConnectionOptions{
 		DatabaseURL:           credentials.DatabaseURL,
@@ -87,6 +89,6 @@ func NewHandle(
 		IdleConnectionTimeout: cfg.ConnMaxIdleTimeSeconds.Duration(),
 	}
 	return &Handle{
-		db.NewHookHandle(ctx, pool, opts, lf),
+		db.NewHookHandle(ctx, pool, opts, lf, tracer),
 	}
 }

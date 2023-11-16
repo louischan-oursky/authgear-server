@@ -6,6 +6,8 @@ import (
 	"runtime"
 
 	getsentry "github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	imagesconfig "github.com/authgear/authgear-server/pkg/images/config"
 	"github.com/authgear/authgear-server/pkg/lib/config"
@@ -25,6 +27,7 @@ type RootProvider struct {
 	DatabasePool      *db.Pool
 	VipsDaemon        *vipsutil.Daemon
 	BaseResources     *resource.Manager
+	Tracer            trace.Tracer
 }
 
 func NewRootProvider(
@@ -65,6 +68,7 @@ func NewRootProvider(
 			envConfig.BuiltinResourceDirectory,
 			envConfig.CustomResourceDirectory,
 		),
+		Tracer: otel.GetTracerProvider().Tracer("root-tracer"),
 	}, nil
 }
 

@@ -122,7 +122,8 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilder := globaldb.NewSQLBuilder(globalDatabaseCredentialsEnvironmentConfig)
 	pool := rootProvider.Database
 	databaseEnvironmentConfig := &environmentConfig.DatabaseConfig
-	handle := globaldb.NewHandle(context, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory)
+	tracer := rootProvider.Tracer
+	handle := globaldb.NewHandle(context, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory, tracer)
 	sqlExecutor := globaldb.NewSQLExecutor(context, handle)
 	domainService := &service.DomainService{
 		Context:      context,
@@ -264,7 +265,7 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 		Context: context,
 	}
 	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(environmentConfig)
-	readHandle := auditdb.NewReadHandle(context, pool, databaseEnvironmentConfig, auditDatabaseCredentials, logFactory)
+	readHandle := auditdb.NewReadHandle(context, pool, databaseEnvironmentConfig, auditDatabaseCredentials, logFactory, tracer)
 	auditdbSQLBuilder := auditdb.NewSQLBuilder(auditDatabaseCredentials)
 	readSQLExecutor := auditdb.NewReadSQLExecutor(context, readHandle)
 	auditDBReadStore := &analytic.AuditDBReadStore{
@@ -316,7 +317,7 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 	}
 	remoteIP := deps.ProvideRemoteIP(request, trustProxy)
 	userAgentString := deps.ProvideUserAgentString(request)
-	writeHandle := auditdb.NewWriteHandle(context, pool, databaseEnvironmentConfig, auditDatabaseCredentials, logFactory)
+	writeHandle := auditdb.NewWriteHandle(context, pool, databaseEnvironmentConfig, auditDatabaseCredentials, logFactory, tracer)
 	auditService := &service.AuditService{
 		Context:         context,
 		RemoteIP:        remoteIP,
@@ -407,7 +408,8 @@ func newAdminAPIHandler(p *deps.RequestProvider) http.Handler {
 	globalDatabaseCredentialsEnvironmentConfig := &environmentConfig.GlobalDatabase
 	databaseEnvironmentConfig := &environmentConfig.DatabaseConfig
 	logFactory := rootProvider.LoggerFactory
-	handle := globaldb.NewHandle(context, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory)
+	tracer := rootProvider.Tracer
+	handle := globaldb.NewHandle(context, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory, tracer)
 	configServiceLogger := service.NewConfigServiceLogger(logFactory)
 	appConfig := rootProvider.AppConfig
 	controller := rootProvider.ConfigSourceController
@@ -551,7 +553,8 @@ func newStripeWebhookHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilder := globaldb.NewSQLBuilder(globalDatabaseCredentialsEnvironmentConfig)
 	pool := rootProvider.Database
 	databaseEnvironmentConfig := &environmentConfig.DatabaseConfig
-	handle := globaldb.NewHandle(context, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory)
+	tracer := rootProvider.Tracer
+	handle := globaldb.NewHandle(context, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory, tracer)
 	sqlExecutor := globaldb.NewSQLExecutor(context, handle)
 	store := &plan.Store{
 		Clock:       clockClock,

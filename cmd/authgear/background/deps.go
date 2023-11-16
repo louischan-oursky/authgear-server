@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/google/wire"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
 	"github.com/authgear/authgear-server/pkg/lib/config"
@@ -60,6 +62,10 @@ func ProvideUserAgentString() httputil.UserAgentString {
 	return "authgear"
 }
 
+func NewNoopTracer() trace.Tracer {
+	return noop.NewTracerProvider().Tracer("noop-tracer")
+}
+
 type AccountDeletionServiceFactory struct {
 	BackgroundProvider *deps.BackgroundProvider
 }
@@ -113,6 +119,7 @@ var DependencySet = wire.NewSet(
 	ProvideUserAgentString,
 	ProvideHTTPHost,
 	ProvideHTTPProto,
+	NewNoopTracer,
 	wire.Struct(new(AccountDeletionServiceFactory), "*"),
 	wire.Struct(new(AccountAnonymizationServiceFactory), "*"),
 	wire.Struct(new(UserService), "*"),

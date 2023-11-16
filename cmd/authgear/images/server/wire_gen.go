@@ -37,7 +37,8 @@ func newConfigSourceController(p *deps.RootProvider, c context.Context) *configs
 	storeFactory := configsource.NewStoreFactory(c, sqlBuilder)
 	pool := p.DatabasePool
 	databaseEnvironmentConfig := environmentConfig.DatabaseConfig
-	databaseHandleFactory := configsource.NewDatabaseHandleFactory(c, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, factory)
+	tracer := p.Tracer
+	databaseHandleFactory := configsource.NewDatabaseHandleFactory(c, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, factory, tracer)
 	resolveAppIDType := configsource.NewResolveAppIDTypePath()
 	database := &configsource.Database{
 		Logger:                databaseLogger,
@@ -66,6 +67,7 @@ var configSourceConfigDependencySet = wire.NewSet(globaldb.DependencySet, clock.
 	"LoggerFactory",
 	"DatabasePool",
 	"BaseResources",
+	"Tracer",
 ), wire.FieldsOf(new(*config.EnvironmentConfig),
 	"TrustProxy",
 	"ConfigSource",

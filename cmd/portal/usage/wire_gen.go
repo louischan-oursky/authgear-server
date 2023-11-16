@@ -26,7 +26,8 @@ func NewCountCollector(ctx context.Context, pool *db.Pool, databaseCredentials *
 	globalDatabaseCredentialsEnvironmentConfig := NewGlobalDatabaseCredentials(databaseCredentials)
 	databaseEnvironmentConfig := config.NewDefaultDatabaseEnvironmentConfig()
 	factory := cobrasentry.NewLoggerFactory(hub)
-	handle := globaldb.NewHandle(ctx, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, factory)
+	tracer := NewNoopTracer()
+	handle := globaldb.NewHandle(ctx, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, factory, tracer)
 	sqlBuilder := globaldb.NewSQLBuilder(globalDatabaseCredentialsEnvironmentConfig)
 	sqlExecutor := globaldb.NewSQLExecutor(ctx, handle)
 	globalDBStore := &usage.GlobalDBStore{
@@ -39,7 +40,7 @@ func NewCountCollector(ctx context.Context, pool *db.Pool, databaseCredentials *
 		Context: ctx,
 		Redis:   analyticredisHandle,
 	}
-	readHandle := auditdb.NewReadHandle(ctx, pool, databaseEnvironmentConfig, auditDatabaseCredentials, factory)
+	readHandle := auditdb.NewReadHandle(ctx, pool, databaseEnvironmentConfig, auditDatabaseCredentials, factory, tracer)
 	auditdbSQLBuilder := auditdb.NewSQLBuilder(auditDatabaseCredentials)
 	readSQLExecutor := auditdb.NewReadSQLExecutor(ctx, readHandle)
 	auditDBReadStore := &meter.AuditDBReadStore{

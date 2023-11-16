@@ -23,6 +23,7 @@ var configSourceConfigDependencySet = wire.NewSet(
 		"LoggerFactory",
 		"DatabasePool",
 		"BaseResources",
+		"Tracer",
 	),
 	wire.FieldsOf(new(*imagesconfig.EnvironmentConfig),
 		"TrustProxy",

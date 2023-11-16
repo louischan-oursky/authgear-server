@@ -55,6 +55,7 @@ var RootDependencySet = wire.NewSet(
 		"SentryHub",
 		"VipsDaemon",
 		"DatabasePool",
+		"Tracer",
 	),
 	wire.FieldsOf(new(*imagesconfig.EnvironmentConfig),
 		"TrustProxy",

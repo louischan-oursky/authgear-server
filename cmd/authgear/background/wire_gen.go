@@ -83,7 +83,8 @@ func newConfigSourceController(p *deps.BackgroundProvider, c context.Context) *c
 	storeFactory := configsource.NewStoreFactory(c, sqlBuilder)
 	pool := p.DatabasePool
 	databaseEnvironmentConfig := &environmentConfig.DatabaseConfig
-	databaseHandleFactory := configsource.NewDatabaseHandleFactory(c, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, factory)
+	tracer := NewNoopTracer()
+	databaseHandleFactory := configsource.NewDatabaseHandleFactory(c, pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, factory, tracer)
 	resolveAppIDType := configsource.NewResolveAppIDTypeDomain()
 	database := &configsource.Database{
 		Logger:                databaseLogger,
@@ -143,7 +144,8 @@ func newUserService(ctx context.Context, p *deps.BackgroundProvider, appID strin
 	secretConfig := configConfig.SecretConfig
 	databaseCredentials := deps.ProvideDatabaseCredentials(secretConfig)
 	factory := p.LoggerFactory
-	handle := appdb.NewHandle(ctx, pool, databaseEnvironmentConfig, databaseCredentials, factory)
+	tracer := NewNoopTracer()
+	handle := appdb.NewHandle(ctx, pool, databaseEnvironmentConfig, databaseCredentials, factory, tracer)
 	appConfig := configConfig.AppConfig
 	configAppID := appConfig.ID
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, configAppID)
@@ -539,7 +541,7 @@ func newUserService(ctx context.Context, p *deps.BackgroundProvider, appID strin
 	}
 	auditLogger := audit.NewLogger(factory)
 	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
-	writeHandle := auditdb.NewWriteHandle(ctx, pool, databaseEnvironmentConfig, auditDatabaseCredentials, factory)
+	writeHandle := auditdb.NewWriteHandle(ctx, pool, databaseEnvironmentConfig, auditDatabaseCredentials, factory, tracer)
 	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, configAppID)
 	writeSQLExecutor := auditdb.NewWriteSQLExecutor(ctx, writeHandle)
 	writeStore := &audit.WriteStore{

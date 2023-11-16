@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	getsentry "github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/config/configsource"
@@ -34,6 +36,7 @@ type RootProvider struct {
 	TaskQueueFactory   TaskQueueFactory
 	BaseResources      *resource.Manager
 	EmbeddedResources  *web.GlobalEmbeddedResourceManager
+	Tracer             trace.Tracer
 }
 
 func NewRootProvider(
@@ -85,6 +88,7 @@ func NewRootProvider(
 			customResourceDirectory,
 		),
 		EmbeddedResources: embeddedResources,
+		Tracer:            otel.GetTracerProvider().Tracer("root-tracer"),
 	}
 	return &p, nil
 }
@@ -103,6 +107,7 @@ func (p *RootProvider) NewAppProvider(ctx context.Context, appCtx *config.AppCon
 		&p.EnvironmentConfig.DatabaseConfig,
 		cfg.SecretConfig.LookupData(config.DatabaseCredentialsKey).(*config.DatabaseCredentials),
 		loggerFactory,
+		p.Tracer,
 	)
 	var auditDatabaseCredentials *config.AuditDatabaseCredentials
 	if a := cfg.SecretConfig.LookupData(config.AuditDatabaseCredentialsKey); a != nil {
@@ -114,6 +119,7 @@ func (p *RootProvider) NewAppProvider(ctx context.Context, appCtx *config.AppCon
 		&p.EnvironmentConfig.DatabaseConfig,
 		auditDatabaseCredentials,
 		loggerFactory,
+		p.Tracer,
 	)
 	auditWriteDatabase := auditdb.NewWriteHandle(
 		ctx,
@@ -121,6 +127,7 @@ func (p *RootProvider) NewAppProvider(ctx context.Context, appCtx *config.AppCon
 		&p.EnvironmentConfig.DatabaseConfig,
 		auditDatabaseCredentials,
 		loggerFactory,
+		p.Tracer,
 	)
 	redis := appredis.NewHandle(
 		p.RedisPool,

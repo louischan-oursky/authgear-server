@@ -47,6 +47,7 @@ var rootDeps = wire.NewSet(
 		"ConfigSourceConfig",
 		"DatabasePool",
 		"EmbeddedResources",
+		"Tracer",
 	),
 
 	envConfigDeps,

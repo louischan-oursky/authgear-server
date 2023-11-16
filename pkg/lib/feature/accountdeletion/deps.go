@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/google/wire"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db"
@@ -35,6 +37,10 @@ func NewRunnableFactory(
 	return factory
 }
 
+func NewNoopTracer() trace.Tracer {
+	return noop.NewTracerProvider().Tracer("noop-tracer")
+}
+
 var DependencySet = wire.NewSet(
 	NewRunnableFactory,
 	NewRunner,
@@ -45,5 +51,6 @@ var RunnableDependencySet = wire.NewSet(
 	wire.Struct(new(Store), "*"),
 	wire.Struct(new(Runnable), "*"),
 	NewRunnableLogger,
+	NewNoopTracer,
 	wire.Bind(new(backgroundjob.Runnable), new(*Runnable)),
 )

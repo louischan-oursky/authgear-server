@@ -2,6 +2,8 @@ package importer
 
 import (
 	"github.com/google/wire"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db/appdb"
@@ -21,8 +23,13 @@ func NewGlobalDatabaseCredentials(dbCredentials *config.DatabaseCredentials) *co
 	}
 }
 
+func NewNoopTracer() trace.Tracer {
+	return noop.NewTracerProvider().Tracer("noop-tracer")
+}
+
 var DependencySet = wire.NewSet(
 	NewLoggerFactory,
+	NewNoopTracer,
 	config.NewDefaultDatabaseEnvironmentConfig,
 	NewGlobalDatabaseCredentials,
 	globaldb.DependencySet,

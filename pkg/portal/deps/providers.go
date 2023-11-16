@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	getsentry "github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/config/configsource"
@@ -46,6 +48,7 @@ type RootProvider struct {
 	Resources              *resource.Manager
 	AppBaseResources       *resource.Manager
 	FilesystemCache        *httputil.FilesystemCache
+	Tracer                 trace.Tracer
 }
 
 func NewRootProvider(
@@ -129,6 +132,7 @@ func NewRootProvider(
 			appCustomResourceDirectory,
 		),
 		FilesystemCache: filesystemCache,
+		Tracer:          otel.GetTracerProvider().Tracer("root-tracer"),
 	}, nil
 }
 

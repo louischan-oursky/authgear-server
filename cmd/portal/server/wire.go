@@ -27,6 +27,7 @@ func newConfigSourceController(p *deps.RootProvider, c context.Context) *configs
 			"LoggerFactory",
 			"AppBaseResources",
 			"Database",
+			"Tracer",
 		),
 		wire.FieldsOf(new(*config.EnvironmentConfig),
 			"TrustProxy",

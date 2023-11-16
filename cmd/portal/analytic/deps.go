@@ -1,6 +1,9 @@
 package analytic
 
 import (
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/authgear/authgear-server/pkg/lib/analytic"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db/appdb"
@@ -23,6 +26,10 @@ func NewGlobalDatabaseCredentials(dbCredentials *config.DatabaseCredentials) *co
 	}
 }
 
+func NewNoopTracer() trace.Tracer {
+	return noop.NewTracerProvider().Tracer("noop-tracer")
+}
+
 var DependencySet = wire.NewSet(
 	NewLoggerFactory,
 	config.NewDefaultDatabaseEnvironmentConfig,
@@ -36,6 +43,7 @@ var DependencySet = wire.NewSet(
 	auditdb.DependencySet,
 	analyticredis.NewHandle,
 	meter.DependencySet,
+	NewNoopTracer,
 
 	analytic.DependencySet,
 	wire.Bind(new(analytic.ReadCounterStore), new(*meter.ReadStoreRedis)),
