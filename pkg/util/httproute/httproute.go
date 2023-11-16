@@ -5,6 +5,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/julienschmidt/httprouter"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Middleware interface {
@@ -61,6 +62,8 @@ func NewRouter() *Router {
 }
 
 func (r *Router) Add(route Route, h http.Handler) {
+	h = otelhttp.NewHandler(h, route.PathPattern)
+
 	if route.Middleware != nil {
 		h = route.Middleware.Handle(h)
 	}
