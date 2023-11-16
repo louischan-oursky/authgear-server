@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -64,6 +65,7 @@ func StartOne(ctx context.Context, logger *log.Logger, spec Spec) (shutdown func
 		Addr:              spec.ListenAddress,
 		Handler:           spec.Handler,
 		ReadHeaderTimeout: 5 * time.Second,
+		BaseContext:       func(_ net.Listener) context.Context { return ctx },
 	}
 
 	shutdown = func(ctx context.Context) error {
