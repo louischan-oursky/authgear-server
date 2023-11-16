@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -22,60 +20,78 @@ type Spec struct {
 	Handler       http.Handler
 }
 
-func Start(logger *log.Logger, specs []Spec) {
-	var ctx context.Context
-	waitGroup := new(sync.WaitGroup)
-	shutdown := make(chan struct{})
+func Start(ctx context.Context, logger *log.Logger, specs []Spec) {
+	ctx, stopReceivingSignal := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stopReceivingSignal()
 
+	type shutdownStruct struct {
+		Name     string
+		Shutdown func(context.Context) error
+	}
+
+	var shutdowns []shutdownStruct
 	for _, spec := range specs {
 		// Capture spec
 		spec := spec
 
-		httpServer := &http.Server{
-			Addr:              spec.ListenAddress,
-			Handler:           spec.Handler,
-			ReadHeaderTimeout: 5 * time.Second,
-		}
+		shutdown := StartOne(ctx, logger, spec)
+		shutdowns = append(shutdowns, shutdownStruct{
+			Name:     spec.Name,
+			Shutdown: shutdown,
+		})
+	}
 
+	<-ctx.Done()
+	logger.Infof("received signal, shutting down...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for _, shutdownStruct := range shutdowns {
+		shutdownStruct := shutdownStruct
 		go func() {
-			var err error
-			if spec.HTTPS {
-				logger.Infof("starting %v on https://%v", spec.Name, spec.ListenAddress)
-				err = httpServer.ListenAndServeTLS(spec.CertFilePath, spec.KeyFilePath)
-			} else {
-				logger.Infof("starting %v on http://%v", spec.Name, spec.ListenAddress)
-				err = httpServer.ListenAndServe()
-			}
-
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				logger.WithError(err).Fatalf("failed to start %v", spec.Name)
-			}
-		}()
-
-		waitGroup.Add(1)
-
-		go func() {
-			defer waitGroup.Done()
-
-			<-shutdown
-
-			logger.Infof("stopping %v...", spec.Name)
-
-			err := httpServer.Shutdown(ctx)
+			logger.Infof("stopping %v...", shutdownStruct.Name)
+			err := shutdownStruct.Shutdown(shutdownCtx)
 			if err != nil {
-				logger.WithError(err).Errorf("failed to stop gracefully %v", spec.Name)
+				logger.WithError(err).Errorf("failed to stop gracefully %v", shutdownStruct.Name)
 			}
 		}()
 	}
+}
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+func StartOne(ctx context.Context, logger *log.Logger, spec Spec) (shutdown func(ctx context.Context) error) {
+	httpServer := &http.Server{
+		Addr:              spec.ListenAddress,
+		Handler:           spec.Handler,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
-	sig := <-sigChan
-	logger.Infof("received signal %s, shutting down...", sig.String())
+	shutdown = func(ctx context.Context) error {
+		return httpServer.Shutdown(ctx)
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	close(shutdown)
-	waitGroup.Wait()
+	listenErr := make(chan error, 1)
+	go func() {
+		if spec.HTTPS {
+			logger.Infof("starting %v on https://%v", spec.Name, spec.ListenAddress)
+			listenErr <- httpServer.ListenAndServeTLS(spec.CertFilePath, spec.KeyFilePath)
+		} else {
+			logger.Infof("starting %v on http://%v", spec.Name, spec.ListenAddress)
+			listenErr <- httpServer.ListenAndServe()
+		}
+	}()
+
+	go func() {
+		select {
+		case err := <-listenErr:
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				logger.WithError(err).Fatalf("failed to start %v", spec.Name)
+			}
+			return
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	return
 }

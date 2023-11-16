@@ -17,6 +17,8 @@ type Controller struct {
 }
 
 func (c *Controller) Start() {
+	ctx := context.Background()
+
 	vipsutil.LibvipsInit()
 
 	cfg, err := LoadConfigFromEnv()
@@ -29,7 +31,7 @@ func (c *Controller) Start() {
 		golog.Fatalf("failed to setup server: %s", err)
 	}
 
-	configSrcController := newConfigSourceController(p, context.Background())
+	configSrcController := newConfigSourceController(p, ctx)
 	err = configSrcController.Open()
 	if err != nil {
 		c.logger.WithError(err).Fatal("cannot open configuration")
@@ -46,5 +48,5 @@ func (c *Controller) Start() {
 		ListenAddress: cfg.ListenAddr,
 		Handler:       images.NewRouter(p, configSrcController.GetConfigSource()),
 	})
-	server.Start(c.logger, specs)
+	server.Start(ctx, c.logger, specs)
 }

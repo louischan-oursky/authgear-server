@@ -24,6 +24,8 @@ type Controller struct {
 }
 
 func (c *Controller) Start() {
+	ctx := context.Background()
+
 	cfg, err := LoadConfigFromEnv()
 	if err != nil {
 		golog.Fatalf("failed to load server config: %v", err)
@@ -55,7 +57,7 @@ func (c *Controller) Start() {
 		c.logger.Warn("development mode is ON - do not use in production")
 	}
 
-	configSrcController := newConfigSourceController(p, context.Background())
+	configSrcController := newConfigSourceController(p, ctx)
 	err = configSrcController.Open()
 	if err != nil {
 		c.logger.WithError(err).Fatal("cannot open configuration")
@@ -118,5 +120,5 @@ func (c *Controller) Start() {
 		})
 	}
 
-	server.Start(c.logger, specs)
+	server.Start(ctx, c.logger, specs)
 }
