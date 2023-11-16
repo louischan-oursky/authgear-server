@@ -2,6 +2,7 @@ package httproute
 
 import (
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -83,6 +84,29 @@ func (r *Router) NotFound(route Route, h http.Handler) {
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.router.ServeHTTP(w, req)
+}
+
+func (r *Router) Pprof() {
+	//r.Add(Route{
+	//	Methods:     []string{"GET"},
+	//	PathPattern: "/debug/pprof/cmdline",
+	//}, http.HandlerFunc(pprof.Cmdline))
+	//r.Add(Route{
+	//	Methods:     []string{"GET"},
+	//	PathPattern: "/debug/pprof/profile",
+	//}, http.HandlerFunc(pprof.Profile))
+	//r.Add(Route{
+	//	Methods:     []string{"GET"},
+	//	PathPattern: "/debug/pprof/symbol",
+	//}, http.HandlerFunc(pprof.Symbol))
+	//r.Add(Route{
+	//	Methods:     []string{"GET"},
+	//	PathPattern: "/debug/pprof/trace",
+	//}, http.HandlerFunc(pprof.Trace))
+	r.Add(Route{
+		Methods:     []string{"GET"},
+		PathPattern: "/debug/pprof/*name",
+	}, http.HandlerFunc(pprof.Index))
 }
 
 func GetParam(r *http.Request, name string) string {

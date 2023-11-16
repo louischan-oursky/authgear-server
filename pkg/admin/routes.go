@@ -14,6 +14,8 @@ import (
 func NewRouter(p *deps.RootProvider, configSource *configsource.ConfigSource, auth config.AdminAPIAuth) *httproute.Router {
 	router := httproute.NewRouter()
 
+	router.Pprof()
+
 	router.Add(httproute.Route{
 		Methods:     []string{"GET"},
 		PathPattern: "/healthz",

@@ -13,6 +13,9 @@ import (
 
 func NewRouter(p *deps.RootProvider) *httproute.Router {
 	router := httproute.NewRouter()
+
+	router.Pprof()
+
 	router.Add(httproute.Route{
 		Methods:     []string{"GET"},
 		PathPattern: "/healthz",
