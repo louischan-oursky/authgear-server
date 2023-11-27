@@ -57038,9 +57038,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	mfaFacade := &facade.MFAFacade{
-		Coordinator: coordinator,
-	}
 	customattrsService := &customattrs.Service{
 		Config:         userProfileConfig,
 		ServiceNoEvent: customattrsServiceNoEvent,
@@ -57177,7 +57174,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
-		MFA:                  mfaFacade,
 		StdAttrsService:      stdattrsService,
 		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
@@ -57825,9 +57821,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	mfaFacade := &facade.MFAFacade{
-		Coordinator: coordinator,
-	}
 	customattrsService := &customattrs.Service{
 		Config:         userProfileConfig,
 		ServiceNoEvent: customattrsServiceNoEvent,
@@ -57964,7 +57957,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
-		MFA:                  mfaFacade,
 		StdAttrsService:      stdattrsService,
 		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
@@ -58605,9 +58597,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	mfaFacade := &facade.MFAFacade{
-		Coordinator: coordinator,
-	}
 	customattrsService := &customattrs.Service{
 		Config:         userProfileConfig,
 		ServiceNoEvent: customattrsServiceNoEvent,
@@ -58744,7 +58733,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
-		MFA:                  mfaFacade,
 		StdAttrsService:      stdattrsService,
 		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
@@ -59420,9 +59408,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	mfaFacade := &facade.MFAFacade{
-		Coordinator: coordinator,
-	}
 	customattrsService := &customattrs.Service{
 		Config:         userProfileConfig,
 		ServiceNoEvent: customattrsServiceNoEvent,
@@ -59559,7 +59544,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
-		MFA:                  mfaFacade,
 		StdAttrsService:      stdattrsService,
 		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,

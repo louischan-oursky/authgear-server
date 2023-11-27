@@ -242,7 +242,6 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(forgotpassword.IdentityService), new(facade.IdentityFacade)),
 		wire.Bind(new(workflow.IdentityService), new(facade.IdentityFacade)),
 		wire.Bind(new(workflow.VerificationService), new(facade.WorkflowVerificationFacade)),
-		wire.Bind(new(workflow.MFAService), new(*facade.MFAFacade)),
 		wire.Bind(new(authenticationflow.IdentityService), new(facade.IdentityFacade)),
 		wire.Bind(new(authenticationflow.VerificationService), new(facade.WorkflowVerificationFacade)),
 		wire.Bind(new(authenticationflow.MFAService), new(*facade.MFAFacade)),

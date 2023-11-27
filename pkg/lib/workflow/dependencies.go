@@ -144,17 +144,6 @@ type CaptchaService interface {
 	VerifyToken(token string) error
 }
 
-type MFAService interface {
-	GenerateRecoveryCodes() []string
-	ReplaceRecoveryCodes(userID string, codes []string) ([]*mfa.RecoveryCode, error)
-	VerifyRecoveryCode(userID string, code string) (*mfa.RecoveryCode, error)
-	ConsumeRecoveryCode(c *mfa.RecoveryCode) error
-
-	GenerateDeviceToken() string
-	CreateDeviceToken(userID string, token string) (*mfa.DeviceToken, error)
-	VerifyDeviceToken(userID string, deviceToken string) error
-}
-
 type OfflineGrantStore interface {
 	ListClientOfflineGrants(clientID string, userID string) ([]*oauth.OfflineGrant, error)
 }
@@ -171,7 +160,6 @@ type Dependencies struct {
 	Users              UserService
 	Identities         IdentityService
 	Authenticators     AuthenticatorService
-	MFA                MFAService
 	StdAttrsService    StdAttrsService
 	CustomAttrsService CustomAttrsService
 	OTPCodes           OTPCodeService
