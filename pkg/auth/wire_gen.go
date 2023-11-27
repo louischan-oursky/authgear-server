@@ -56630,15 +56630,76 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Clock: clockClock,
 		SIWE:  siweService,
 	}
+	passwordStore := &password.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorConfig := appConfig.Authenticator
+	authenticatorPasswordConfig := authenticatorConfig.Password
+	passwordLogger := password.NewLogger(factory)
+	historyStore := &password.HistoryStore{
+		Clock:       clockClock,
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorFeatureConfig := featureConfig.Authenticator
+	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
+	housekeeperLogger := password.NewHousekeeperLogger(factory)
+	housekeeper := &password.Housekeeper{
+		Store:  historyStore,
+		Logger: housekeeperLogger,
+		Config: authenticatorPasswordConfig,
+	}
+	passwordProvider := &password.Provider{
+		Store:           passwordStore,
+		Config:          authenticatorPasswordConfig,
+		Clock:           clockClock,
+		Logger:          passwordLogger,
+		PasswordHistory: historyStore,
+		PasswordChecker: passwordChecker,
+		Housekeeper:     housekeeper,
+	}
+	store3 := &passkey3.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	provider2 := &passkey3.Provider{
+		Store:   store3,
+		Clock:   clockClock,
+		Passkey: passkeyService,
+	}
+	totpStore := &totp.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorTOTPConfig := authenticatorConfig.TOTP
+	totpProvider := &totp.Provider{
+		Store:  totpStore,
+		Config: authenticatorTOTPConfig,
+		Clock:  clockClock,
+	}
+	oobStore := &oob.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	oobProvider := &oob.Provider{
+		Store:                    oobStore,
+		LoginIDNormalizerFactory: normalizerFactory,
+		Clock:                    clockClock,
+	}
 	accountsService := &accounts.Service{
-		SQLBuilder:          sqlBuilderApp,
-		SQLExecutor:         sqlExecutor,
-		LoginIDIdentities:   provider,
-		OAuthIdentities:     oauthProvider,
-		AnonymousIdentities: anonymousProvider,
-		BiometricIdentities: biometricProvider,
-		PasskeyIdentities:   passkeyProvider,
-		SIWEIdentities:      siweProvider,
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -56673,66 +56734,9 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	store3 := &service2.Store{
+	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	passwordStore := &password.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorConfig := appConfig.Authenticator
-	authenticatorPasswordConfig := authenticatorConfig.Password
-	passwordLogger := password.NewLogger(factory)
-	historyStore := &password.HistoryStore{
-		Clock:       clockClock,
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorFeatureConfig := featureConfig.Authenticator
-	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
-	housekeeperLogger := password.NewHousekeeperLogger(factory)
-	housekeeper := &password.Housekeeper{
-		Store:  historyStore,
-		Logger: housekeeperLogger,
-		Config: authenticatorPasswordConfig,
-	}
-	passwordProvider := &password.Provider{
-		Store:           passwordStore,
-		Config:          authenticatorPasswordConfig,
-		Clock:           clockClock,
-		Logger:          passwordLogger,
-		PasswordHistory: historyStore,
-		PasswordChecker: passwordChecker,
-		Housekeeper:     housekeeper,
-	}
-	store4 := &passkey3.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	provider2 := &passkey3.Provider{
-		Store:   store4,
-		Clock:   clockClock,
-		Passkey: passkeyService,
-	}
-	totpStore := &totp.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorTOTPConfig := authenticatorConfig.TOTP
-	totpProvider := &totp.Provider{
-		Store:  totpStore,
-		Config: authenticatorTOTPConfig,
-		Clock:  clockClock,
-	}
-	oobStore := &oob.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	oobProvider := &oob.Provider{
-		Store:                    oobStore,
-		LoginIDNormalizerFactory: normalizerFactory,
-		Clock:                    clockClock,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -56785,7 +56789,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store3,
+		Store:          store4,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -57422,15 +57426,76 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Clock: clockClock,
 		SIWE:  siweService,
 	}
+	passwordStore := &password.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorConfig := appConfig.Authenticator
+	authenticatorPasswordConfig := authenticatorConfig.Password
+	passwordLogger := password.NewLogger(factory)
+	historyStore := &password.HistoryStore{
+		Clock:       clockClock,
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorFeatureConfig := featureConfig.Authenticator
+	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
+	housekeeperLogger := password.NewHousekeeperLogger(factory)
+	housekeeper := &password.Housekeeper{
+		Store:  historyStore,
+		Logger: housekeeperLogger,
+		Config: authenticatorPasswordConfig,
+	}
+	passwordProvider := &password.Provider{
+		Store:           passwordStore,
+		Config:          authenticatorPasswordConfig,
+		Clock:           clockClock,
+		Logger:          passwordLogger,
+		PasswordHistory: historyStore,
+		PasswordChecker: passwordChecker,
+		Housekeeper:     housekeeper,
+	}
+	store3 := &passkey3.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	provider2 := &passkey3.Provider{
+		Store:   store3,
+		Clock:   clockClock,
+		Passkey: passkeyService,
+	}
+	totpStore := &totp.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorTOTPConfig := authenticatorConfig.TOTP
+	totpProvider := &totp.Provider{
+		Store:  totpStore,
+		Config: authenticatorTOTPConfig,
+		Clock:  clockClock,
+	}
+	oobStore := &oob.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	oobProvider := &oob.Provider{
+		Store:                    oobStore,
+		LoginIDNormalizerFactory: normalizerFactory,
+		Clock:                    clockClock,
+	}
 	accountsService := &accounts.Service{
-		SQLBuilder:          sqlBuilderApp,
-		SQLExecutor:         sqlExecutor,
-		LoginIDIdentities:   provider,
-		OAuthIdentities:     oauthProvider,
-		AnonymousIdentities: anonymousProvider,
-		BiometricIdentities: biometricProvider,
-		PasskeyIdentities:   passkeyProvider,
-		SIWEIdentities:      siweProvider,
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -57465,66 +57530,9 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	store3 := &service2.Store{
+	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	passwordStore := &password.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorConfig := appConfig.Authenticator
-	authenticatorPasswordConfig := authenticatorConfig.Password
-	passwordLogger := password.NewLogger(factory)
-	historyStore := &password.HistoryStore{
-		Clock:       clockClock,
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorFeatureConfig := featureConfig.Authenticator
-	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
-	housekeeperLogger := password.NewHousekeeperLogger(factory)
-	housekeeper := &password.Housekeeper{
-		Store:  historyStore,
-		Logger: housekeeperLogger,
-		Config: authenticatorPasswordConfig,
-	}
-	passwordProvider := &password.Provider{
-		Store:           passwordStore,
-		Config:          authenticatorPasswordConfig,
-		Clock:           clockClock,
-		Logger:          passwordLogger,
-		PasswordHistory: historyStore,
-		PasswordChecker: passwordChecker,
-		Housekeeper:     housekeeper,
-	}
-	store4 := &passkey3.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	provider2 := &passkey3.Provider{
-		Store:   store4,
-		Clock:   clockClock,
-		Passkey: passkeyService,
-	}
-	totpStore := &totp.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorTOTPConfig := authenticatorConfig.TOTP
-	totpProvider := &totp.Provider{
-		Store:  totpStore,
-		Config: authenticatorTOTPConfig,
-		Clock:  clockClock,
-	}
-	oobStore := &oob.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	oobProvider := &oob.Provider{
-		Store:                    oobStore,
-		LoginIDNormalizerFactory: normalizerFactory,
-		Clock:                    clockClock,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -57577,7 +57585,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store3,
+		Store:          store4,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -58209,15 +58217,76 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Clock: clockClock,
 		SIWE:  siweService,
 	}
+	passwordStore := &password.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorConfig := appConfig.Authenticator
+	authenticatorPasswordConfig := authenticatorConfig.Password
+	passwordLogger := password.NewLogger(factory)
+	historyStore := &password.HistoryStore{
+		Clock:       clockClock,
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorFeatureConfig := featureConfig.Authenticator
+	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
+	housekeeperLogger := password.NewHousekeeperLogger(factory)
+	housekeeper := &password.Housekeeper{
+		Store:  historyStore,
+		Logger: housekeeperLogger,
+		Config: authenticatorPasswordConfig,
+	}
+	passwordProvider := &password.Provider{
+		Store:           passwordStore,
+		Config:          authenticatorPasswordConfig,
+		Clock:           clockClock,
+		Logger:          passwordLogger,
+		PasswordHistory: historyStore,
+		PasswordChecker: passwordChecker,
+		Housekeeper:     housekeeper,
+	}
+	store3 := &passkey3.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	provider2 := &passkey3.Provider{
+		Store:   store3,
+		Clock:   clockClock,
+		Passkey: passkeyService,
+	}
+	totpStore := &totp.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorTOTPConfig := authenticatorConfig.TOTP
+	totpProvider := &totp.Provider{
+		Store:  totpStore,
+		Config: authenticatorTOTPConfig,
+		Clock:  clockClock,
+	}
+	oobStore := &oob.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	oobProvider := &oob.Provider{
+		Store:                    oobStore,
+		LoginIDNormalizerFactory: normalizerFactory,
+		Clock:                    clockClock,
+	}
 	accountsService := &accounts.Service{
-		SQLBuilder:          sqlBuilderApp,
-		SQLExecutor:         sqlExecutor,
-		LoginIDIdentities:   provider,
-		OAuthIdentities:     oauthProvider,
-		AnonymousIdentities: anonymousProvider,
-		BiometricIdentities: biometricProvider,
-		PasskeyIdentities:   passkeyProvider,
-		SIWEIdentities:      siweProvider,
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -58252,66 +58321,9 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	store3 := &service2.Store{
+	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	passwordStore := &password.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorConfig := appConfig.Authenticator
-	authenticatorPasswordConfig := authenticatorConfig.Password
-	passwordLogger := password.NewLogger(factory)
-	historyStore := &password.HistoryStore{
-		Clock:       clockClock,
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorFeatureConfig := featureConfig.Authenticator
-	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
-	housekeeperLogger := password.NewHousekeeperLogger(factory)
-	housekeeper := &password.Housekeeper{
-		Store:  historyStore,
-		Logger: housekeeperLogger,
-		Config: authenticatorPasswordConfig,
-	}
-	passwordProvider := &password.Provider{
-		Store:           passwordStore,
-		Config:          authenticatorPasswordConfig,
-		Clock:           clockClock,
-		Logger:          passwordLogger,
-		PasswordHistory: historyStore,
-		PasswordChecker: passwordChecker,
-		Housekeeper:     housekeeper,
-	}
-	store4 := &passkey3.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	provider2 := &passkey3.Provider{
-		Store:   store4,
-		Clock:   clockClock,
-		Passkey: passkeyService,
-	}
-	totpStore := &totp.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorTOTPConfig := authenticatorConfig.TOTP
-	totpProvider := &totp.Provider{
-		Store:  totpStore,
-		Config: authenticatorTOTPConfig,
-		Clock:  clockClock,
-	}
-	oobStore := &oob.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	oobProvider := &oob.Provider{
-		Store:                    oobStore,
-		LoginIDNormalizerFactory: normalizerFactory,
-		Clock:                    clockClock,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -58364,7 +58376,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store3,
+		Store:          store4,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -59033,15 +59045,76 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Clock: clockClock,
 		SIWE:  siweService,
 	}
+	passwordStore := &password.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorConfig := appConfig.Authenticator
+	authenticatorPasswordConfig := authenticatorConfig.Password
+	passwordLogger := password.NewLogger(factory)
+	historyStore := &password.HistoryStore{
+		Clock:       clockClock,
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorFeatureConfig := featureConfig.Authenticator
+	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
+	housekeeperLogger := password.NewHousekeeperLogger(factory)
+	housekeeper := &password.Housekeeper{
+		Store:  historyStore,
+		Logger: housekeeperLogger,
+		Config: authenticatorPasswordConfig,
+	}
+	passwordProvider := &password.Provider{
+		Store:           passwordStore,
+		Config:          authenticatorPasswordConfig,
+		Clock:           clockClock,
+		Logger:          passwordLogger,
+		PasswordHistory: historyStore,
+		PasswordChecker: passwordChecker,
+		Housekeeper:     housekeeper,
+	}
+	store3 := &passkey3.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	provider2 := &passkey3.Provider{
+		Store:   store3,
+		Clock:   clockClock,
+		Passkey: passkeyService,
+	}
+	totpStore := &totp.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	authenticatorTOTPConfig := authenticatorConfig.TOTP
+	totpProvider := &totp.Provider{
+		Store:  totpStore,
+		Config: authenticatorTOTPConfig,
+		Clock:  clockClock,
+	}
+	oobStore := &oob.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	oobProvider := &oob.Provider{
+		Store:                    oobStore,
+		LoginIDNormalizerFactory: normalizerFactory,
+		Clock:                    clockClock,
+	}
 	accountsService := &accounts.Service{
-		SQLBuilder:          sqlBuilderApp,
-		SQLExecutor:         sqlExecutor,
-		LoginIDIdentities:   provider,
-		OAuthIdentities:     oauthProvider,
-		AnonymousIdentities: anonymousProvider,
-		BiometricIdentities: biometricProvider,
-		PasskeyIdentities:   passkeyProvider,
-		SIWEIdentities:      siweProvider,
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -59076,66 +59149,9 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	store3 := &service2.Store{
+	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	passwordStore := &password.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorConfig := appConfig.Authenticator
-	authenticatorPasswordConfig := authenticatorConfig.Password
-	passwordLogger := password.NewLogger(factory)
-	historyStore := &password.HistoryStore{
-		Clock:       clockClock,
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorFeatureConfig := featureConfig.Authenticator
-	passwordChecker := password.ProvideChecker(authenticatorPasswordConfig, authenticatorFeatureConfig, historyStore)
-	housekeeperLogger := password.NewHousekeeperLogger(factory)
-	housekeeper := &password.Housekeeper{
-		Store:  historyStore,
-		Logger: housekeeperLogger,
-		Config: authenticatorPasswordConfig,
-	}
-	passwordProvider := &password.Provider{
-		Store:           passwordStore,
-		Config:          authenticatorPasswordConfig,
-		Clock:           clockClock,
-		Logger:          passwordLogger,
-		PasswordHistory: historyStore,
-		PasswordChecker: passwordChecker,
-		Housekeeper:     housekeeper,
-	}
-	store4 := &passkey3.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	provider2 := &passkey3.Provider{
-		Store:   store4,
-		Clock:   clockClock,
-		Passkey: passkeyService,
-	}
-	totpStore := &totp.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	authenticatorTOTPConfig := authenticatorConfig.TOTP
-	totpProvider := &totp.Provider{
-		Store:  totpStore,
-		Config: authenticatorTOTPConfig,
-		Clock:  clockClock,
-	}
-	oobStore := &oob.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	oobProvider := &oob.Provider{
-		Store:                    oobStore,
-		LoginIDNormalizerFactory: normalizerFactory,
-		Clock:                    clockClock,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -59188,7 +59204,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store3,
+		Store:          store4,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,

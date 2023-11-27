@@ -171,6 +171,10 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(authenticatorservice.PasskeyAuthenticatorProvider), new(*authenticatorpasskey.Provider)),
 		wire.Bind(new(authenticatorservice.OOBOTPAuthenticatorProvider), new(*authenticatoroob.Provider)),
 		wire.Bind(new(authenticatorservice.TOTPAuthenticatorProvider), new(*authenticatortotp.Provider)),
+		wire.Bind(new(accounts.PasswordAuthenticators), new(*authenticatorpassword.Provider)),
+		wire.Bind(new(accounts.PasskeyAuthenticators), new(*authenticatorpasskey.Provider)),
+		wire.Bind(new(accounts.OOBOTPAuthenticators), new(*authenticatoroob.Provider)),
+		wire.Bind(new(accounts.TOTPAuthenticators), new(*authenticatortotp.Provider)),
 
 		wire.Bind(new(facade.AuthenticatorService), new(*authenticatorservice.Service)),
 		wire.Bind(new(user.AuthenticatorService), new(*authenticatorservice.Service)),
@@ -222,6 +226,12 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(identityservice.AnonymousIdentityProvider), new(*identityanonymous.Provider)),
 		wire.Bind(new(identityservice.BiometricIdentityProvider), new(*identitybiometric.Provider)),
 		wire.Bind(new(identityservice.SIWEIdentityProvider), new(*identitysiwe.Provider)),
+		wire.Bind(new(accounts.LoginIDIdentities), new(*identityloginid.Provider)),
+		wire.Bind(new(accounts.OAuthIdentities), new(*identityoauth.Provider)),
+		wire.Bind(new(accounts.PasskeyIdentities), new(*identitypasskey.Provider)),
+		wire.Bind(new(accounts.AnonymousIdentities), new(*identityanonymous.Provider)),
+		wire.Bind(new(accounts.BiometricIdentities), new(*identitybiometric.Provider)),
+		wire.Bind(new(accounts.SIWEIdentities), new(*identitysiwe.Provider)),
 
 		wire.Bind(new(facade.IdentityService), new(*identityservice.Service)),
 		wire.Bind(new(user.IdentityService), new(*identityservice.Service)),
@@ -230,14 +240,10 @@ var CommonDependencySet = wire.NewSet(
 
 		wire.Bind(new(oauthhandler.PromotionCodeStore), new(*identityanonymous.StoreRedis)),
 		wire.Bind(new(oauthhandler.AnonymousIdentityProvider), new(*identityanonymous.Provider)),
+	),
 
+	wire.NewSet(
 		accounts.DependencySet,
-		wire.Bind(new(accounts.LoginIDIdentities), new(*identityloginid.Provider)),
-		wire.Bind(new(accounts.OAuthIdentities), new(*identityoauth.Provider)),
-		wire.Bind(new(accounts.PasskeyIdentities), new(*identitypasskey.Provider)),
-		wire.Bind(new(accounts.AnonymousIdentities), new(*identityanonymous.Provider)),
-		wire.Bind(new(accounts.BiometricIdentities), new(*identitybiometric.Provider)),
-		wire.Bind(new(accounts.SIWEIdentities), new(*identitysiwe.Provider)),
 		wire.Bind(new(workflow.AccountService), new(*accounts.Service)),
 	),
 

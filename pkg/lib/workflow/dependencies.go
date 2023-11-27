@@ -36,6 +36,11 @@ type AccountService interface {
 	ListIdentitiesByClaim(name string, value string) ([]*identity.Info, error)
 	ListIdentitiesOfUser(userID string) ([]*identity.Info, error)
 	FindDuplicatedIdentity(info *identity.Info) (*identity.Info, error)
+
+	NewAuthenticator(spec *authenticator.Spec) (*authenticator.Info, error)
+	CreateAuthenticator(info *authenticator.Info) error
+
+	ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info, error)
 }
 
 type IdentityService interface {

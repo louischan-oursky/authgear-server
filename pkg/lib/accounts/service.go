@@ -1,6 +1,8 @@
 package accounts
 
 import (
+	"github.com/authgear/authgear-server/pkg/api/model"
+	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
 	"github.com/authgear/authgear-server/pkg/lib/config"
@@ -70,6 +72,40 @@ type SIWEIdentities interface {
 	GetByMessage(msg string, signature string) (*identity.SIWE, error)
 }
 
+type PasswordAuthenticators interface {
+	New(id string, userID string, password string, isDefault bool, kind string) (*authenticator.Password, error)
+	Create(*authenticator.Password) error
+
+	GetMany(ids []string) ([]*authenticator.Password, error)
+}
+
+type PasskeyAuthenticators interface {
+	New(
+		id string,
+		userID string,
+		attestationResponse []byte,
+		isDefault bool,
+		kind string,
+	) (*authenticator.Passkey, error)
+	Create(*authenticator.Passkey) error
+
+	GetMany(ids []string) ([]*authenticator.Passkey, error)
+}
+
+type TOTPAuthenticators interface {
+	New(id string, userID string, displayName string, isDefault bool, kind string) *authenticator.TOTP
+	Create(*authenticator.TOTP) error
+
+	GetMany(ids []string) ([]*authenticator.TOTP, error)
+}
+
+type OOBOTPAuthenticators interface {
+	New(id string, userID string, oobAuthenticatorType model.AuthenticatorType, target string, isDefault bool, kind string) (*authenticator.OOBOTP, error)
+	Create(*authenticator.OOBOTP) error
+
+	GetMany(ids []string) ([]*authenticator.OOBOTP, error)
+}
+
 type Service struct {
 	SQLBuilder  *appdb.SQLBuilderApp
 	SQLExecutor *appdb.SQLExecutor
@@ -80,4 +116,9 @@ type Service struct {
 	BiometricIdentities BiometricIdentities
 	PasskeyIdentities   PasskeyIdentities
 	SIWEIdentities      SIWEIdentities
+
+	PasswordAuthenticators PasswordAuthenticators
+	PasskeyAuthenticators  PasskeyAuthenticators
+	TOTPAuthenticators     TOTPAuthenticators
+	OOBOTPAuthenticators   OOBOTPAuthenticators
 }
