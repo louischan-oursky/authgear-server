@@ -480,17 +480,16 @@ func newSessionMiddleware(p *deps.RequestProvider, idpSessionOnly bool) httprout
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -849,16 +848,14 @@ func newSessionResolveHandler(p *deps.RequestProvider) http.Handler {
 		SIWE:                  siweProvider,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
 	resolveHandlerLogger := handler.NewResolveHandlerLogger(factory)
 	userStore := &user.Store{
@@ -991,6 +988,7 @@ func newSessionResolveHandler(p *deps.RequestProvider) http.Handler {
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,

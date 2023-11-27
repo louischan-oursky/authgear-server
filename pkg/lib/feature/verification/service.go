@@ -24,9 +24,7 @@ type ClaimStore interface {
 }
 
 type Service struct {
-	Config            *config.VerificationConfig
-	UserProfileConfig *config.UserProfileConfig
-
+	Config     *config.VerificationConfig
 	Clock      clock.Clock
 	ClaimStore ClaimStore
 }
