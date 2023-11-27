@@ -6,7 +6,9 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
 	"github.com/authgear/authgear-server/pkg/lib/config"
+	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db/appdb"
+	"github.com/authgear/authgear-server/pkg/util/clock"
 )
 
 type LoginIDIdentities interface {
@@ -106,7 +108,13 @@ type OOBOTPAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.OOBOTP, error)
 }
 
+type VerifiedClaims interface {
+	ListByUser(userID string) ([]*verification.Claim, error)
+	Create(claim *verification.Claim) error
+}
+
 type Service struct {
+	Clock       clock.Clock
 	SQLBuilder  *appdb.SQLBuilderApp
 	SQLExecutor *appdb.SQLExecutor
 
@@ -121,4 +129,7 @@ type Service struct {
 	PasskeyAuthenticators  PasskeyAuthenticators
 	TOTPAuthenticators     TOTPAuthenticators
 	OOBOTPAuthenticators   OOBOTPAuthenticators
+
+	VerificationConfig *config.VerificationConfig
+	VerifiedClaims     VerifiedClaims
 }

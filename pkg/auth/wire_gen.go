@@ -56687,7 +56687,13 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	accountsService := &accounts.Service{
+		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		LoginIDIdentities:      provider,
@@ -56700,6 +56706,8 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		PasskeyAuthenticators:  provider2,
 		TOTPAuthenticators:     totpProvider,
 		OOBOTPAuthenticators:   oobProvider,
+		VerificationConfig:     verificationConfig,
+		VerifiedClaims:         storePQ,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -56798,11 +56806,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		OTPCodeService: otpService,
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
-	}
-	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
@@ -57483,7 +57486,13 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	accountsService := &accounts.Service{
+		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		LoginIDIdentities:      provider,
@@ -57496,6 +57505,8 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		PasskeyAuthenticators:  provider2,
 		TOTPAuthenticators:     totpProvider,
 		OOBOTPAuthenticators:   oobProvider,
+		VerificationConfig:     verificationConfig,
+		VerifiedClaims:         storePQ,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -57594,11 +57605,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		OTPCodeService: otpService,
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
-	}
-	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
@@ -58274,7 +58280,13 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	accountsService := &accounts.Service{
+		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		LoginIDIdentities:      provider,
@@ -58287,6 +58299,8 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		PasskeyAuthenticators:  provider2,
 		TOTPAuthenticators:     totpProvider,
 		OOBOTPAuthenticators:   oobProvider,
+		VerificationConfig:     verificationConfig,
+		VerifiedClaims:         storePQ,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -58385,11 +58399,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		OTPCodeService: otpService,
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
-	}
-	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
@@ -59102,7 +59111,13 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	accountsService := &accounts.Service{
+		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		LoginIDIdentities:      provider,
@@ -59115,6 +59130,8 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		PasskeyAuthenticators:  provider2,
 		TOTPAuthenticators:     totpProvider,
 		OOBOTPAuthenticators:   oobProvider,
+		VerificationConfig:     verificationConfig,
+		VerifiedClaims:         storePQ,
 	}
 	userStore := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -59213,11 +59230,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		OTPCodeService: otpService,
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
-	}
-	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,

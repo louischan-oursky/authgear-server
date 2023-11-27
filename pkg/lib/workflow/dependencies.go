@@ -28,19 +28,31 @@ import (
 )
 
 type AccountService interface {
+	// Identity Create
 	NewIdentity(userID string, spec *identity.Spec) (*identity.Info, error)
 	CreateIdentity(info *identity.Info) error
 
+	// Identity Read
 	GetIdentityByID(id string) (*identity.Info, error)
 	SearchIdentities(spec *identity.Spec) (exactMatch *identity.Info, otherMatches []*identity.Info, err error)
 	ListIdentitiesByClaim(name string, value string) ([]*identity.Info, error)
 	ListIdentitiesOfUser(userID string) ([]*identity.Info, error)
 	FindDuplicatedIdentity(info *identity.Info) (*identity.Info, error)
 
+	// Authenticator Create
 	NewAuthenticator(spec *authenticator.Spec) (*authenticator.Info, error)
 	CreateAuthenticator(info *authenticator.Info) error
 
+	// Authenticator Read
 	ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info, error)
+
+	// VerifiedClaim Create
+	NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim
+	CreateVerifiedClaim(claim *verification.Claim) error
+
+	// VerifiedClaim Read
+	ListVerifiedClaimsOfUser(userID string) ([]*verification.Claim, error)
+	GetIdentityVerificationStatus(info *identity.Info, claims []*verification.Claim) ([]verification.ClaimStatus, error)
 }
 
 type IdentityService interface {

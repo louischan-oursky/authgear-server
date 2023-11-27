@@ -360,6 +360,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(user.VerificationService), new(*verification.Service)),
 		wire.Bind(new(facade.VerificationService), new(*verification.Service)),
 		wire.Bind(new(interaction.VerificationService), new(*verification.Service)),
+		wire.Bind(new(accounts.VerifiedClaims), new(*verification.StorePQ)),
 	),
 
 	wire.NewSet(
