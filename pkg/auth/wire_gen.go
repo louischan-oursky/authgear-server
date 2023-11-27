@@ -16,6 +16,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp/viewmodels"
 	webapp2 "github.com/authgear/authgear-server/pkg/auth/webapp"
 	"github.com/authgear/authgear-server/pkg/lib/accountmigration"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/app2app"
 	"github.com/authgear/authgear-server/pkg/lib/audit"
 	"github.com/authgear/authgear-server/pkg/lib/authenticationflow"
@@ -56485,34 +56486,11 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &user.Store{
+	store := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	loginidStore := &loginid.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -56527,7 +56505,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             loginidStore,
+		Store:             store,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -56579,6 +56557,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -56617,20 +56596,21 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
+	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -56649,6 +56629,37 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	accountsService := &accounts.Service{
+		SQLBuilder:          sqlBuilderApp,
+		SQLExecutor:         sqlExecutor,
+		LoginIDIdentities:   provider,
+		OAuthIdentities:     oauthProvider,
+		AnonymousIdentities: anonymousProvider,
+		BiometricIdentities: biometricProvider,
+		PasskeyIdentities:   passkeyProvider,
+		SIWEIdentities:      siweProvider,
+	}
+	userStore := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	rawCommands := &user.RawCommands{
+		Store: userStore,
+		Clock: clockClock,
+	}
+	rawQueries := &user.RawQueries{
+		Store: userStore,
+	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
 	}
 	serviceService := &service.Service{
 		Authentication:        authenticationConfig,
@@ -56805,14 +56816,14 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         store,
+		UserStore:         userStore,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   store,
+		UserStore:   userStore,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -56821,7 +56832,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              store,
+		Store:              userStore,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -56889,7 +56900,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   loginidStore,
+		LoginID:   store,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -56897,7 +56908,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -56939,7 +56950,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      store,
+		UserStore:      userStore,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -57171,6 +57182,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Accounts:             accountsService,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
@@ -57266,34 +57278,11 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &user.Store{
+	store := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	loginidStore := &loginid.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -57308,7 +57297,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             loginidStore,
+		Store:             store,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -57360,6 +57349,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -57398,20 +57388,21 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
+	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -57430,6 +57421,37 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	accountsService := &accounts.Service{
+		SQLBuilder:          sqlBuilderApp,
+		SQLExecutor:         sqlExecutor,
+		LoginIDIdentities:   provider,
+		OAuthIdentities:     oauthProvider,
+		AnonymousIdentities: anonymousProvider,
+		BiometricIdentities: biometricProvider,
+		PasskeyIdentities:   passkeyProvider,
+		SIWEIdentities:      siweProvider,
+	}
+	userStore := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	rawCommands := &user.RawCommands{
+		Store: userStore,
+		Clock: clockClock,
+	}
+	rawQueries := &user.RawQueries{
+		Store: userStore,
+	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
 	}
 	serviceService := &service.Service{
 		Authentication:        authenticationConfig,
@@ -57586,14 +57608,14 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         store,
+		UserStore:         userStore,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   store,
+		UserStore:   userStore,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -57602,7 +57624,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              store,
+		Store:              userStore,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -57670,7 +57692,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   loginidStore,
+		LoginID:   store,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -57678,7 +57700,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -57720,7 +57742,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      store,
+		UserStore:      userStore,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -57954,6 +57976,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Accounts:             accountsService,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
@@ -58042,34 +58065,11 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &user.Store{
+	store := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	loginidStore := &loginid.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -58084,7 +58084,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             loginidStore,
+		Store:             store,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -58136,6 +58136,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -58174,20 +58175,21 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
+	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -58206,6 +58208,37 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	accountsService := &accounts.Service{
+		SQLBuilder:          sqlBuilderApp,
+		SQLExecutor:         sqlExecutor,
+		LoginIDIdentities:   provider,
+		OAuthIdentities:     oauthProvider,
+		AnonymousIdentities: anonymousProvider,
+		BiometricIdentities: biometricProvider,
+		PasskeyIdentities:   passkeyProvider,
+		SIWEIdentities:      siweProvider,
+	}
+	userStore := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	rawCommands := &user.RawCommands{
+		Store: userStore,
+		Clock: clockClock,
+	}
+	rawQueries := &user.RawQueries{
+		Store: userStore,
+	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
 	}
 	serviceService := &service.Service{
 		Authentication:        authenticationConfig,
@@ -58362,14 +58395,14 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         store,
+		UserStore:         userStore,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   store,
+		UserStore:   userStore,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -58378,7 +58411,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              store,
+		Store:              userStore,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -58446,7 +58479,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   loginidStore,
+		LoginID:   store,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -58454,7 +58487,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -58496,7 +58529,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      store,
+		UserStore:      userStore,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -58730,6 +58763,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Accounts:             accountsService,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
@@ -58855,34 +58889,11 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &user.Store{
+	store := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	loginidStore := &loginid.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -58897,7 +58908,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             loginidStore,
+		Store:             store,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -58949,6 +58960,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -58987,20 +58999,21 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
+	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -59019,6 +59032,37 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	accountsService := &accounts.Service{
+		SQLBuilder:          sqlBuilderApp,
+		SQLExecutor:         sqlExecutor,
+		LoginIDIdentities:   provider,
+		OAuthIdentities:     oauthProvider,
+		AnonymousIdentities: anonymousProvider,
+		BiometricIdentities: biometricProvider,
+		PasskeyIdentities:   passkeyProvider,
+		SIWEIdentities:      siweProvider,
+	}
+	userStore := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	rawCommands := &user.RawCommands{
+		Store: userStore,
+		Clock: clockClock,
+	}
+	rawQueries := &user.RawQueries{
+		Store: userStore,
+	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
 	}
 	serviceService := &service.Service{
 		Authentication:        authenticationConfig,
@@ -59175,14 +59219,14 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         store,
+		UserStore:         userStore,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   store,
+		UserStore:   userStore,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -59191,7 +59235,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              store,
+		Store:              userStore,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -59259,7 +59303,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   loginidStore,
+		LoginID:   store,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -59267,7 +59311,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -59309,7 +59353,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      store,
+		UserStore:      userStore,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -59541,6 +59585,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Accounts:             accountsService,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,

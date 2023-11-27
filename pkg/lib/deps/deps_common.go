@@ -5,6 +5,7 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/auth/handler/webapp"
 	"github.com/authgear/authgear-server/pkg/lib/accountmigration"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/app2app"
 	"github.com/authgear/authgear-server/pkg/lib/audit"
 	"github.com/authgear/authgear-server/pkg/lib/authenticationflow"
@@ -229,6 +230,15 @@ var CommonDependencySet = wire.NewSet(
 
 		wire.Bind(new(oauthhandler.PromotionCodeStore), new(*identityanonymous.StoreRedis)),
 		wire.Bind(new(oauthhandler.AnonymousIdentityProvider), new(*identityanonymous.Provider)),
+
+		accounts.DependencySet,
+		wire.Bind(new(accounts.LoginIDIdentities), new(*identityloginid.Provider)),
+		wire.Bind(new(accounts.OAuthIdentities), new(*identityoauth.Provider)),
+		wire.Bind(new(accounts.PasskeyIdentities), new(*identitypasskey.Provider)),
+		wire.Bind(new(accounts.AnonymousIdentities), new(*identityanonymous.Provider)),
+		wire.Bind(new(accounts.BiometricIdentities), new(*identitybiometric.Provider)),
+		wire.Bind(new(accounts.SIWEIdentities), new(*identitysiwe.Provider)),
+		wire.Bind(new(workflow.AccountService), new(*accounts.Service)),
 	),
 
 	wire.NewSet(

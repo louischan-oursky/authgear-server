@@ -27,6 +27,17 @@ import (
 	"github.com/authgear/authgear-server/pkg/util/httputil"
 )
 
+type AccountService interface {
+	NewIdentity(userID string, spec *identity.Spec) (*identity.Info, error)
+	CreateIdentity(info *identity.Info) error
+
+	GetIdentityByID(id string) (*identity.Info, error)
+	SearchIdentities(spec *identity.Spec) (exactMatch *identity.Info, otherMatches []*identity.Info, err error)
+	ListIdentitiesByClaim(name string, value string) ([]*identity.Info, error)
+	ListIdentitiesOfUser(userID string) ([]*identity.Info, error)
+	FindDuplicatedIdentity(info *identity.Info) (*identity.Info, error)
+}
+
 type IdentityService interface {
 	Get(id string) (*identity.Info, error)
 	SearchBySpec(spec *identity.Spec) (exactMatch *identity.Info, otherMatches []*identity.Info, err error)
@@ -157,6 +168,7 @@ type Dependencies struct {
 
 	HTTPRequest *http.Request
 
+	Accounts           AccountService
 	Users              UserService
 	Identities         IdentityService
 	Authenticators     AuthenticatorService
