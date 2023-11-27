@@ -450,17 +450,16 @@ func newOAuthAuthorizeHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -977,17 +976,16 @@ func newOAuthConsentHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -1597,17 +1595,16 @@ func newOAuthTokenHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -1749,12 +1746,11 @@ func newOAuthTokenHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      userStore,
+		Events:         eventService,
 	}
 	httpConfig := appConfig.HTTP
 	cookieManager := deps.NewCookieManager(request, trustProxy, httpConfig)
@@ -2427,17 +2423,16 @@ func newOAuthRevokeHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -2902,17 +2897,16 @@ func newOAuthJWKSHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -3278,17 +3272,16 @@ func newOAuthUserInfoHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -3729,17 +3722,16 @@ func newOAuthEndSessionHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -4285,17 +4277,16 @@ func newOAuthAppSessionTokenHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -4437,12 +4428,11 @@ func newOAuthAppSessionTokenHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      userStore,
+		Events:         eventService,
 	}
 	httpConfig := appConfig.HTTP
 	cookieManager := deps.NewCookieManager(request, trustProxy, httpConfig)
@@ -5160,17 +5150,16 @@ func newAPIAnonymousUserSignupHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -5312,12 +5301,11 @@ func newAPIAnonymousUserSignupHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      userStore,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -5957,17 +5945,16 @@ func newAPIAnonymousUserPromotionCodeHandler(p *deps.RequestProvider) http.Handl
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -6109,12 +6096,11 @@ func newAPIAnonymousUserPromotionCodeHandler(p *deps.RequestProvider) http.Handl
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      userStore,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -6844,17 +6830,16 @@ func newWebAppLoginHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -7064,12 +7049,11 @@ func newWebAppLoginHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -7712,17 +7696,16 @@ func newWebAppSignupHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -7932,12 +7915,11 @@ func newWebAppSignupHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -8579,17 +8561,16 @@ func newWebAppPromoteHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -8799,12 +8780,11 @@ func newWebAppPromoteHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -9434,17 +9414,16 @@ func newWebAppSelectAccountHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -9654,12 +9633,11 @@ func newWebAppSelectAccountHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -10284,17 +10262,16 @@ func newWebAppSSOCallbackHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -10436,12 +10413,11 @@ func newWebAppSSOCallbackHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -11249,17 +11225,16 @@ func newWechatAuthHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -11469,12 +11444,11 @@ func newWechatAuthHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -12089,17 +12063,16 @@ func newWechatCallbackHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -12309,12 +12282,11 @@ func newWechatCallbackHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -12933,17 +12905,16 @@ func newWebAppEnterLoginIDHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -13153,12 +13124,11 @@ func newWebAppEnterLoginIDHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -13779,17 +13749,16 @@ func newWebAppEnterPasswordHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -13999,12 +13968,11 @@ func newWebAppEnterPasswordHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -14623,17 +14591,16 @@ func newWebConfirmTerminateOtherSessionsHandler(p *deps.RequestProvider) http.Ha
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -14843,12 +14810,11 @@ func newWebConfirmTerminateOtherSessionsHandler(p *deps.RequestProvider) http.Ha
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -15463,17 +15429,16 @@ func newWebAppUsePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -15683,12 +15648,11 @@ func newWebAppUsePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -16307,17 +16271,16 @@ func newWebAppCreatePasswordHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -16527,12 +16490,11 @@ func newWebAppCreatePasswordHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -17152,17 +17114,16 @@ func newWebAppCreatePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -17372,12 +17333,11 @@ func newWebAppCreatePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -17996,17 +17956,16 @@ func newWebAppPromptCreatePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -18216,12 +18175,11 @@ func newWebAppPromptCreatePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -18840,17 +18798,16 @@ func newWebAppSetupTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -19060,12 +19017,11 @@ func newWebAppSetupTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -19686,17 +19642,16 @@ func newWebAppEnterTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -19906,12 +19861,11 @@ func newWebAppEnterTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -20530,17 +20484,16 @@ func newWebAppSetupOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -20750,12 +20703,11 @@ func newWebAppSetupOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -21374,17 +21326,16 @@ func newWebAppEnterOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -21594,12 +21545,11 @@ func newWebAppEnterOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -22222,17 +22172,16 @@ func newWebAppSetupWhatsappOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -22442,12 +22391,11 @@ func newWebAppSetupWhatsappOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -23066,17 +23014,16 @@ func newWebAppWhatsappOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -23286,12 +23233,11 @@ func newWebAppWhatsappOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -23914,17 +23860,16 @@ func newWebAppSetupLoginLinkOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -24134,12 +24079,11 @@ func newWebAppSetupLoginLinkOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -24758,17 +24702,16 @@ func newWebAppLoginLinkOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -24978,12 +24921,11 @@ func newWebAppLoginLinkOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -25610,17 +25552,16 @@ func newWebAppVerifyLoginLinkOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -25830,12 +25771,11 @@ func newWebAppVerifyLoginLinkOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -26472,17 +26412,16 @@ func newWebAppEnterRecoveryCodeHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -26692,12 +26631,11 @@ func newWebAppEnterRecoveryCodeHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -27316,17 +27254,16 @@ func newWebAppSetupRecoveryCodeHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -27536,12 +27473,11 @@ func newWebAppSetupRecoveryCodeHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -28156,17 +28092,16 @@ func newWebAppVerifyIdentityHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -28376,12 +28311,11 @@ func newWebAppVerifyIdentityHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -29000,17 +28934,16 @@ func newWebAppVerifyIdentitySuccessHandler(p *deps.RequestProvider) http.Handler
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -29220,12 +29153,11 @@ func newWebAppVerifyIdentitySuccessHandler(p *deps.RequestProvider) http.Handler
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -29840,17 +29772,16 @@ func newWebAppForgotPasswordHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -30060,12 +29991,11 @@ func newWebAppForgotPasswordHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -30690,17 +30620,16 @@ func newWebAppForgotPasswordSuccessHandler(p *deps.RequestProvider) http.Handler
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -30910,12 +30839,11 @@ func newWebAppForgotPasswordSuccessHandler(p *deps.RequestProvider) http.Handler
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -31530,17 +31458,16 @@ func newWebAppResetPasswordHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -31750,12 +31677,11 @@ func newWebAppResetPasswordHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -32372,17 +32298,16 @@ func newWebAppResetPasswordSuccessHandler(p *deps.RequestProvider) http.Handler 
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -32592,12 +32517,11 @@ func newWebAppResetPasswordSuccessHandler(p *deps.RequestProvider) http.Handler 
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -33212,17 +33136,16 @@ func newWebAppSettingsHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -33432,12 +33355,11 @@ func newWebAppSettingsHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -34084,17 +34006,16 @@ func newWebAppSettingsProfileHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -34304,12 +34225,11 @@ func newWebAppSettingsProfileHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -34935,17 +34855,16 @@ func newWebAppSettingsProfileEditHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -35155,12 +35074,11 @@ func newWebAppSettingsProfileEditHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -35799,17 +35717,16 @@ func newWebAppSettingsIdentityHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -36019,12 +35936,11 @@ func newWebAppSettingsIdentityHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -36647,17 +36563,16 @@ func newWebAppSettingsBiometricHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -36867,12 +36782,11 @@ func newWebAppSettingsBiometricHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -37488,17 +37402,16 @@ func newWebAppSettingsMFAHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -37708,12 +37621,11 @@ func newWebAppSettingsMFAHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -38337,17 +38249,16 @@ func newWebAppSettingsTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -38557,12 +38468,11 @@ func newWebAppSettingsTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -39178,17 +39088,16 @@ func newWebAppSettingsPasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -39398,12 +39307,11 @@ func newWebAppSettingsPasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -40019,17 +39927,16 @@ func newWebAppSettingsOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -40239,12 +40146,11 @@ func newWebAppSettingsOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -40860,17 +40766,16 @@ func newWebAppSettingsRecoveryCodeHandler(p *deps.RequestProvider) http.Handler 
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -41080,12 +40985,11 @@ func newWebAppSettingsRecoveryCodeHandler(p *deps.RequestProvider) http.Handler 
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -41702,17 +41606,16 @@ func newWebAppSettingsSessionsHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -41922,12 +41825,11 @@ func newWebAppSettingsSessionsHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -42563,17 +42465,16 @@ func newWebAppForceChangePasswordHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -42783,12 +42684,11 @@ func newWebAppForceChangePasswordHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -43404,17 +43304,16 @@ func newWebAppSettingsChangePasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -43624,12 +43523,11 @@ func newWebAppSettingsChangePasswordHandler(p *deps.RequestProvider) http.Handle
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -44245,17 +44143,16 @@ func newWebAppForceChangeSecondaryPasswordHandler(p *deps.RequestProvider) http.
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -44465,12 +44362,11 @@ func newWebAppForceChangeSecondaryPasswordHandler(p *deps.RequestProvider) http.
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -45086,17 +44982,16 @@ func newWebAppSettingsChangeSecondaryPasswordHandler(p *deps.RequestProvider) ht
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -45306,12 +45201,11 @@ func newWebAppSettingsChangeSecondaryPasswordHandler(p *deps.RequestProvider) ht
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -45927,17 +45821,16 @@ func newWebAppSettingsDeleteAccountHandler(p *deps.RequestProvider) http.Handler
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -46147,12 +46040,11 @@ func newWebAppSettingsDeleteAccountHandler(p *deps.RequestProvider) http.Handler
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -46775,17 +46667,16 @@ func newWebAppSettingsDeleteAccountSuccessHandler(p *deps.RequestProvider) http.
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -46995,12 +46886,11 @@ func newWebAppSettingsDeleteAccountSuccessHandler(p *deps.RequestProvider) http.
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -47617,17 +47507,16 @@ func newWebAppAccountStatusHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -47837,12 +47726,11 @@ func newWebAppAccountStatusHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -48457,17 +48345,16 @@ func newWebAppLogoutHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -48677,12 +48564,11 @@ func newWebAppLogoutHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -49313,17 +49199,16 @@ func newWebAppReturnHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -49533,12 +49418,11 @@ func newWebAppReturnHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -50153,17 +50037,16 @@ func newWebAppErrorHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -50373,12 +50256,11 @@ func newWebAppErrorHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -50993,17 +50875,16 @@ func newWebAppNotFoundHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -51213,12 +51094,11 @@ func newWebAppNotFoundHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -51851,17 +51731,16 @@ func newWebAppPasskeyCreationOptionsHandler(p *deps.RequestProvider) http.Handle
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -52071,12 +51950,11 @@ func newWebAppPasskeyCreationOptionsHandler(p *deps.RequestProvider) http.Handle
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -52655,17 +52533,16 @@ func newWebAppPasskeyRequestOptionsHandler(p *deps.RequestProvider) http.Handler
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -52875,12 +52752,11 @@ func newWebAppPasskeyRequestOptionsHandler(p *deps.RequestProvider) http.Handler
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -53458,17 +53334,16 @@ func newWebAppConnectWeb3AccountHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -53678,12 +53553,11 @@ func newWebAppConnectWeb3AccountHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -54308,17 +54182,16 @@ func newWebAppMissingWeb3WalletHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -54528,12 +54401,11 @@ func newWebAppMissingWeb3WalletHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -55149,17 +55021,16 @@ func newWebAppFeatureDisabledHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -55369,12 +55240,11 @@ func newWebAppFeatureDisabledHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -55989,17 +55859,16 @@ func newWebAppTesterHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -56209,12 +56078,11 @@ func newWebAppTesterHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -56917,17 +56785,16 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -57069,12 +56936,11 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -57704,17 +57570,16 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -57856,12 +57721,11 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -58486,17 +58350,16 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -58638,12 +58501,11 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -59305,17 +59167,16 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -59457,12 +59318,11 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -60094,17 +59954,16 @@ func newAPIAuthenticationFlowV1CreateHandler(p *deps.RequestProvider) http.Handl
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -60246,12 +60105,11 @@ func newAPIAuthenticationFlowV1CreateHandler(p *deps.RequestProvider) http.Handl
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -60925,17 +60783,16 @@ func newAPIAuthenticationFlowV1InputHandler(p *deps.RequestProvider) http.Handle
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -61077,12 +60934,11 @@ func newAPIAuthenticationFlowV1InputHandler(p *deps.RequestProvider) http.Handle
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -61747,17 +61603,16 @@ func newAPIAuthenticationFlowV1GetHandler(p *deps.RequestProvider) http.Handler 
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -61899,12 +61754,11 @@ func newAPIAuthenticationFlowV1GetHandler(p *deps.RequestProvider) http.Handler 
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -62618,17 +62472,16 @@ func newWebAppAuthflowLoginHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -62770,12 +62623,11 @@ func newWebAppAuthflowLoginHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -63519,17 +63371,16 @@ func newWebAppAuthflowSignupHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -63671,12 +63522,11 @@ func newWebAppAuthflowSignupHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -64419,17 +64269,16 @@ func newWebAppAuthflowPromoteHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -64571,12 +64420,11 @@ func newWebAppAuthflowPromoteHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -65302,17 +65150,16 @@ func newWebAppAuthflowEnterPasswordHandler(p *deps.RequestProvider) http.Handler
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -65454,12 +65301,11 @@ func newWebAppAuthflowEnterPasswordHandler(p *deps.RequestProvider) http.Handler
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -66179,17 +66025,16 @@ func newWebAppAuthflowEnterOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -66331,12 +66176,11 @@ func newWebAppAuthflowEnterOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -67058,17 +66902,16 @@ func newWebAppAuthflowCreatePasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -67210,12 +67053,11 @@ func newWebAppAuthflowCreatePasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -67935,17 +67777,16 @@ func newWebAppAuthflowEnterTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -68087,12 +67928,11 @@ func newWebAppAuthflowEnterTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -68812,17 +68652,16 @@ func newWebAppAuthflowSetupTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -68964,12 +68803,11 @@ func newWebAppAuthflowSetupTOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -69689,17 +69527,16 @@ func newWebAppAuthflowViewRecoveryCodeHandler(p *deps.RequestProvider) http.Hand
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -69841,12 +69678,11 @@ func newWebAppAuthflowViewRecoveryCodeHandler(p *deps.RequestProvider) http.Hand
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -70566,17 +70402,16 @@ func newWebAppAuthflowWhatsappOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -70718,12 +70553,11 @@ func newWebAppAuthflowWhatsappOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -71445,17 +71279,16 @@ func newWebAppAuthflowOOBOTPLinkHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -71597,12 +71430,11 @@ func newWebAppAuthflowOOBOTPLinkHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -72324,17 +72156,16 @@ func newWebAppAuthflowChangePasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -72476,12 +72307,11 @@ func newWebAppAuthflowChangePasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -73201,17 +73031,16 @@ func newWebAppAuthflowUsePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -73353,12 +73182,11 @@ func newWebAppAuthflowUsePasskeyHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -74078,17 +73906,16 @@ func newWebAppAuthflowPromptCreatePasskeyHandler(p *deps.RequestProvider) http.H
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -74230,12 +74057,11 @@ func newWebAppAuthflowPromptCreatePasskeyHandler(p *deps.RequestProvider) http.H
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -74955,17 +74781,16 @@ func newWebAppAuthflowEnterRecoveryCodeHandler(p *deps.RequestProvider) http.Han
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -75107,12 +74932,11 @@ func newWebAppAuthflowEnterRecoveryCodeHandler(p *deps.RequestProvider) http.Han
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -75832,17 +75656,16 @@ func newWebAppAuthflowSetupOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -75984,12 +75807,11 @@ func newWebAppAuthflowSetupOOBOTPHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -76709,17 +76531,16 @@ func newWebAppAuthflowTerminateOtherSessionsHandler(p *deps.RequestProvider) htt
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -76861,12 +76682,11 @@ func newWebAppAuthflowTerminateOtherSessionsHandler(p *deps.RequestProvider) htt
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -77586,17 +77406,16 @@ func newWebAppAuthflowWechatHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -77738,12 +77557,11 @@ func newWebAppAuthflowWechatHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -78463,17 +78281,16 @@ func newWebAppAuthflowForgotPasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -78615,12 +78432,11 @@ func newWebAppAuthflowForgotPasswordHandler(p *deps.RequestProvider) http.Handle
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -79340,17 +79156,16 @@ func newWebAppAuthflowForgotPasswordOTPHandler(p *deps.RequestProvider) http.Han
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -79492,12 +79307,11 @@ func newWebAppAuthflowForgotPasswordOTPHandler(p *deps.RequestProvider) http.Han
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -80219,17 +80033,16 @@ func newWebAppAuthflowForgotPasswordSuccessHandler(p *deps.RequestProvider) http
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -80371,12 +80184,11 @@ func newWebAppAuthflowForgotPasswordSuccessHandler(p *deps.RequestProvider) http
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -81096,17 +80908,16 @@ func newWebAppReauthHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -81316,12 +81127,11 @@ func newWebAppReauthHandler(p *deps.RequestProvider) http.Handler {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -81934,17 +81744,16 @@ func newWebAppAuthflowReauthHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -82086,12 +81895,11 @@ func newWebAppAuthflowReauthHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -82781,17 +82589,16 @@ func newWebAppAuthflowResetPasswordHandler(p *deps.RequestProvider) http.Handler
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -82933,12 +82740,11 @@ func newWebAppAuthflowResetPasswordHandler(p *deps.RequestProvider) http.Handler
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -83658,17 +83464,16 @@ func newWebAppAuthflowResetPasswordSuccessHandler(p *deps.RequestProvider) http.
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -83810,12 +83615,11 @@ func newWebAppAuthflowResetPasswordSuccessHandler(p *deps.RequestProvider) http.
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -85183,17 +84987,16 @@ func newSessionMiddleware(p *deps.RequestProvider, idpSessionOnly bool) httprout
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -85702,17 +85505,16 @@ func newWebAppSessionMiddleware(p *deps.RequestProvider) httproute.Middleware {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -85922,12 +85724,11 @@ func newWebAppSessionMiddleware(p *deps.RequestProvider) httproute.Middleware {
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,
@@ -86504,17 +86305,16 @@ func newWebAppUIParamMiddleware(p *deps.RequestProvider) httproute.Middleware {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -87004,17 +86804,16 @@ func newSettingsSubRoutesMiddleware(p *deps.RequestProvider) httproute.Middlewar
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -87156,12 +86955,11 @@ func newSettingsSubRoutesMiddleware(p *deps.RequestProvider) httproute.Middlewar
 		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,

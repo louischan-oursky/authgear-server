@@ -471,17 +471,16 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -653,12 +652,11 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,

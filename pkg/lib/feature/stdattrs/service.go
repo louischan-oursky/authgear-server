@@ -11,7 +11,6 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/stdattrs"
 	"github.com/authgear/authgear-server/pkg/lib/authn/user"
-	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 )
 
@@ -32,12 +31,11 @@ type EventService interface {
 }
 
 type Service struct {
-	UserProfileConfig *config.UserProfileConfig
-	ServiceNoEvent    *ServiceNoEvent
-	Identities        IdentityService
-	UserQueries       UserQueries
-	UserStore         UserStore
-	Events            EventService
+	ServiceNoEvent *ServiceNoEvent
+	Identities     IdentityService
+	UserQueries    UserQueries
+	UserStore      UserStore
+	Events         EventService
 }
 
 func (s *Service) PopulateStandardAttributes(userID string, iden *identity.Info) error {
