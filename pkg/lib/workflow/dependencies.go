@@ -118,10 +118,6 @@ type StdAttrsService interface {
 	UpdateStandardAttributesWithList(role accesscontrol.Role, userID string, attrs attrs.List) error
 }
 
-type CustomAttrsService interface {
-	UpdateCustomAttributesWithList(role accesscontrol.Role, userID string, attrs attrs.List) error
-}
-
 type AuthenticationInfoService interface {
 	Save(entry *authenticationinfo.Entry) error
 }
@@ -157,18 +153,17 @@ type Dependencies struct {
 
 	HTTPRequest *http.Request
 
-	Users              UserService
-	Identities         IdentityService
-	Authenticators     AuthenticatorService
-	StdAttrsService    StdAttrsService
-	CustomAttrsService CustomAttrsService
-	OTPCodes           OTPCodeService
-	OTPSender          OTPSender
-	Verification       VerificationService
-	ForgotPassword     ForgotPasswordService
-	ResetPassword      ResetPasswordService
-	AccountMigrations  AccountMigrationService
-	Captcha            CaptchaService
+	Users             UserService
+	Identities        IdentityService
+	Authenticators    AuthenticatorService
+	StdAttrsService   StdAttrsService
+	OTPCodes          OTPCodeService
+	OTPSender         OTPSender
+	Verification      VerificationService
+	ForgotPassword    ForgotPasswordService
+	ResetPassword     ResetPasswordService
+	AccountMigrations AccountMigrationService
+	Captcha           CaptchaService
 
 	IDPSessions          IDPSessionService
 	Sessions             SessionService

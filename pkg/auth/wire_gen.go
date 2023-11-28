@@ -57038,11 +57038,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	customattrsService := &customattrs.Service{
-		Config:         userProfileConfig,
-		ServiceNoEvent: customattrsServiceNoEvent,
-		Events:         eventService,
-	}
 	messagingLogger := messaging.NewLogger(factory)
 	usageLogger := usage.NewLogger(factory)
 	usageLimiter := &usage.Limiter{
@@ -57175,7 +57170,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
 		StdAttrsService:      stdattrsService,
-		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
 		Verification:         workflowVerificationFacade,
@@ -57821,11 +57815,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	customattrsService := &customattrs.Service{
-		Config:         userProfileConfig,
-		ServiceNoEvent: customattrsServiceNoEvent,
-		Events:         eventService,
-	}
 	messagingLogger := messaging.NewLogger(factory)
 	usageLogger := usage.NewLogger(factory)
 	usageLimiter := &usage.Limiter{
@@ -57958,7 +57947,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
 		StdAttrsService:      stdattrsService,
-		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
 		Verification:         workflowVerificationFacade,
@@ -58597,11 +58585,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	customattrsService := &customattrs.Service{
-		Config:         userProfileConfig,
-		ServiceNoEvent: customattrsServiceNoEvent,
-		Events:         eventService,
-	}
 	messagingLogger := messaging.NewLogger(factory)
 	usageLogger := usage.NewLogger(factory)
 	usageLimiter := &usage.Limiter{
@@ -58734,7 +58717,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
 		StdAttrsService:      stdattrsService,
-		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
 		Verification:         workflowVerificationFacade,
@@ -59408,11 +59390,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	customattrsService := &customattrs.Service{
-		Config:         userProfileConfig,
-		ServiceNoEvent: customattrsServiceNoEvent,
-		Events:         eventService,
-	}
 	messagingLogger := messaging.NewLogger(factory)
 	usageLogger := usage.NewLogger(factory)
 	usageLimiter := &usage.Limiter{
@@ -59545,7 +59522,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
 		StdAttrsService:      stdattrsService,
-		CustomAttrsService:   customattrsService,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
 		Verification:         workflowVerificationFacade,
