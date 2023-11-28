@@ -175,6 +175,33 @@ func (s *Service) ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info
 	return infos, nil
 }
 
+func (s *Service) UpdateAuthenticatorWithSpec(info *authenticator.Info, spec *authenticator.Spec) (bool, *authenticator.Info, error) {
+	changed := false
+	switch info.Type {
+	case model.AuthenticatorTypePassword:
+		a := info.Password
+		plainPassword := spec.Password.PlainPassword
+		newAuth, err := s.PasswordAuthenticators.WithPassword(a, plainPassword)
+		if err != nil {
+			return false, nil, err
+		}
+		changed = (newAuth != a)
+		return changed, newAuth.ToInfo(), nil
+	case model.AuthenticatorTypeOOBEmail:
+		fallthrough
+	case model.AuthenticatorTypeOOBSMS:
+		a := info.OOBOTP
+		newAuth, err := s.OOBOTPAuthenticators.WithSpec(a, spec.OOBOTP)
+		if err != nil {
+			return false, nil, err
+		}
+		changed = (newAuth != a)
+		return changed, newAuth.ToInfo(), nil
+	}
+
+	panic("authenticator: update authenticator is not supported for type " + info.Type)
+}
+
 func (s *Service) scanAuthenticatorRef(scanner db.Scanner) (*authenticator.Ref, error) {
 	ref := &authenticator.Ref{}
 	err := scanner.Scan(

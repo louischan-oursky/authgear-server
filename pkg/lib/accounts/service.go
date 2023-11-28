@@ -13,6 +13,8 @@ import (
 	"github.com/authgear/authgear-server/pkg/util/clock"
 )
 
+//go:generate mockgen -source=service.go -destination=service_mock_test.go -package accounts
+
 type LoginIDIdentities interface {
 	New(userID string, loginID identity.LoginIDSpec, options loginid.CheckerOptions) (*identity.LoginID, error)
 	Create(i *identity.LoginID) error
@@ -22,6 +24,8 @@ type LoginIDIdentities interface {
 	ListByClaim(name string, value string) ([]*identity.LoginID, error)
 	GetByValue(loginIDValue string) ([]*identity.LoginID, error)
 	GetByUniqueKey(uniqueKey string) (*identity.LoginID, error)
+
+	WithValue(iden *identity.LoginID, value string, options loginid.CheckerOptions) (*identity.LoginID, error)
 }
 
 type OAuthIdentities interface {
@@ -38,6 +42,8 @@ type OAuthIdentities interface {
 	GetMany(ids []string) ([]*identity.OAuth, error)
 	ListByClaim(name string, value string) ([]*identity.OAuth, error)
 	GetByProviderSubject(provider config.ProviderID, subjectID string) (*identity.OAuth, error)
+
+	WithUpdate(iden *identity.OAuth, rawProfile map[string]interface{}, claims map[string]interface{}) *identity.OAuth
 }
 
 type AnonymousIdentities interface {
@@ -81,6 +87,8 @@ type PasswordAuthenticators interface {
 	Create(*authenticator.Password) error
 
 	GetMany(ids []string) ([]*authenticator.Password, error)
+
+	WithPassword(a *authenticator.Password, password string) (*authenticator.Password, error)
 }
 
 type PasskeyAuthenticators interface {
@@ -108,6 +116,8 @@ type OOBOTPAuthenticators interface {
 	Create(*authenticator.OOBOTP) error
 
 	GetMany(ids []string) ([]*authenticator.OOBOTP, error)
+
+	WithSpec(a *authenticator.OOBOTP, spec *authenticator.OOBOTPSpec) (*authenticator.OOBOTP, error)
 }
 
 type VerifiedClaims interface {
@@ -122,6 +132,7 @@ type Users interface {
 
 type StandardAttributes interface {
 	UpdateStandardAttributes0(role accesscontrol.Role, u *user.User, identities []*identity.Info, stdAttrsToUpdate map[string]interface{}) (map[string]interface{}, error)
+	PopulateIdentityAwareStandardAttributes0(originalStdAttrs map[string]interface{}, unsortedIdentities []*identity.Info) (map[string]interface{}, bool)
 }
 
 type Service struct {
@@ -132,6 +143,7 @@ type Service struct {
 	Users              Users
 	StandardAttributes StandardAttributes
 
+	IdentityConfig      *config.IdentityConfig
 	LoginIDIdentities   LoginIDIdentities
 	OAuthIdentities     OAuthIdentities
 	AnonymousIdentities AnonymousIdentities
@@ -146,4 +158,61 @@ type Service struct {
 
 	VerificationConfig *config.VerificationConfig
 	VerifiedClaims     VerifiedClaims
+}
+
+func (s *Service) identitiesSlice(identities []*identity.Info, updated []*identity.Info) []*identity.Info {
+	var out []*identity.Info
+	appended := map[string]struct{}{}
+
+	for _, i := range updated {
+		out = append(out, i)
+		appended[i.ID] = struct{}{}
+	}
+
+	for _, i := range identities {
+		_, alreadyAppended := appended[i.ID]
+		if !alreadyAppended {
+			out = append(out, i)
+		}
+	}
+
+	return out
+}
+
+func (s *Service) authenticatorsSlice(authenticators []*authenticator.Info, updated []*authenticator.Info) []*authenticator.Info {
+	var out []*authenticator.Info
+	appended := map[string]struct{}{}
+
+	for _, i := range updated {
+		out = append(out, i)
+		appended[i.ID] = struct{}{}
+	}
+
+	for _, i := range authenticators {
+		_, alreadyAppended := appended[i.ID]
+		if !alreadyAppended {
+			out = append(out, i)
+		}
+	}
+
+	return out
+}
+
+func (s *Service) claimsSlice(claims []*verification.Claim, updated []*verification.Claim) []*verification.Claim {
+	var out []*verification.Claim
+	appended := map[string]struct{}{}
+
+	for _, i := range updated {
+		out = append(out, i)
+		appended[i.ID] = struct{}{}
+	}
+
+	for _, i := range claims {
+		_, alreadyAppended := appended[i.ID]
+		if !alreadyAppended {
+			out = append(out, i)
+		}
+	}
+
+	return out
 }

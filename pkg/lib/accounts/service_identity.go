@@ -5,10 +5,22 @@ import (
 	"fmt"
 
 	"github.com/authgear/authgear-server/pkg/api/model"
+	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
+	"github.com/authgear/authgear-server/pkg/lib/authn/user"
+	"github.com/authgear/authgear-server/pkg/lib/config"
+	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db"
 )
+
+type UpdateIdentityChanges struct {
+	UpdatedUser           *user.User
+	UpdatedIdentity       *identity.Info
+	NewVerifiedClaims     []*verification.Claim
+	UpdatedAuthenticators []*authenticator.Info
+	RemovedVerifiedClaims []*verification.Claim
+}
 
 func (s *Service) GetIdentityByID(id string) (*identity.Info, error) {
 	ref, err := s.getIdentityRefByID(id)
@@ -407,6 +419,191 @@ func (s *Service) CreateIdentity(info *identity.Info) error {
 		panic("identity: unknown identity type " + info.Type)
 	}
 	return nil
+}
+
+func (s *Service) GetUpdateIdentityChanges(
+	info *identity.Info,
+	spec *identity.Spec,
+	u *user.User,
+	identities []*identity.Info,
+	authenticators []*authenticator.Info,
+	claims []*verification.Claim,
+) (*UpdateIdentityChanges, error) {
+	switch info.Type {
+	case model.IdentityTypeLoginID:
+		i, err := s.LoginIDIdentities.WithValue(info.LoginID, spec.LoginID.Value, loginid.CheckerOptions{
+			// The use case of GetUpdateIdentityChanges does not bypass.
+			EmailByPassBlocklistAllowlist: false,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		updated := i.ToInfo()
+		return s.getUpdateIdentityChanges(info, updated, u, identities, authenticators, claims)
+	case model.IdentityTypeOAuth:
+		rawProfile := spec.OAuth.RawProfile
+		standardClaims := spec.OAuth.StandardClaims
+		i := s.OAuthIdentities.WithUpdate(
+			info.OAuth,
+			rawProfile,
+			standardClaims,
+		)
+		updated := i.ToInfo()
+		return s.getUpdateIdentityChanges(info, updated, u, identities, authenticators, claims)
+	default:
+		panic("identity: cannot update identity type " + info.Type)
+	}
+}
+
+func (s *Service) getUpdateIdentityChanges(
+	oldInfo *identity.Info,
+	newInfo *identity.Info,
+	u *user.User,
+	identities []*identity.Info,
+	authenticators []*authenticator.Info,
+	claims []*verification.Claim,
+) (*UpdateIdentityChanges, error) {
+	changes := &UpdateIdentityChanges{}
+	changes.UpdatedIdentity = newInfo
+	identities = s.identitiesSlice(identities, []*identity.Info{newInfo})
+
+	claim, ok := s.markOAuthEmailAsVerified(newInfo, claims)
+	if ok {
+		changes.NewVerifiedClaims = append(changes.NewVerifiedClaims, claim)
+		claims = s.claimsSlice(claims, []*verification.Claim{claim})
+	}
+
+	updatedAuthenticators, err := s.updateDependentAuthenticators(oldInfo, newInfo, authenticators)
+	if err != nil {
+		return nil, err
+	}
+	if len(updatedAuthenticators) > 0 {
+		changes.UpdatedAuthenticators = append(changes.UpdatedAuthenticators, updatedAuthenticators...)
+		authenticators = s.authenticatorsSlice(authenticators, updatedAuthenticators)
+	}
+
+	removedClaims := s.removeOrphanedClaims(identities, authenticators, claims)
+	if len(removedClaims) > 0 {
+		changes.RemovedVerifiedClaims = append(changes.RemovedVerifiedClaims, removedClaims...)
+	}
+
+	stdAttrs, ok := s.StandardAttributes.PopulateIdentityAwareStandardAttributes0(u.StandardAttributes, identities)
+	if ok {
+		uu := *u
+		uu.StandardAttributes = stdAttrs
+		uu.UpdatedAt = s.Clock.NowUTC()
+		changes.UpdatedUser = &uu
+	}
+
+	return changes, nil
+}
+
+func (s *Service) removeOrphanedClaims(identities []*identity.Info, authenticators []*authenticator.Info, claims []*verification.Claim) []*verification.Claim {
+	type claim struct {
+		Name  string
+		Value string
+	}
+
+	orphans := make(map[claim]*verification.Claim)
+	for _, c := range claims {
+		orphans[claim{c.Name, c.Value}] = c
+	}
+
+	for _, i := range identities {
+		for name, value := range i.IdentityAwareStandardClaims() {
+			delete(orphans, claim{Name: string(name), Value: value})
+		}
+	}
+
+	for _, a := range authenticators {
+		for name, value := range a.StandardClaims() {
+			delete(orphans, claim{Name: string(name), Value: value})
+		}
+	}
+
+	var out []*verification.Claim
+	for _, claim := range orphans {
+		out = append(out, claim)
+	}
+
+	return out
+}
+
+func (s *Service) updateDependentAuthenticators(oldInfo *identity.Info, newInfo *identity.Info, authenticators []*authenticator.Info) ([]*authenticator.Info, error) {
+	var updated []*authenticator.Info
+
+	for _, a := range authenticators {
+		if a.IsDependentOf(oldInfo) {
+			spec := &authenticator.Spec{
+				Type:      a.Type,
+				UserID:    a.UserID,
+				IsDefault: a.IsDefault,
+				Kind:      a.Kind,
+			}
+			switch a.Type {
+			case model.AuthenticatorTypeOOBEmail:
+				spec.OOBOTP = &authenticator.OOBOTPSpec{
+					Email: newInfo.LoginID.LoginID,
+				}
+			case model.AuthenticatorTypeOOBSMS:
+				spec.OOBOTP = &authenticator.OOBOTPSpec{
+					Phone: newInfo.LoginID.LoginID,
+				}
+			}
+
+			changed, newAuthenticator, err := s.UpdateAuthenticatorWithSpec(a, spec)
+			if err != nil {
+				return nil, err
+			}
+			if changed {
+				updated = append(updated, newAuthenticator)
+			}
+		}
+	}
+
+	return updated, nil
+}
+
+func (s *Service) markOAuthEmailAsVerified(info *identity.Info, claims []*verification.Claim) (*verification.Claim, bool) {
+	if info.Type != model.IdentityTypeOAuth {
+		return nil, false
+	}
+
+	providerID := info.OAuth.ProviderID
+
+	var cfg *config.OAuthSSOProviderConfig
+	for _, c := range s.IdentityConfig.OAuth.Providers {
+		if c.ProviderID().Equal(&providerID) {
+			c := c
+			cfg = &c
+			break
+		}
+	}
+
+	standardClaims := info.IdentityAwareStandardClaims()
+
+	email, ok := standardClaims[model.ClaimEmail]
+	if ok && cfg != nil && *cfg.Claims.Email.AssumeVerified {
+		// Mark as verified if OAuth email is assumed to be verified
+		claim, ok := s.markVerified(info.UserID, claims, model.ClaimEmail, email)
+		if ok {
+			return claim, true
+		}
+	}
+
+	return nil, false
+}
+
+func (s *Service) markVerified(userID string, existingClaims []*verification.Claim, claimName model.ClaimName, claimValue string) (*verification.Claim, bool) {
+	for _, claim := range existingClaims {
+		if claim.Name == string(claimName) && claim.Value == claimValue {
+			return nil, false
+		}
+	}
+
+	claim := s.NewVerifiedClaim(userID, string(claimName), claimValue)
+	return claim, true
 }
 
 func (s *Service) getIdentityBySpec(spec *identity.Spec) (*identity.Info, error) {

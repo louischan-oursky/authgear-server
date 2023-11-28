@@ -7,6 +7,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/api/event"
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/accountmigration"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/authn/attrs"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticationinfo"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
@@ -38,6 +39,16 @@ type AccountService interface {
 	ListIdentitiesByClaim(name string, value string) ([]*identity.Info, error)
 	ListIdentitiesOfUser(userID string) ([]*identity.Info, error)
 	FindDuplicatedIdentity(info *identity.Info) (*identity.Info, error)
+
+	// Identity Update
+	GetUpdateIdentityChanges(
+		info *identity.Info,
+		spec *identity.Spec,
+		u *user.User,
+		identities []*identity.Info,
+		authenticators []*authenticator.Info,
+		claims []*verification.Claim,
+	) (*accounts.UpdateIdentityChanges, error)
 
 	// Authenticator Create
 	NewAuthenticator(spec *authenticator.Spec) (*authenticator.Info, error)
