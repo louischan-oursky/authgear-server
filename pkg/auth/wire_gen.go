@@ -56486,7 +56486,12 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &loginid.Store{
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -56505,7 +56510,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             store,
+		Store:             loginidStore,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -56696,6 +56701,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -56709,17 +56715,12 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:     verificationConfig,
 		VerifiedClaims:         storePQ,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	rawQueries := &user.RawQueries{
-		Store: userStore,
+		Store: store,
 	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
@@ -56823,14 +56824,14 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         userStore,
+		UserStore:         store,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   userStore,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -56839,7 +56840,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -56907,7 +56908,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   store,
+		LoginID:   loginidStore,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -56957,7 +56958,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -57285,7 +57286,12 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &loginid.Store{
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -57304,7 +57310,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             store,
+		Store:             loginidStore,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -57495,6 +57501,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -57508,17 +57515,12 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:     verificationConfig,
 		VerifiedClaims:         storePQ,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	rawQueries := &user.RawQueries{
-		Store: userStore,
+		Store: store,
 	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
@@ -57622,14 +57624,14 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         userStore,
+		UserStore:         store,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   userStore,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -57638,7 +57640,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -57706,7 +57708,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   store,
+		LoginID:   loginidStore,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -57756,7 +57758,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -58079,7 +58081,12 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &loginid.Store{
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -58098,7 +58105,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             store,
+		Store:             loginidStore,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -58289,6 +58296,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -58302,17 +58310,12 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:     verificationConfig,
 		VerifiedClaims:         storePQ,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	rawQueries := &user.RawQueries{
-		Store: userStore,
+		Store: store,
 	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
@@ -58416,14 +58419,14 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         userStore,
+		UserStore:         store,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   userStore,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -58432,7 +58435,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -58500,7 +58503,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   store,
+		LoginID:   loginidStore,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -58550,7 +58553,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -58910,7 +58913,12 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	store := &loginid.Store{
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -58929,7 +58937,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Config: loginIDConfig,
 	}
 	provider := &loginid.Provider{
-		Store:             store,
+		Store:             loginidStore,
 		Config:            loginIDConfig,
 		Checker:           checker,
 		NormalizerFactory: normalizerFactory,
@@ -59120,6 +59128,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -59133,17 +59142,12 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:     verificationConfig,
 		VerifiedClaims:         storePQ,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	rawQueries := &user.RawQueries{
-		Store: userStore,
+		Store: store,
 	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
@@ -59247,14 +59251,14 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		UserProfileConfig: userProfileConfig,
 		Identities:        serviceService,
 		UserQueries:       rawQueries,
-		UserStore:         userStore,
+		UserStore:         store,
 		ClaimStore:        storePQ,
 		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
 		UserQueries: rawQueries,
-		UserStore:   userStore,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -59263,7 +59267,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -59331,7 +59335,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Client:    client,
 		Users:     queries,
 		OAuth:     oauthStore,
-		LoginID:   store,
+		LoginID:   loginidStore,
 		TaskQueue: queue,
 	}
 	elasticsearchSink := &elasticsearch.Sink{
@@ -59381,7 +59385,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{

@@ -5,6 +5,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
+	"github.com/authgear/authgear-server/pkg/lib/authn/user"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db/appdb"
@@ -113,10 +114,17 @@ type VerifiedClaims interface {
 	Create(claim *verification.Claim) error
 }
 
+type Users interface {
+	Get(id string) (*user.User, error)
+	Create(u *user.User) error
+}
+
 type Service struct {
 	Clock       clock.Clock
 	SQLBuilder  *appdb.SQLBuilderApp
 	SQLExecutor *appdb.SQLExecutor
+
+	Users Users
 
 	LoginIDIdentities   LoginIDIdentities
 	OAuthIdentities     OAuthIdentities

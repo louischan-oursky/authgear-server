@@ -283,6 +283,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(oauthhandler.UserProvider), new(*user.Queries)),
 		wire.Bind(new(event.ResolverUserQueries), new(*user.Queries)),
 		wire.Bind(new(libes.UserQueries), new(*user.Queries)),
+		wire.Bind(new(accounts.Users), new(*user.Store)),
 	),
 
 	wire.NewSet(
