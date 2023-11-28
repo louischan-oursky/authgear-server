@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/authgear/authgear-server/pkg/api/model"
+	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/stdattrs"
+	"github.com/authgear/authgear-server/pkg/lib/authn/user"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
@@ -27,17 +29,16 @@ type ServiceNoEvent struct {
 	Transformer       Transformer
 }
 
-func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) (err error) {
-	// Get all the identities this user has.
-	identities, err := s.Identities.ListByUser(userID)
-	if err != nil {
-		return
-	}
+func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes0(originalStdAttrs map[string]interface{}, unsortedIdentities []*identity.Info) (map[string]interface{}, bool) {
+	stdAttrs := stdattrs.T(originalStdAttrs).Clone().ToClaims()
+
+	sortedIdentities := make([]*identity.Info, len(unsortedIdentities))
+	copy(sortedIdentities, unsortedIdentities)
 
 	// Sort the identities with newer ones ordered first.
-	sort.SliceStable(identities, func(i, j int) bool {
-		a := identities[i]
-		b := identities[j]
+	sort.SliceStable(sortedIdentities, func(i, j int) bool {
+		a := sortedIdentities[i]
+		b := sortedIdentities[j]
 		return a.CreatedAt.After(b.CreatedAt)
 	})
 
@@ -45,7 +46,7 @@ func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) 
 	var emails []string
 	var phoneNumbers []string
 	var preferredUsernames []string
-	for _, iden := range identities {
+	for _, iden := range sortedIdentities {
 		standardClaims := iden.IdentityAwareStandardClaims()
 		if email, ok := standardClaims[model.ClaimEmail]; ok && email != "" {
 			emails = append(emails, email)
@@ -58,18 +59,13 @@ func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) 
 		}
 	}
 
-	user, err := s.UserQueries.GetRaw(userID)
-	if err != nil {
-		return
-	}
-
 	updated := false
 
 	// Clear dangling standard attributes.
 	clear := func(key string, allowedValues []string) {
-		if value, ok := user.StandardAttributes[key].(string); ok {
+		if value, ok := stdAttrs[key].(string); ok {
 			if !slice.ContainsString(allowedValues, value) {
-				delete(user.StandardAttributes, key)
+				delete(stdAttrs, key)
 				updated = true
 			}
 		}
@@ -80,9 +76,9 @@ func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) 
 
 	// Populate standard attributes.
 	populate := func(key string, allowedValues []string) {
-		if _, ok := user.StandardAttributes[key].(string); !ok {
+		if _, ok := stdAttrs[key].(string); !ok {
 			if len(allowedValues) > 0 {
-				user.StandardAttributes[key] = allowedValues[0]
+				stdAttrs[key] = allowedValues[0]
 				updated = true
 			}
 		}
@@ -91,8 +87,24 @@ func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) 
 	populate(stdattrs.PhoneNumber, phoneNumbers)
 	populate(stdattrs.PreferredUsername, preferredUsernames)
 
+	return stdAttrs, updated
+}
+
+func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) (err error) {
+	// Get all the identities this user has.
+	identities, err := s.Identities.ListByUser(userID)
+	if err != nil {
+		return
+	}
+
+	user, err := s.UserQueries.GetRaw(userID)
+	if err != nil {
+		return
+	}
+
+	stdAttrs, updated := s.PopulateIdentityAwareStandardAttributes0(user.StandardAttributes, identities)
 	if updated {
-		err = s.UserStore.UpdateStandardAttributes(userID, user.StandardAttributes)
+		err = s.UserStore.UpdateStandardAttributes(userID, stdAttrs)
 		if err != nil {
 			return
 		}
@@ -101,42 +113,32 @@ func (s *ServiceNoEvent) PopulateIdentityAwareStandardAttributes(userID string) 
 	return
 }
 
-func (s *ServiceNoEvent) UpdateStandardAttributes(role accesscontrol.Role, userID string, stdAttrs map[string]interface{}) error {
+func (s *ServiceNoEvent) UpdateStandardAttributes0(role accesscontrol.Role, u *user.User, identities []*identity.Info, stdAttrsToUpdate map[string]interface{}) (map[string]interface{}, error) {
 	// Remove derived attributes to avoid failing the validation.
-	stdAttrs = stdattrs.T(stdAttrs).WithDerivedAttributesRemoved()
+	stdAttrs := stdattrs.T(stdAttrsToUpdate).WithDerivedAttributesRemoved()
 
 	// Transform if needed.
 	for key, value := range stdAttrs {
 		value, err := s.Transformer.RepresentationFormToStorageForm(key, value)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		stdAttrs[key] = value
 	}
 
 	err := stdattrs.Validate(stdattrs.T(stdAttrs))
 	if err != nil {
-		return err
-	}
-
-	rawUser, err := s.UserQueries.GetRaw(userID)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	accessControl := s.UserProfileConfig.StandardAttributes.GetAccessControl()
-	err = stdattrs.T(rawUser.StandardAttributes).CheckWrite(
+	err = stdattrs.T(u.StandardAttributes).CheckWrite(
 		accessControl,
 		role,
 		stdattrs.T(stdAttrs),
 	)
 	if err != nil {
-		return err
-	}
-
-	identities, err := s.Identities.ListByUser(userID)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ownedEmails := make(map[string]struct{})
@@ -167,26 +169,42 @@ func (s *ServiceNoEvent) UpdateStandardAttributes(role accesscontrol.Role, userI
 
 	err = check(stdattrs.Email, ownedEmails)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = check(stdattrs.PhoneNumber, ownedPhoneNumbers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = check(stdattrs.PreferredUsername, ownedPreferredUsernames)
+	if err != nil {
+		return nil, err
+	}
+
+	// In case email/phone_number/preferred_username was removed, we add them back.
+	stdAttrs, _ = s.PopulateIdentityAwareStandardAttributes0(stdAttrs, identities)
+
+	return stdAttrs, nil
+}
+
+func (s *ServiceNoEvent) UpdateStandardAttributes(role accesscontrol.Role, userID string, stdAttrs map[string]interface{}) error {
+	u, err := s.UserQueries.GetRaw(userID)
+	if err != nil {
+		return err
+	}
+
+	identities, err := s.Identities.ListByUser(userID)
+	if err != nil {
+		return err
+	}
+
+	stdAttrs, err = s.UpdateStandardAttributes0(role, u, identities, stdAttrs)
 	if err != nil {
 		return err
 	}
 
 	err = s.UserStore.UpdateStandardAttributes(userID, stdAttrs)
-	if err != nil {
-		return err
-	}
-
-	// In case email/phone_number/preferred_username was removed, we add them back.
-	err = s.PopulateIdentityAwareStandardAttributes(userID)
 	if err != nil {
 		return err
 	}
