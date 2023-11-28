@@ -30,7 +30,7 @@ import (
 
 type AccountService interface {
 	// Identity Create
-	NewIdentity(userID string, spec *identity.Spec) (*identity.Info, error)
+	GetNewIdentityChanges(spec *identity.Spec, u *user.User, identities []*identity.Info, claims []*verification.Claim) (*accounts.NewIdentityChanges, error)
 	CreateIdentity(info *identity.Info) error
 
 	// Identity Read

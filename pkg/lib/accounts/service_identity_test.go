@@ -39,6 +39,14 @@ func newBool(b bool) *bool {
 	return &b
 }
 
+func newUserNoAttrs(id string) *user.User {
+	return &user.User{
+		ID:                 id,
+		StandardAttributes: map[string]interface{}{},
+		CustomAttributes:   map[string]interface{}{},
+	}
+}
+
 func newUser(id string, email string) *user.User {
 	return &user.User{
 		ID: id,
@@ -181,6 +189,133 @@ func newVerifiedClaim(id string, userID string, name string, value string) *veri
 		Name:   name,
 		Value:  value,
 	}
+}
+
+func TestGetNewIdentityChanges(t *testing.T) {
+	Convey("GetNewIdentityChanges", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		loginIDIdentities := NewMockLoginIDIdentities(ctrl)
+		oauthIdentities := NewMockOAuthIdentities(ctrl)
+		standardAttributes := NewMockStandardAttributes(ctrl)
+
+		s := &Service{
+			StandardAttributes: standardAttributes,
+			LoginIDIdentities:  loginIDIdentities,
+			OAuthIdentities:    oauthIdentities,
+			IdentityConfig: &config.IdentityConfig{
+				OAuth: &config.OAuthSSOConfig{
+					Providers: []config.OAuthSSOProviderConfig{
+						{
+							Alias: "google",
+							Type:  config.OAuthSSOProviderTypeGoogle,
+							Claims: &config.OAuthClaimsConfig{
+								Email: &config.OAuthClaimConfig{
+									AssumeVerified: newBool(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			Clock: clock.NewMockClock(),
+		}
+
+		Convey("new login id identity", func() {
+			spec := &identity.Spec{
+				Type: model.IdentityTypeLoginID,
+				LoginID: &identity.LoginIDSpec{
+					Key:   "email",
+					Type:  model.LoginIDKeyTypeEmail,
+					Value: "user@example.com",
+				},
+			}
+			loginIDIdentities.EXPECT().New("user0", *spec.LoginID, gomock.Any()).Times(1).Return(
+				newEmailLoginIDIdentity("identity0", "user0", "user@example.com").LoginID, nil,
+			)
+			standardAttributes.EXPECT().PopulateIdentityAwareStandardAttributes0(deepEqual(map[string]interface{}{}), deepEqual([]*identity.Info{
+				newEmailLoginIDIdentity("identity0", "user0", "user@example.com"),
+			})).Times(1).Return(
+				map[string]interface{}{
+					"email": "user@example.com",
+				},
+				true,
+			)
+
+			changes, err := s.GetNewIdentityChanges(
+				spec,
+				newUserNoAttrs("user0"),
+				[]*identity.Info{},
+				[]*verification.Claim{},
+			)
+			So(err, ShouldBeNil)
+			So(changes, ShouldResemble, &NewIdentityChanges{
+				UpdatedUser: newUser("user0", "user@example.com"),
+				NewIdentity: newEmailLoginIDIdentity("identity0", "user0", "user@example.com"),
+			})
+		})
+
+		Convey("new oauth identity", func() {
+			spec := &identity.Spec{
+				Type: model.IdentityTypeOAuth,
+				OAuth: &identity.OAuthSpec{
+					ProviderID: config.ProviderID{
+						Type: "google",
+					},
+					SubjectID: "google0",
+					RawProfile: map[string]interface{}{
+						"email": "user@gmail.com",
+					},
+					StandardClaims: map[string]interface{}{
+						"email": "user@gmail.com",
+					},
+				},
+			}
+			oauthIdentities.EXPECT().New(
+				"user0",
+				config.ProviderID{
+					Type: "google",
+				},
+				"google0",
+				map[string]interface{}{
+					"email": "user@gmail.com",
+				},
+				map[string]interface{}{
+					"email": "user@gmail.com",
+				},
+			).Times(1).Return(
+				newOAuthGoogleIdentity("identity0", "user0", "google0", "user@gmail.com").OAuth,
+			)
+			standardAttributes.EXPECT().PopulateIdentityAwareStandardAttributes0(deepEqual(map[string]interface{}{}), deepEqual([]*identity.Info{
+				newOAuthGoogleIdentity("identity0", "user0", "google0", "user@gmail.com"),
+			})).Times(1).Return(
+				map[string]interface{}{
+					"email": "user@gmail.com",
+				},
+				true,
+			)
+
+			changes, err := s.GetNewIdentityChanges(
+				spec,
+				newUserNoAttrs("user0"),
+				[]*identity.Info{},
+				[]*verification.Claim{},
+			)
+			So(err, ShouldBeNil)
+			expected := &NewIdentityChanges{
+				UpdatedUser: newUser("user0", "user@gmail.com"),
+				NewIdentity: newOAuthGoogleIdentity("identity0", "user0", "google0", "user@gmail.com"),
+				NewVerifiedClaims: []*verification.Claim{
+					newVerifiedClaim("", "user0", "email", "user@gmail.com"),
+				},
+			}
+			So(changes.UpdatedUser, ShouldResemble, expected.UpdatedUser)
+			So(changes.NewIdentity, ShouldResemble, expected.NewIdentity)
+			So(len(changes.NewVerifiedClaims), ShouldEqual, 1)
+			So(changes.NewVerifiedClaims[0].Value, ShouldEqual, expected.NewVerifiedClaims[0].Value)
+		})
+	})
 }
 
 func TestGetUpdateIdentityChanges(t *testing.T) {

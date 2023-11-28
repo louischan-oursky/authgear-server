@@ -14,6 +14,12 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/infra/db"
 )
 
+type NewIdentityChanges struct {
+	UpdatedUser       *user.User
+	NewIdentity       *identity.Info
+	NewVerifiedClaims []*verification.Claim
+}
+
 type UpdateIdentityChanges struct {
 	UpdatedUser           *user.User
 	UpdatedIdentity       *identity.Info
@@ -254,53 +260,80 @@ func (s *Service) ListIdentitiesOfUser(userID string) ([]*identity.Info, error) 
 	return infos, nil
 }
 
-func (s *Service) NewIdentity(userID string, spec *identity.Spec) (*identity.Info, error) {
+func (s *Service) GetNewIdentityChanges(spec *identity.Spec, u *user.User, identities []*identity.Info, claims []*verification.Claim) (*NewIdentityChanges, error) {
 	switch spec.Type {
 	case model.IdentityTypeLoginID:
-		l, err := s.LoginIDIdentities.New(userID, *spec.LoginID, loginid.CheckerOptions{
+		l, err := s.LoginIDIdentities.New(u.ID, *spec.LoginID, loginid.CheckerOptions{
 			// The use case of NewIdentity does not bypass.
 			EmailByPassBlocklistAllowlist: false,
 		})
 		if err != nil {
 			return nil, err
 		}
-		return l.ToInfo(), nil
+		return s.getNewIdentityChanges(l.ToInfo(), u, identities, claims)
 	case model.IdentityTypeOAuth:
 		providerID := spec.OAuth.ProviderID
 		subjectID := spec.OAuth.SubjectID
 		rawProfile := spec.OAuth.RawProfile
 		standardClaims := spec.OAuth.StandardClaims
-		o := s.OAuthIdentities.New(userID, providerID, subjectID, rawProfile, standardClaims)
-		return o.ToInfo(), nil
+		o := s.OAuthIdentities.New(u.ID, providerID, subjectID, rawProfile, standardClaims)
+		return s.getNewIdentityChanges(o.ToInfo(), u, identities, claims)
 	case model.IdentityTypeAnonymous:
 		keyID := spec.Anonymous.KeyID
 		key := spec.Anonymous.Key
-		a := s.AnonymousIdentities.New(userID, keyID, []byte(key))
-		return a.ToInfo(), nil
+		a := s.AnonymousIdentities.New(u.ID, keyID, []byte(key))
+		return s.getNewIdentityChanges(a.ToInfo(), u, identities, claims)
 	case model.IdentityTypeBiometric:
 		keyID := spec.Biometric.KeyID
 		key := spec.Biometric.Key
 		deviceInfo := spec.Biometric.DeviceInfo
-		b := s.BiometricIdentities.New(userID, keyID, []byte(key), deviceInfo)
-		return b.ToInfo(), nil
+		b := s.BiometricIdentities.New(u.ID, keyID, []byte(key), deviceInfo)
+		return s.getNewIdentityChanges(b.ToInfo(), u, identities, claims)
 	case model.IdentityTypePasskey:
 		attestationResponse := spec.Passkey.AttestationResponse
-		p, err := s.PasskeyIdentities.New(userID, attestationResponse)
+		p, err := s.PasskeyIdentities.New(u.ID, attestationResponse)
 		if err != nil {
 			return nil, err
 		}
-		return p.ToInfo(), nil
+		return s.getNewIdentityChanges(p.ToInfo(), u, identities, claims)
 	case model.IdentityTypeSIWE:
 		message := spec.SIWE.Message
 		signature := spec.SIWE.Signature
-		e, err := s.SIWEIdentities.New(userID, message, signature)
+		e, err := s.SIWEIdentities.New(u.ID, message, signature)
 		if err != nil {
 			return nil, err
 		}
-		return e.ToInfo(), nil
+		return s.getNewIdentityChanges(e.ToInfo(), u, identities, claims)
 	}
 
 	panic("identity: unknown identity type " + spec.Type)
+}
+
+func (s *Service) getNewIdentityChanges(
+	info *identity.Info,
+	u *user.User,
+	identities []*identity.Info,
+	claims []*verification.Claim,
+) (*NewIdentityChanges, error) {
+	changes := &NewIdentityChanges{}
+	changes.NewIdentity = info
+	identities = s.identitiesSlice(identities, []*identity.Info{info})
+
+	claim, ok := s.markOAuthEmailAsVerified(info, claims)
+	if ok {
+		changes.NewVerifiedClaims = append(changes.NewVerifiedClaims, claim)
+		claims = s.claimsSlice(claims, []*verification.Claim{claim})
+	}
+
+	stdAttrs, ok := s.StandardAttributes.PopulateIdentityAwareStandardAttributes0(u.StandardAttributes, identities)
+	if ok {
+		uu := *u
+		uu.StandardAttributes = stdAttrs
+		uu.UpdatedAt = s.Clock.NowUTC()
+		changes.UpdatedUser = &uu
+	}
+
+	return changes, nil
 }
 
 func (s *Service) FindDuplicatedIdentity(info *identity.Info) (duplicate *identity.Info, err error) {
