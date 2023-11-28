@@ -425,6 +425,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(workflow.StdAttrsService), new(*featurestdattrs.Service)),
 		wire.Bind(new(authenticationflow.StdAttrsService), new(*featurestdattrs.Service)),
 		wire.Bind(new(hook.StandardAttributesServiceNoEvent), new(*featurestdattrs.ServiceNoEvent)),
+		wire.Bind(new(accounts.StandardAttributes), new(*featurestdattrs.ServiceNoEvent)),
 	),
 
 	presign.DependencySet,

@@ -9,6 +9,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/lib/infra/db/appdb"
+	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 	"github.com/authgear/authgear-server/pkg/util/clock"
 )
 
@@ -119,12 +120,17 @@ type Users interface {
 	Create(u *user.User) error
 }
 
+type StandardAttributes interface {
+	UpdateStandardAttributes0(role accesscontrol.Role, u *user.User, identities []*identity.Info, stdAttrsToUpdate map[string]interface{}) (map[string]interface{}, error)
+}
+
 type Service struct {
 	Clock       clock.Clock
 	SQLBuilder  *appdb.SQLBuilderApp
 	SQLExecutor *appdb.SQLExecutor
 
-	Users Users
+	Users              Users
+	StandardAttributes StandardAttributes
 
 	LoginIDIdentities   LoginIDIdentities
 	OAuthIdentities     OAuthIdentities

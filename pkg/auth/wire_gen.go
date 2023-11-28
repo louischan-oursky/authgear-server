@@ -56491,11 +56491,18 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
+	userProfileConfig := appConfig.UserProfile
+	authenticationConfig := appConfig.Authentication
+	identityConfig := appConfig.Identity
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
-	identityConfig := appConfig.Identity
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -56601,7 +56608,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
-	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
@@ -56634,6 +56640,39 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	serviceService := &service.Service{
+		Authentication:        authenticationConfig,
+		Identity:              identityConfig,
+		IdentityFeatureConfig: identityFeatureConfig,
+		Store:                 serviceStore,
+		LoginID:               provider,
+		OAuth:                 oauthProvider,
+		Anonymous:             anonymousProvider,
+		Biometric:             biometricProvider,
+		Passkey:               passkeyProvider,
+		SIWE:                  siweProvider,
+	}
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -56693,15 +56732,12 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                    clockClock,
 	}
 	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	accountsService := &accounts.Service{
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		Users:                  store,
+		StandardAttributes:     serviceNoEvent,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -56719,30 +56755,10 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Store: store,
 		Clock: clockClock,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
 	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
 	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	serviceService := &service.Service{
-		Authentication:        authenticationConfig,
-		Identity:              identityConfig,
-		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 serviceStore,
-		LoginID:               provider,
-		OAuth:                 oauthProvider,
-		Anonymous:             anonymousProvider,
-		Biometric:             biometricProvider,
-		Passkey:               passkeyProvider,
-		SIWE:                  siweProvider,
-	}
 	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
@@ -56812,21 +56828,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
-	}
-	userProfileConfig := appConfig.UserProfile
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -57291,11 +57292,18 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
+	userProfileConfig := appConfig.UserProfile
+	authenticationConfig := appConfig.Authentication
+	identityConfig := appConfig.Identity
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
-	identityConfig := appConfig.Identity
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -57401,7 +57409,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
-	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
@@ -57434,6 +57441,39 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	serviceService := &service.Service{
+		Authentication:        authenticationConfig,
+		Identity:              identityConfig,
+		IdentityFeatureConfig: identityFeatureConfig,
+		Store:                 serviceStore,
+		LoginID:               provider,
+		OAuth:                 oauthProvider,
+		Anonymous:             anonymousProvider,
+		Biometric:             biometricProvider,
+		Passkey:               passkeyProvider,
+		SIWE:                  siweProvider,
+	}
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -57493,15 +57533,12 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                    clockClock,
 	}
 	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	accountsService := &accounts.Service{
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		Users:                  store,
+		StandardAttributes:     serviceNoEvent,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -57519,30 +57556,10 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Store: store,
 		Clock: clockClock,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
 	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
 	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	serviceService := &service.Service{
-		Authentication:        authenticationConfig,
-		Identity:              identityConfig,
-		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 serviceStore,
-		LoginID:               provider,
-		OAuth:                 oauthProvider,
-		Anonymous:             anonymousProvider,
-		Biometric:             biometricProvider,
-		Passkey:               passkeyProvider,
-		SIWE:                  siweProvider,
-	}
 	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
@@ -57612,21 +57629,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
-	}
-	userProfileConfig := appConfig.UserProfile
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -58086,11 +58088,18 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
+	userProfileConfig := appConfig.UserProfile
+	authenticationConfig := appConfig.Authentication
+	identityConfig := appConfig.Identity
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
-	identityConfig := appConfig.Identity
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -58196,7 +58205,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
-	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
@@ -58229,6 +58237,39 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	serviceService := &service.Service{
+		Authentication:        authenticationConfig,
+		Identity:              identityConfig,
+		IdentityFeatureConfig: identityFeatureConfig,
+		Store:                 serviceStore,
+		LoginID:               provider,
+		OAuth:                 oauthProvider,
+		Anonymous:             anonymousProvider,
+		Biometric:             biometricProvider,
+		Passkey:               passkeyProvider,
+		SIWE:                  siweProvider,
+	}
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -58288,15 +58329,12 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                    clockClock,
 	}
 	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	accountsService := &accounts.Service{
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		Users:                  store,
+		StandardAttributes:     serviceNoEvent,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -58314,30 +58352,10 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Store: store,
 		Clock: clockClock,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
 	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
 	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	serviceService := &service.Service{
-		Authentication:        authenticationConfig,
-		Identity:              identityConfig,
-		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 serviceStore,
-		LoginID:               provider,
-		OAuth:                 oauthProvider,
-		Anonymous:             anonymousProvider,
-		Biometric:             biometricProvider,
-		Passkey:               passkeyProvider,
-		SIWE:                  siweProvider,
-	}
 	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
@@ -58407,21 +58425,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
-	}
-	userProfileConfig := appConfig.UserProfile
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -58918,11 +58921,18 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
+	userProfileConfig := appConfig.UserProfile
+	authenticationConfig := appConfig.Authentication
+	identityConfig := appConfig.Identity
+	identityFeatureConfig := featureConfig.Identity
+	serviceStore := &service.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	loginidStore := &loginid.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
-	identityConfig := appConfig.Identity
 	loginIDConfig := identityConfig.LoginID
 	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
@@ -59028,7 +59038,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	web3Config := appConfig.Web3
-	authenticationConfig := appConfig.Authentication
 	storeRedis := &siwe2.StoreRedis{
 		Context: contextContext,
 		Redis:   appredisHandle,
@@ -59061,6 +59070,39 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Store: siweStore,
 		Clock: clockClock,
 		SIWE:  siweService,
+	}
+	serviceService := &service.Service{
+		Authentication:        authenticationConfig,
+		Identity:              identityConfig,
+		IdentityFeatureConfig: identityFeatureConfig,
+		Store:                 serviceStore,
+		LoginID:               provider,
+		OAuth:                 oauthProvider,
+		Anonymous:             anonymousProvider,
+		Biometric:             biometricProvider,
+		Passkey:               passkeyProvider,
+		SIWE:                  siweProvider,
+	}
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -59120,15 +59162,12 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Clock:                    clockClock,
 	}
 	verificationConfig := appConfig.Verification
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
 	accountsService := &accounts.Service{
 		Clock:                  clockClock,
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
 		Users:                  store,
+		StandardAttributes:     serviceNoEvent,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -59146,30 +59185,10 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Store: store,
 		Clock: clockClock,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
 	userAgentString := deps.ProvideUserAgentString(request)
 	eventLogger := event.NewLogger(factory)
 	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
 	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	identityFeatureConfig := featureConfig.Identity
-	serviceStore := &service.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	serviceService := &service.Service{
-		Authentication:        authenticationConfig,
-		Identity:              identityConfig,
-		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 serviceStore,
-		LoginID:               provider,
-		OAuth:                 oauthProvider,
-		Anonymous:             anonymousProvider,
-		Biometric:             biometricProvider,
-		Passkey:               passkeyProvider,
-		SIWE:                  siweProvider,
-	}
 	store4 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
@@ -59239,21 +59258,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
-	}
-	userProfileConfig := appConfig.UserProfile
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
