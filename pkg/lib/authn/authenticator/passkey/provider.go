@@ -92,6 +92,22 @@ func (p *Provider) New(
 	return a, nil
 }
 
+func (p *Provider) AuthenticatePure(a *authenticator.Passkey, assertionResponse []byte) (updated *authenticator.Passkey, err error) {
+	signCount, err := p.Passkey.PeekAssertionResponse(assertionResponse, a.AttestationResponse)
+	if err != nil {
+		return
+	}
+
+	if signCount != a.SignCount {
+		aa := *a
+		aa.SignCount = signCount
+		aa.UpdatedAt = p.Clock.NowUTC()
+		updated = &aa
+	}
+
+	return
+}
+
 func (p *Provider) Authenticate(a *authenticator.Passkey, assertionResponse []byte) (requireUpdate bool, err error) {
 	signCount, err := p.Passkey.PeekAssertionResponse(assertionResponse, a.AttestationResponse)
 	if err != nil {
