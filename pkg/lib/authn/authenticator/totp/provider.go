@@ -48,8 +48,11 @@ func (p *Provider) New(id string, userID string, displayName string, isDefault b
 	if id == "" {
 		id = uuid.New()
 	}
+	now := p.Clock.NowUTC()
 	a := &authenticator.TOTP{
 		ID:          id,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 		UserID:      userID,
 		Secret:      totp.Secret,
 		DisplayName: displayName,
