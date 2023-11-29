@@ -76,8 +76,11 @@ func (p *Provider) New(
 	if id == "" {
 		id = uuid.New()
 	}
+	now := p.Clock.NowUTC()
 	a := &authenticator.Passkey{
 		ID:                  id,
+		CreatedAt:           now,
+		UpdatedAt:           now,
 		UserID:              userID,
 		IsDefault:           isDefault,
 		Kind:                kind,

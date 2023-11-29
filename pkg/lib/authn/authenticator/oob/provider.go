@@ -48,8 +48,11 @@ func (p *Provider) New(id string, userID string, oobAuthenticatorType model.Auth
 	if id == "" {
 		id = uuid.New()
 	}
+	now := p.Clock.NowUTC()
 	a := &authenticator.OOBOTP{
 		ID:                   id,
+		CreatedAt:            now,
+		UpdatedAt:            now,
 		UserID:               userID,
 		OOBAuthenticatorType: oobAuthenticatorType,
 		IsDefault:            isDefault,
