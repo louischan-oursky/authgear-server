@@ -61,11 +61,14 @@ func (p *Provider) New(
 	keyID string,
 	key []byte,
 ) *identity.Anonymous {
+	now := p.Clock.NowUTC()
 	i := &identity.Anonymous{
-		ID:     uuid.New(),
-		UserID: userID,
-		KeyID:  keyID,
-		Key:    key,
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		UserID:    userID,
+		KeyID:     keyID,
+		Key:       key,
 	}
 	return i
 }

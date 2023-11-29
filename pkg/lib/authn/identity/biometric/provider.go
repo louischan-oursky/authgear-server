@@ -62,8 +62,11 @@ func (p *Provider) New(
 	key []byte,
 	deviceInfo map[string]interface{},
 ) *identity.Biometric {
+	now := p.Clock.NowUTC()
 	i := &identity.Biometric{
 		ID:         uuid.New(),
+		CreatedAt:  now,
+		UpdatedAt:  now,
 		UserID:     userID,
 		KeyID:      keyID,
 		Key:        key,

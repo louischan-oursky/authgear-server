@@ -56,8 +56,11 @@ func (p *Provider) New(
 		return nil, err
 	}
 
+	now := p.Clock.NowUTC()
 	i := &identity.Passkey{
 		ID:                  uuid.New(),
+		CreatedAt:           now,
+		UpdatedAt:           now,
 		UserID:              userID,
 		CredentialID:        credentialID,
 		CreationOptions:     creationOptions,

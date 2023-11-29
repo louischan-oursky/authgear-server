@@ -58,8 +58,11 @@ func (p *Provider) New(
 	profile map[string]interface{},
 	claims map[string]interface{},
 ) *identity.OAuth {
+	now := p.Clock.NowUTC()
 	i := &identity.OAuth{
 		ID:                uuid.New(),
+		CreatedAt:         now,
+		UpdatedAt:         now,
 		UserID:            userID,
 		ProviderID:        provider,
 		ProviderSubjectID: subjectID,
