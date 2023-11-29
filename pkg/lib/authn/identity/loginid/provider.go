@@ -127,8 +127,11 @@ func (p *Provider) New(userID string, spec identity.LoginIDSpec, options Checker
 		claims[claimName] = normalized
 	}
 
+	now := p.Clock.NowUTC()
 	iden := &identity.LoginID{
 		ID:              uuid.New(),
+		CreatedAt:       now,
+		UpdatedAt:       now,
 		UserID:          userID,
 		LoginIDKey:      spec.Key,
 		LoginIDType:     spec.Type,

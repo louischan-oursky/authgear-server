@@ -63,11 +63,14 @@ func (p *Provider) New(
 		return nil, err
 	}
 
+	now := p.Clock.NowUTC()
 	i := &identity.SIWE{
-		ID:      uuid.New(),
-		UserID:  userID,
-		Address: wallet.Address,
-		ChainID: wallet.ChainID,
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		UserID:    userID,
+		Address:   wallet.Address,
+		ChainID:   wallet.ChainID,
 
 		Data: &model.SIWEVerifiedData{
 			Message:          msg,
