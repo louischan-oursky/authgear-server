@@ -1,10 +1,13 @@
 package accounts
 
 import (
+	"github.com/authgear/authgear-server/pkg/api/event"
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
+	authenticatorservice "github.com/authgear/authgear-server/pkg/lib/authn/authenticator/service"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
+	"github.com/authgear/authgear-server/pkg/lib/authn/otp"
 	"github.com/authgear/authgear-server/pkg/lib/authn/user"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
@@ -89,6 +92,8 @@ type PasswordAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.Password, error)
 
 	WithPassword(a *authenticator.Password, password string) (*authenticator.Password, error)
+
+	AuthenticatePure(a *authenticator.Password, password string) (migrated *authenticator.Password, requireForceChange bool, err error)
 }
 
 type PasskeyAuthenticators interface {
@@ -102,6 +107,8 @@ type PasskeyAuthenticators interface {
 	Create(*authenticator.Passkey) error
 
 	GetMany(ids []string) ([]*authenticator.Passkey, error)
+
+	AuthenticatePure(a *authenticator.Passkey, assertionResponse []byte) (updated *authenticator.Passkey, err error)
 }
 
 type TOTPAuthenticators interface {
@@ -109,6 +116,8 @@ type TOTPAuthenticators interface {
 	Create(*authenticator.TOTP) error
 
 	GetMany(ids []string) ([]*authenticator.TOTP, error)
+
+	Authenticate(a *authenticator.TOTP, code string) error
 }
 
 type OOBOTPAuthenticators interface {
@@ -118,6 +127,20 @@ type OOBOTPAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.OOBOTP, error)
 
 	WithSpec(a *authenticator.OOBOTP, spec *authenticator.OOBOTPSpec) (*authenticator.OOBOTP, error)
+}
+
+type OTPCodes interface {
+	VerifyOTP(kind otp.Kind, target string, otp string, opts *otp.VerifyOptions) error
+}
+
+type AuthenticatorRateLimits interface {
+	Reserve(userID string, typ model.AuthenticatorType) *authenticatorservice.Reservation
+	Cancel(r *authenticatorservice.Reservation)
+}
+
+type AuthenticatorLockout interface {
+	Check(userID string) error
+	MakeAttempt(userID string, authenticatorType model.AuthenticatorType) error
 }
 
 type VerifiedClaims interface {
@@ -135,10 +158,17 @@ type StandardAttributes interface {
 	PopulateIdentityAwareStandardAttributes0(originalStdAttrs map[string]interface{}, unsortedIdentities []*identity.Info) (map[string]interface{}, bool)
 }
 
+type Events interface {
+	DispatchErrorEvent(payload event.NonBlockingPayload) error
+}
+
 type Service struct {
 	Clock       clock.Clock
 	SQLBuilder  *appdb.SQLBuilderApp
 	SQLExecutor *appdb.SQLExecutor
+	AppConfig   *config.AppConfig
+
+	Events Events
 
 	Users              Users
 	StandardAttributes StandardAttributes
@@ -151,10 +181,13 @@ type Service struct {
 	PasskeyIdentities   PasskeyIdentities
 	SIWEIdentities      SIWEIdentities
 
-	PasswordAuthenticators PasswordAuthenticators
-	PasskeyAuthenticators  PasskeyAuthenticators
-	TOTPAuthenticators     TOTPAuthenticators
-	OOBOTPAuthenticators   OOBOTPAuthenticators
+	PasswordAuthenticators  PasswordAuthenticators
+	PasskeyAuthenticators   PasskeyAuthenticators
+	TOTPAuthenticators      TOTPAuthenticators
+	OOBOTPAuthenticators    OOBOTPAuthenticators
+	AuthenticatorRateLimits AuthenticatorRateLimits
+	AuthenticatorLockout    AuthenticatorLockout
+	OTPCodes                OTPCodes
 
 	VerificationConfig *config.VerificationConfig
 	VerifiedClaims     VerifiedClaims

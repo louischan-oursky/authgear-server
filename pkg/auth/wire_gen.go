@@ -56486,12 +56486,19 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
+	userAgentString := deps.ProvideUserAgentString(request)
+	logger := event.NewLogger(factory)
+	localizationConfig := appConfig.Localization
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
-	userProfileConfig := appConfig.UserProfile
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
@@ -56569,7 +56576,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
-	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -56614,14 +56620,14 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	logger := ratelimit.NewLogger(factory)
+	ratelimitLogger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  logger,
+		Logger:  ratelimitLogger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -56653,26 +56659,9 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	storePQ := &verification.StorePQ{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -56703,12 +56692,12 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -56730,39 +56719,6 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Store:                    oobStore,
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
-	}
-	verificationConfig := appConfig.Verification
-	accountsService := &accounts.Service{
-		Clock:                  clockClock,
-		SQLBuilder:             sqlBuilderApp,
-		SQLExecutor:            sqlExecutor,
-		Users:                  store,
-		StandardAttributes:     serviceNoEvent,
-		IdentityConfig:         identityConfig,
-		LoginIDIdentities:      provider,
-		OAuthIdentities:        oauthProvider,
-		AnonymousIdentities:    anonymousProvider,
-		BiometricIdentities:    biometricProvider,
-		PasskeyIdentities:      passkeyProvider,
-		SIWEIdentities:         siweProvider,
-		PasswordAuthenticators: passwordProvider,
-		PasskeyAuthenticators:  provider2,
-		TOTPAuthenticators:     totpProvider,
-		OOBOTPAuthenticators:   oobProvider,
-		VerificationConfig:     verificationConfig,
-		VerifiedClaims:         storePQ,
-	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	eventLogger := event.NewLogger(factory)
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	store4 := &service2.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -56815,7 +56771,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store4,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -56825,10 +56781,30 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -56918,7 +56894,46 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	serviceRateLimits := &service2.RateLimits{
+		IP:          remoteIP,
+		Config:      authenticationConfig,
+		RateLimiter: limiter,
+	}
+	lockout2 := &service2.Lockout{
+		Config:   authenticationLockoutConfig,
+		RemoteIP: remoteIP,
+		Provider: lockoutService,
+	}
+	accountsService := &accounts.Service{
+		Clock:                   clockClock,
+		SQLBuilder:              sqlBuilderApp,
+		SQLExecutor:             sqlExecutor,
+		AppConfig:               appConfig,
+		Events:                  eventService,
+		Users:                   store,
+		StandardAttributes:      serviceNoEvent,
+		IdentityConfig:          identityConfig,
+		LoginIDIdentities:       provider,
+		OAuthIdentities:         oauthProvider,
+		AnonymousIdentities:     anonymousProvider,
+		BiometricIdentities:     biometricProvider,
+		PasskeyIdentities:       passkeyProvider,
+		SIWEIdentities:          siweProvider,
+		PasswordAuthenticators:  passwordProvider,
+		PasskeyAuthenticators:   provider2,
+		TOTPAuthenticators:      totpProvider,
+		OOBOTPAuthenticators:    oobProvider,
+		AuthenticatorRateLimits: serviceRateLimits,
+		AuthenticatorLockout:    lockout2,
+		OTPCodes:                otpService,
+		VerificationConfig:      verificationConfig,
+		VerifiedClaims:          storePQ,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -57282,12 +57297,19 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
+	userAgentString := deps.ProvideUserAgentString(request)
+	logger := event.NewLogger(factory)
+	localizationConfig := appConfig.Localization
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
-	userProfileConfig := appConfig.UserProfile
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
@@ -57365,7 +57387,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
-	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -57410,14 +57431,14 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	logger := ratelimit.NewLogger(factory)
+	ratelimitLogger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  logger,
+		Logger:  ratelimitLogger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -57449,26 +57470,9 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	storePQ := &verification.StorePQ{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -57499,12 +57503,12 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -57526,39 +57530,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Store:                    oobStore,
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
-	}
-	verificationConfig := appConfig.Verification
-	accountsService := &accounts.Service{
-		Clock:                  clockClock,
-		SQLBuilder:             sqlBuilderApp,
-		SQLExecutor:            sqlExecutor,
-		Users:                  store,
-		StandardAttributes:     serviceNoEvent,
-		IdentityConfig:         identityConfig,
-		LoginIDIdentities:      provider,
-		OAuthIdentities:        oauthProvider,
-		AnonymousIdentities:    anonymousProvider,
-		BiometricIdentities:    biometricProvider,
-		PasskeyIdentities:      passkeyProvider,
-		SIWEIdentities:         siweProvider,
-		PasswordAuthenticators: passwordProvider,
-		PasskeyAuthenticators:  provider2,
-		TOTPAuthenticators:     totpProvider,
-		OOBOTPAuthenticators:   oobProvider,
-		VerificationConfig:     verificationConfig,
-		VerifiedClaims:         storePQ,
-	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	eventLogger := event.NewLogger(factory)
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	store4 := &service2.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -57611,7 +57582,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store4,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -57621,10 +57592,30 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -57714,7 +57705,46 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	serviceRateLimits := &service2.RateLimits{
+		IP:          remoteIP,
+		Config:      authenticationConfig,
+		RateLimiter: limiter,
+	}
+	lockout2 := &service2.Lockout{
+		Config:   authenticationLockoutConfig,
+		RemoteIP: remoteIP,
+		Provider: lockoutService,
+	}
+	accountsService := &accounts.Service{
+		Clock:                   clockClock,
+		SQLBuilder:              sqlBuilderApp,
+		SQLExecutor:             sqlExecutor,
+		AppConfig:               appConfig,
+		Events:                  eventService,
+		Users:                   store,
+		StandardAttributes:      serviceNoEvent,
+		IdentityConfig:          identityConfig,
+		LoginIDIdentities:       provider,
+		OAuthIdentities:         oauthProvider,
+		AnonymousIdentities:     anonymousProvider,
+		BiometricIdentities:     biometricProvider,
+		PasskeyIdentities:       passkeyProvider,
+		SIWEIdentities:          siweProvider,
+		PasswordAuthenticators:  passwordProvider,
+		PasskeyAuthenticators:   provider2,
+		TOTPAuthenticators:      totpProvider,
+		OOBOTPAuthenticators:    oobProvider,
+		AuthenticatorRateLimits: serviceRateLimits,
+		AuthenticatorLockout:    lockout2,
+		OTPCodes:                otpService,
+		VerificationConfig:      verificationConfig,
+		VerifiedClaims:          storePQ,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -58073,12 +58103,19 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
+	userAgentString := deps.ProvideUserAgentString(request)
+	logger := event.NewLogger(factory)
+	localizationConfig := appConfig.Localization
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
-	userProfileConfig := appConfig.UserProfile
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
@@ -58156,7 +58193,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
-	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -58201,14 +58237,14 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	logger := ratelimit.NewLogger(factory)
+	ratelimitLogger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  logger,
+		Logger:  ratelimitLogger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -58240,26 +58276,9 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	storePQ := &verification.StorePQ{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -58290,12 +58309,12 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -58317,39 +58336,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Store:                    oobStore,
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
-	}
-	verificationConfig := appConfig.Verification
-	accountsService := &accounts.Service{
-		Clock:                  clockClock,
-		SQLBuilder:             sqlBuilderApp,
-		SQLExecutor:            sqlExecutor,
-		Users:                  store,
-		StandardAttributes:     serviceNoEvent,
-		IdentityConfig:         identityConfig,
-		LoginIDIdentities:      provider,
-		OAuthIdentities:        oauthProvider,
-		AnonymousIdentities:    anonymousProvider,
-		BiometricIdentities:    biometricProvider,
-		PasskeyIdentities:      passkeyProvider,
-		SIWEIdentities:         siweProvider,
-		PasswordAuthenticators: passwordProvider,
-		PasskeyAuthenticators:  provider2,
-		TOTPAuthenticators:     totpProvider,
-		OOBOTPAuthenticators:   oobProvider,
-		VerificationConfig:     verificationConfig,
-		VerifiedClaims:         storePQ,
-	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	eventLogger := event.NewLogger(factory)
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	store4 := &service2.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -58402,7 +58388,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store4,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -58412,10 +58398,30 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -58505,7 +58511,46 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	serviceRateLimits := &service2.RateLimits{
+		IP:          remoteIP,
+		Config:      authenticationConfig,
+		RateLimiter: limiter,
+	}
+	lockout2 := &service2.Lockout{
+		Config:   authenticationLockoutConfig,
+		RemoteIP: remoteIP,
+		Provider: lockoutService,
+	}
+	accountsService := &accounts.Service{
+		Clock:                   clockClock,
+		SQLBuilder:              sqlBuilderApp,
+		SQLExecutor:             sqlExecutor,
+		AppConfig:               appConfig,
+		Events:                  eventService,
+		Users:                   store,
+		StandardAttributes:      serviceNoEvent,
+		IdentityConfig:          identityConfig,
+		LoginIDIdentities:       provider,
+		OAuthIdentities:         oauthProvider,
+		AnonymousIdentities:     anonymousProvider,
+		BiometricIdentities:     biometricProvider,
+		PasskeyIdentities:       passkeyProvider,
+		SIWEIdentities:          siweProvider,
+		PasswordAuthenticators:  passwordProvider,
+		PasskeyAuthenticators:   provider2,
+		TOTPAuthenticators:      totpProvider,
+		OOBOTPAuthenticators:    oobProvider,
+		AuthenticatorRateLimits: serviceRateLimits,
+		AuthenticatorLockout:    lockout2,
+		OTPCodes:                otpService,
+		VerificationConfig:      verificationConfig,
+		VerifiedClaims:          storePQ,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,
@@ -58901,12 +58946,19 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
+	userAgentString := deps.ProvideUserAgentString(request)
+	logger := event.NewLogger(factory)
+	localizationConfig := appConfig.Localization
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 		Clock:       clockClock,
 	}
-	userProfileConfig := appConfig.UserProfile
+	rawQueries := &user.RawQueries{
+		Store: store,
+	}
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
@@ -58984,7 +59036,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
-	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -59029,14 +59080,14 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	logger := ratelimit.NewLogger(factory)
+	ratelimitLogger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  logger,
+		Logger:  ratelimitLogger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -59068,26 +59119,9 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	rawQueries := &user.RawQueries{
-		Store: store,
-	}
-	storePQ := &verification.StorePQ{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
 	}
 	passwordStore := &password.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -59118,12 +59152,12 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -59145,39 +59179,6 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Store:                    oobStore,
 		LoginIDNormalizerFactory: normalizerFactory,
 		Clock:                    clockClock,
-	}
-	verificationConfig := appConfig.Verification
-	accountsService := &accounts.Service{
-		Clock:                  clockClock,
-		SQLBuilder:             sqlBuilderApp,
-		SQLExecutor:            sqlExecutor,
-		Users:                  store,
-		StandardAttributes:     serviceNoEvent,
-		IdentityConfig:         identityConfig,
-		LoginIDIdentities:      provider,
-		OAuthIdentities:        oauthProvider,
-		AnonymousIdentities:    anonymousProvider,
-		BiometricIdentities:    biometricProvider,
-		PasskeyIdentities:      passkeyProvider,
-		SIWEIdentities:         siweProvider,
-		PasswordAuthenticators: passwordProvider,
-		PasskeyAuthenticators:  provider2,
-		TOTPAuthenticators:     totpProvider,
-		OOBOTPAuthenticators:   oobProvider,
-		VerificationConfig:     verificationConfig,
-		VerifiedClaims:         storePQ,
-	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	userAgentString := deps.ProvideUserAgentString(request)
-	eventLogger := event.NewLogger(factory)
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	store4 := &service2.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
 	}
 	testModeConfig := appConfig.TestMode
 	testModeFeatureConfig := featureConfig.TestMode
@@ -59230,7 +59231,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          store4,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -59240,10 +59241,30 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		RateLimits:     rateLimits,
 		Lockout:        serviceLockout,
 	}
+	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
 	}
 	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
 		Config:      userProfileConfig,
@@ -59333,7 +59354,46 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	serviceRateLimits := &service2.RateLimits{
+		IP:          remoteIP,
+		Config:      authenticationConfig,
+		RateLimiter: limiter,
+	}
+	lockout2 := &service2.Lockout{
+		Config:   authenticationLockoutConfig,
+		RemoteIP: remoteIP,
+		Provider: lockoutService,
+	}
+	accountsService := &accounts.Service{
+		Clock:                   clockClock,
+		SQLBuilder:              sqlBuilderApp,
+		SQLExecutor:             sqlExecutor,
+		AppConfig:               appConfig,
+		Events:                  eventService,
+		Users:                   store,
+		StandardAttributes:      serviceNoEvent,
+		IdentityConfig:          identityConfig,
+		LoginIDIdentities:       provider,
+		OAuthIdentities:         oauthProvider,
+		AnonymousIdentities:     anonymousProvider,
+		BiometricIdentities:     biometricProvider,
+		PasskeyIdentities:       passkeyProvider,
+		SIWEIdentities:          siweProvider,
+		PasswordAuthenticators:  passwordProvider,
+		PasskeyAuthenticators:   provider2,
+		TOTPAuthenticators:      totpProvider,
+		OOBOTPAuthenticators:    oobProvider,
+		AuthenticatorRateLimits: serviceRateLimits,
+		AuthenticatorLockout:    lockout2,
+		OTPCodes:                otpService,
+		VerificationConfig:      verificationConfig,
+		VerifiedClaims:          storePQ,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
 	commands := &user.Commands{
 		RawCommands:        rawCommands,
 		RawQueries:         rawQueries,

@@ -123,6 +123,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(facade.EventService), new(*event.Service)),
 		wire.Bind(new(oauthhandler.EventService), new(*event.Service)),
 		wire.Bind(new(oauth.EventService), new(*event.Service)),
+		wire.Bind(new(accounts.Events), new(*event.Service)),
 	),
 
 	wire.NewSet(
@@ -175,6 +176,8 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(accounts.PasskeyAuthenticators), new(*authenticatorpasskey.Provider)),
 		wire.Bind(new(accounts.OOBOTPAuthenticators), new(*authenticatoroob.Provider)),
 		wire.Bind(new(accounts.TOTPAuthenticators), new(*authenticatortotp.Provider)),
+		wire.Bind(new(accounts.AuthenticatorRateLimits), new(*authenticatorservice.RateLimits)),
+		wire.Bind(new(accounts.AuthenticatorLockout), new(*authenticatorservice.Lockout)),
 
 		wire.Bind(new(facade.AuthenticatorService), new(*authenticatorservice.Service)),
 		wire.Bind(new(user.AuthenticatorService), new(*authenticatorservice.Service)),
@@ -375,6 +378,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(workflow.OTPSender), new(*otp.MessageSender)),
 		wire.Bind(new(authenticationflow.OTPSender), new(*otp.MessageSender)),
 		wire.Bind(new(forgotpassword.OTPSender), new(*otp.MessageSender)),
+		wire.Bind(new(accounts.OTPCodes), new(*otp.Service)),
 	),
 
 	wire.NewSet(

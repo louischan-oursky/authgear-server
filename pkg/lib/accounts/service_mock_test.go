@@ -7,10 +7,13 @@ package accounts
 import (
 	reflect "reflect"
 
+	event "github.com/authgear/authgear-server/pkg/api/event"
 	model "github.com/authgear/authgear-server/pkg/api/model"
 	authenticator "github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
+	service "github.com/authgear/authgear-server/pkg/lib/authn/authenticator/service"
 	identity "github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	loginid "github.com/authgear/authgear-server/pkg/lib/authn/identity/loginid"
+	otp "github.com/authgear/authgear-server/pkg/lib/authn/otp"
 	user "github.com/authgear/authgear-server/pkg/lib/authn/user"
 	config "github.com/authgear/authgear-server/pkg/lib/config"
 	verification "github.com/authgear/authgear-server/pkg/lib/feature/verification"
@@ -694,6 +697,22 @@ func (m *MockPasswordAuthenticators) EXPECT() *MockPasswordAuthenticatorsMockRec
 	return m.recorder
 }
 
+// AuthenticatePure mocks base method.
+func (m *MockPasswordAuthenticators) AuthenticatePure(a *authenticator.Password, password string) (*authenticator.Password, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AuthenticatePure", a, password)
+	ret0, _ := ret[0].(*authenticator.Password)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AuthenticatePure indicates an expected call of AuthenticatePure.
+func (mr *MockPasswordAuthenticatorsMockRecorder) AuthenticatePure(a, password interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticatePure", reflect.TypeOf((*MockPasswordAuthenticators)(nil).AuthenticatePure), a, password)
+}
+
 // Create mocks base method.
 func (m *MockPasswordAuthenticators) Create(arg0 *authenticator.Password) error {
 	m.ctrl.T.Helper()
@@ -776,6 +795,21 @@ func (m *MockPasskeyAuthenticators) EXPECT() *MockPasskeyAuthenticatorsMockRecor
 	return m.recorder
 }
 
+// AuthenticatePure mocks base method.
+func (m *MockPasskeyAuthenticators) AuthenticatePure(a *authenticator.Passkey, assertionResponse []byte) (*authenticator.Passkey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AuthenticatePure", a, assertionResponse)
+	ret0, _ := ret[0].(*authenticator.Passkey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AuthenticatePure indicates an expected call of AuthenticatePure.
+func (mr *MockPasskeyAuthenticatorsMockRecorder) AuthenticatePure(a, assertionResponse interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticatePure", reflect.TypeOf((*MockPasskeyAuthenticators)(nil).AuthenticatePure), a, assertionResponse)
+}
+
 // Create mocks base method.
 func (m *MockPasskeyAuthenticators) Create(arg0 *authenticator.Passkey) error {
 	m.ctrl.T.Helper()
@@ -841,6 +875,20 @@ func NewMockTOTPAuthenticators(ctrl *gomock.Controller) *MockTOTPAuthenticators 
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTOTPAuthenticators) EXPECT() *MockTOTPAuthenticatorsMockRecorder {
 	return m.recorder
+}
+
+// Authenticate mocks base method.
+func (m *MockTOTPAuthenticators) Authenticate(a *authenticator.TOTP, code string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Authenticate", a, code)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Authenticate indicates an expected call of Authenticate.
+func (mr *MockTOTPAuthenticatorsMockRecorder) Authenticate(a, code interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockTOTPAuthenticators)(nil).Authenticate), a, code)
 }
 
 // Create mocks base method.
@@ -966,6 +1014,143 @@ func (m *MockOOBOTPAuthenticators) WithSpec(a *authenticator.OOBOTP, spec *authe
 func (mr *MockOOBOTPAuthenticatorsMockRecorder) WithSpec(a, spec interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithSpec", reflect.TypeOf((*MockOOBOTPAuthenticators)(nil).WithSpec), a, spec)
+}
+
+// MockOTPCodes is a mock of OTPCodes interface.
+type MockOTPCodes struct {
+	ctrl     *gomock.Controller
+	recorder *MockOTPCodesMockRecorder
+}
+
+// MockOTPCodesMockRecorder is the mock recorder for MockOTPCodes.
+type MockOTPCodesMockRecorder struct {
+	mock *MockOTPCodes
+}
+
+// NewMockOTPCodes creates a new mock instance.
+func NewMockOTPCodes(ctrl *gomock.Controller) *MockOTPCodes {
+	mock := &MockOTPCodes{ctrl: ctrl}
+	mock.recorder = &MockOTPCodesMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOTPCodes) EXPECT() *MockOTPCodesMockRecorder {
+	return m.recorder
+}
+
+// VerifyOTP mocks base method.
+func (m *MockOTPCodes) VerifyOTP(kind otp.Kind, target, otp string, opts *otp.VerifyOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyOTP", kind, target, otp, opts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// VerifyOTP indicates an expected call of VerifyOTP.
+func (mr *MockOTPCodesMockRecorder) VerifyOTP(kind, target, otp, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyOTP", reflect.TypeOf((*MockOTPCodes)(nil).VerifyOTP), kind, target, otp, opts)
+}
+
+// MockAuthenticatorRateLimits is a mock of AuthenticatorRateLimits interface.
+type MockAuthenticatorRateLimits struct {
+	ctrl     *gomock.Controller
+	recorder *MockAuthenticatorRateLimitsMockRecorder
+}
+
+// MockAuthenticatorRateLimitsMockRecorder is the mock recorder for MockAuthenticatorRateLimits.
+type MockAuthenticatorRateLimitsMockRecorder struct {
+	mock *MockAuthenticatorRateLimits
+}
+
+// NewMockAuthenticatorRateLimits creates a new mock instance.
+func NewMockAuthenticatorRateLimits(ctrl *gomock.Controller) *MockAuthenticatorRateLimits {
+	mock := &MockAuthenticatorRateLimits{ctrl: ctrl}
+	mock.recorder = &MockAuthenticatorRateLimitsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAuthenticatorRateLimits) EXPECT() *MockAuthenticatorRateLimitsMockRecorder {
+	return m.recorder
+}
+
+// Cancel mocks base method.
+func (m *MockAuthenticatorRateLimits) Cancel(r *service.Reservation) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Cancel", r)
+}
+
+// Cancel indicates an expected call of Cancel.
+func (mr *MockAuthenticatorRateLimitsMockRecorder) Cancel(r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cancel", reflect.TypeOf((*MockAuthenticatorRateLimits)(nil).Cancel), r)
+}
+
+// Reserve mocks base method.
+func (m *MockAuthenticatorRateLimits) Reserve(userID string, typ model.AuthenticatorType) *service.Reservation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Reserve", userID, typ)
+	ret0, _ := ret[0].(*service.Reservation)
+	return ret0
+}
+
+// Reserve indicates an expected call of Reserve.
+func (mr *MockAuthenticatorRateLimitsMockRecorder) Reserve(userID, typ interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reserve", reflect.TypeOf((*MockAuthenticatorRateLimits)(nil).Reserve), userID, typ)
+}
+
+// MockAuthenticatorLockout is a mock of AuthenticatorLockout interface.
+type MockAuthenticatorLockout struct {
+	ctrl     *gomock.Controller
+	recorder *MockAuthenticatorLockoutMockRecorder
+}
+
+// MockAuthenticatorLockoutMockRecorder is the mock recorder for MockAuthenticatorLockout.
+type MockAuthenticatorLockoutMockRecorder struct {
+	mock *MockAuthenticatorLockout
+}
+
+// NewMockAuthenticatorLockout creates a new mock instance.
+func NewMockAuthenticatorLockout(ctrl *gomock.Controller) *MockAuthenticatorLockout {
+	mock := &MockAuthenticatorLockout{ctrl: ctrl}
+	mock.recorder = &MockAuthenticatorLockoutMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAuthenticatorLockout) EXPECT() *MockAuthenticatorLockoutMockRecorder {
+	return m.recorder
+}
+
+// Check mocks base method.
+func (m *MockAuthenticatorLockout) Check(userID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Check", userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Check indicates an expected call of Check.
+func (mr *MockAuthenticatorLockoutMockRecorder) Check(userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockAuthenticatorLockout)(nil).Check), userID)
+}
+
+// MakeAttempt mocks base method.
+func (m *MockAuthenticatorLockout) MakeAttempt(userID string, authenticatorType model.AuthenticatorType) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MakeAttempt", userID, authenticatorType)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MakeAttempt indicates an expected call of MakeAttempt.
+func (mr *MockAuthenticatorLockoutMockRecorder) MakeAttempt(userID, authenticatorType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeAttempt", reflect.TypeOf((*MockAuthenticatorLockout)(nil).MakeAttempt), userID, authenticatorType)
 }
 
 // MockVerifiedClaims is a mock of VerifiedClaims interface.
@@ -1123,4 +1308,41 @@ func (m *MockStandardAttributes) UpdateStandardAttributes0(role accesscontrol.Ro
 func (mr *MockStandardAttributesMockRecorder) UpdateStandardAttributes0(role, u, identities, stdAttrsToUpdate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStandardAttributes0", reflect.TypeOf((*MockStandardAttributes)(nil).UpdateStandardAttributes0), role, u, identities, stdAttrsToUpdate)
+}
+
+// MockEvents is a mock of Events interface.
+type MockEvents struct {
+	ctrl     *gomock.Controller
+	recorder *MockEventsMockRecorder
+}
+
+// MockEventsMockRecorder is the mock recorder for MockEvents.
+type MockEventsMockRecorder struct {
+	mock *MockEvents
+}
+
+// NewMockEvents creates a new mock instance.
+func NewMockEvents(ctrl *gomock.Controller) *MockEvents {
+	mock := &MockEvents{ctrl: ctrl}
+	mock.recorder = &MockEventsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockEvents) EXPECT() *MockEventsMockRecorder {
+	return m.recorder
+}
+
+// DispatchErrorEvent mocks base method.
+func (m *MockEvents) DispatchErrorEvent(payload event.NonBlockingPayload) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DispatchErrorEvent", payload)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DispatchErrorEvent indicates an expected call of DispatchErrorEvent.
+func (mr *MockEventsMockRecorder) DispatchErrorEvent(payload interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DispatchErrorEvent", reflect.TypeOf((*MockEvents)(nil).DispatchErrorEvent), payload)
 }

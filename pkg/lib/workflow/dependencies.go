@@ -57,6 +57,9 @@ type AccountService interface {
 	// Authenticator Read
 	ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info, error)
 
+	// Authenticator Update
+	VerifyAuthenticatorsWithSpec(infos []*authenticator.Info, spec *authenticator.Spec, options *accounts.VerifyAuthenticatorOptions) (*accounts.VerifyAuthenticatorResult, error)
+
 	// VerifiedClaim Create
 	NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim
 	CreateVerifiedClaim(claim *verification.Claim) error
