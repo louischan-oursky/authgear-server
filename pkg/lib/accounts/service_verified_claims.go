@@ -8,7 +8,13 @@ import (
 	"github.com/authgear/authgear-server/pkg/util/uuid"
 )
 
-func (s *Service) NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim {
+func (s *Service) NewVerifiedClaim(existingClaims []*verification.Claim, userID string, claimName string, claimValue string) (*verification.Claim, bool) {
+	for _, c := range existingClaims {
+		if c.Name == claimName && c.Value == claimValue {
+			return nil, false
+		}
+	}
+
 	now := s.Clock.NowUTC()
 	return &verification.Claim{
 		ID:        uuid.New(),
@@ -16,7 +22,7 @@ func (s *Service) NewVerifiedClaim(userID string, claimName string, claimValue s
 		Name:      claimName,
 		Value:     claimValue,
 		CreatedAt: now,
-	}
+	}, true
 }
 
 func (s *Service) ListVerifiedClaimsOfUser(userID string) ([]*verification.Claim, error) {

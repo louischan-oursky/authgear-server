@@ -572,24 +572,13 @@ func (s *Service) markOAuthEmailAsVerified(info *identity.Info, claims []*verifi
 	email, ok := standardClaims[model.ClaimEmail]
 	if ok && cfg != nil && *cfg.Claims.Email.AssumeVerified {
 		// Mark as verified if OAuth email is assumed to be verified
-		claim, ok := s.markVerified(info.UserID, claims, model.ClaimEmail, email)
+		claim, ok := s.NewVerifiedClaim(claims, info.UserID, string(model.ClaimEmail), email)
 		if ok {
 			return claim, true
 		}
 	}
 
 	return nil, false
-}
-
-func (s *Service) markVerified(userID string, existingClaims []*verification.Claim, claimName model.ClaimName, claimValue string) (*verification.Claim, bool) {
-	for _, claim := range existingClaims {
-		if claim.Name == string(claimName) && claim.Value == claimValue {
-			return nil, false
-		}
-	}
-
-	claim := s.NewVerifiedClaim(userID, string(claimName), claimValue)
-	return claim, true
 }
 
 func (s *Service) getIdentityBySpec(spec *identity.Spec) (*identity.Info, error) {

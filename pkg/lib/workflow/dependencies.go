@@ -71,7 +71,7 @@ type AccountService interface {
 	ResetPrimaryPassword(infos []*authenticator.Info, state *otp.State, newPassword string) (*accounts.ResetPrimaryPasswordResult, error)
 
 	// VerifiedClaim Create
-	NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim
+	NewVerifiedClaim(existingClaims []*verification.Claim, userID string, claimName string, claimValue string) (*verification.Claim, bool)
 
 	// VerifiedClaim Read
 	ListVerifiedClaimsOfUser(userID string) ([]*verification.Claim, error)
