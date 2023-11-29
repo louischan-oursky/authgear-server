@@ -322,6 +322,9 @@ func (s *Service) getNewIdentityChanges(
 	claim, ok := s.markOAuthEmailAsVerified(info, claims)
 	if ok {
 		changes.NewVerifiedClaims = append(changes.NewVerifiedClaims, claim)
+		// In case claims is used, we need to update it.
+		// But it is not used actually, so we ignore the lint error.
+		// nolint: ineffassign
 		claims = s.claimsSlice(claims, []*verification.Claim{claim})
 	}
 
