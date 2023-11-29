@@ -74,3 +74,19 @@ func TryMigrate(password []byte, hash *[]byte) (migrated bool, err error) {
 	migrated = true
 	return
 }
+
+func TryMigratePure(password []byte, hash []byte) (newHash []byte, err error) {
+	fmt, err := resolveFormat(hash)
+	if err != nil {
+		return
+	}
+	if fmt.ID() == latestFormat.ID() {
+		return
+	}
+	newHash, err = latestFormat.Hash(password)
+	if err != nil {
+		return
+	}
+
+	return
+}
