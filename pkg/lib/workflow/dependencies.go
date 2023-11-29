@@ -29,6 +29,18 @@ import (
 )
 
 type AccountService interface {
+	// User Create
+	NewUser(id string) *user.User
+	CreateUser(u *user.User) error
+	UpdateUserLoginTime(u *user.User, loginAt time.Time) *user.User
+
+	// User Read
+	GetUserByID(id string) (*user.User, error)
+
+	// User Update
+	PopulateStandardAttribute(u *user.User, info *identity.Info) *user.User
+	UpdateStandardAttributesWithList(role accesscontrol.Role, u *user.User, identities []*identity.Info, attrs attrs.List) (*user.User, error)
+
 	// Identity Create
 	GetNewIdentityChanges(spec *identity.Spec, u *user.User, identities []*identity.Info, claims []*verification.Claim) (*accounts.NewIdentityChanges, error)
 	CreateIdentity(info *identity.Info) error
