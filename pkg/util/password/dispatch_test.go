@@ -72,5 +72,21 @@ func TestDispatch(t *testing.T) {
 			So(migrated, ShouldBeFalse)
 			So(string(h), ShouldEqual, "$test2$password")
 		})
+
+		Convey("migrate if needed", func() {
+			h := []byte("$test1$password")
+			newHash, err := TryMigratePure([]byte("password"), h)
+			So(err, ShouldBeNil)
+			So(newHash, ShouldNotBeNil)
+			So(string(newHash), ShouldEqual, "$test2$password")
+		})
+
+		Convey("do not migrate if not needed", func() {
+			h := []byte("$test2$password")
+			newHash, err := TryMigratePure([]byte("password"), h)
+			So(err, ShouldBeNil)
+			So(newHash, ShouldBeNil)
+			So(string(h), ShouldEqual, "$test2$password")
+		})
 	})
 }
