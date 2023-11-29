@@ -32,6 +32,12 @@ type VerifyAuthenticatorResult struct {
 	RequireForceChange   bool
 }
 
+type ResetPrimaryPasswordResult struct {
+	MaybeUpdatedAuthenticator *authenticator.Info
+	MaybeNewAuthenticator     *authenticator.Info
+	RemovedAuthenticators     []*authenticator.Info
+}
+
 func (s *Service) NewAuthenticator(spec *authenticator.Spec) (*authenticator.Info, error) {
 	authenticatorID := uuid.New()
 
@@ -242,6 +248,61 @@ func (s *Service) VerifyAuthenticatorsWithSpec(infos []*authenticator.Info, spec
 	}
 
 	return result, nil
+}
+
+func (s *Service) ResetPrimaryPassword(infos []*authenticator.Info, state *otp.State, newPassword string) (*ResetPrimaryPasswordResult, error) {
+	passwords := authenticator.ApplyFilters(
+		infos,
+		authenticator.KeepType(model.AuthenticatorTypePassword),
+		authenticator.KeepKind(authenticator.KindPrimary),
+	)
+
+	switch {
+	case len(passwords) == 1:
+		// The normal case: the user has 1 primary password
+		changed, updated, err := s.UpdateAuthenticatorWithSpec(passwords[0], &authenticator.Spec{
+			Password: &authenticator.PasswordSpec{
+				PlainPassword: newPassword,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result := &ResetPrimaryPasswordResult{}
+		if changed {
+			result.MaybeUpdatedAuthenticator = updated
+		}
+		return result, nil
+	default:
+		// The special case: the user either has no primary password or
+		// more than 1 primary passwords.
+		// We delete the existing primary passwords and then create a new one.
+		isDefault := false
+		for _, p := range passwords {
+			if p.IsDefault {
+				isDefault = true
+			}
+		}
+
+		newPasswordAuthenticator, err := s.NewAuthenticator(&authenticator.Spec{
+			Type:      model.AuthenticatorTypePassword,
+			Kind:      authenticator.KindPrimary,
+			UserID:    state.UserID,
+			IsDefault: isDefault,
+			Password: &authenticator.PasswordSpec{
+				PlainPassword: newPassword,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result := &ResetPrimaryPasswordResult{}
+		result.MaybeNewAuthenticator = newPasswordAuthenticator
+		result.RemovedAuthenticators = passwords
+		return result, nil
+	}
 }
 
 func (s *Service) dispatchAuthenticationFailedEvent(

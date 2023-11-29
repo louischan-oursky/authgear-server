@@ -59,6 +59,7 @@ type AccountService interface {
 
 	// Authenticator Update
 	VerifyAuthenticatorsWithSpec(infos []*authenticator.Info, spec *authenticator.Spec, options *accounts.VerifyAuthenticatorOptions) (*accounts.VerifyAuthenticatorResult, error)
+	ResetPrimaryPassword(infos []*authenticator.Info, state *otp.State, newPassword string) (*accounts.ResetPrimaryPasswordResult, error)
 
 	// VerifiedClaim Create
 	NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim
