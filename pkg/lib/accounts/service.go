@@ -92,8 +92,8 @@ type PasswordAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.Password, error)
 
 	WithPassword(a *authenticator.Password, password string) (*authenticator.Password, error)
-
 	AuthenticatePure(a *authenticator.Password, password string) (migrated *authenticator.Password, requireForceChange bool, err error)
+	UpdatePassword(*authenticator.Password) error
 }
 
 type PasskeyAuthenticators interface {
@@ -109,6 +109,7 @@ type PasskeyAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.Passkey, error)
 
 	AuthenticatePure(a *authenticator.Passkey, assertionResponse []byte) (updated *authenticator.Passkey, err error)
+	Update(*authenticator.Passkey) error
 }
 
 type TOTPAuthenticators interface {
@@ -127,6 +128,7 @@ type OOBOTPAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.OOBOTP, error)
 
 	WithSpec(a *authenticator.OOBOTP, spec *authenticator.OOBOTPSpec) (*authenticator.OOBOTP, error)
+	Update(a *authenticator.OOBOTP) error
 }
 
 type OTPCodes interface {

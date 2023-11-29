@@ -757,6 +757,20 @@ func (mr *MockPasswordAuthenticatorsMockRecorder) New(id, userID, password, isDe
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockPasswordAuthenticators)(nil).New), id, userID, password, isDefault, kind)
 }
 
+// UpdatePassword mocks base method.
+func (m *MockPasswordAuthenticators) UpdatePassword(arg0 *authenticator.Password) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePassword", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePassword indicates an expected call of UpdatePassword.
+func (mr *MockPasswordAuthenticatorsMockRecorder) UpdatePassword(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePassword", reflect.TypeOf((*MockPasswordAuthenticators)(nil).UpdatePassword), arg0)
+}
+
 // WithPassword mocks base method.
 func (m *MockPasswordAuthenticators) WithPassword(a *authenticator.Password, password string) (*authenticator.Password, error) {
 	m.ctrl.T.Helper()
@@ -852,6 +866,20 @@ func (m *MockPasskeyAuthenticators) New(id, userID string, attestationResponse [
 func (mr *MockPasskeyAuthenticatorsMockRecorder) New(id, userID, attestationResponse, isDefault, kind interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockPasskeyAuthenticators)(nil).New), id, userID, attestationResponse, isDefault, kind)
+}
+
+// Update mocks base method.
+func (m *MockPasskeyAuthenticators) Update(arg0 *authenticator.Passkey) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockPasskeyAuthenticatorsMockRecorder) Update(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPasskeyAuthenticators)(nil).Update), arg0)
 }
 
 // MockTOTPAuthenticators is a mock of TOTPAuthenticators interface.
@@ -999,6 +1027,20 @@ func (m *MockOOBOTPAuthenticators) New(id, userID string, oobAuthenticatorType m
 func (mr *MockOOBOTPAuthenticatorsMockRecorder) New(id, userID, oobAuthenticatorType, target, isDefault, kind interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockOOBOTPAuthenticators)(nil).New), id, userID, oobAuthenticatorType, target, isDefault, kind)
+}
+
+// Update mocks base method.
+func (m *MockOOBOTPAuthenticators) Update(a *authenticator.OOBOTP) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", a)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockOOBOTPAuthenticatorsMockRecorder) Update(a interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOOBOTPAuthenticators)(nil).Update), a)
 }
 
 // WithSpec mocks base method.

@@ -305,6 +305,39 @@ func (s *Service) ResetPrimaryPassword(infos []*authenticator.Info, state *otp.S
 	}
 }
 
+func (s *Service) UpdateAuthenticator(info *authenticator.Info) error {
+	switch info.Type {
+	case model.AuthenticatorTypePassword:
+		a := info.Password
+		if err := s.PasswordAuthenticators.UpdatePassword(a); err != nil {
+			return err
+		}
+		*info = *a.ToInfo()
+	case model.AuthenticatorTypePasskey:
+		a := info.Passkey
+		if err := s.PasskeyAuthenticators.Update(a); err != nil {
+			return err
+		}
+		*info = *a.ToInfo()
+	case model.AuthenticatorTypeOOBEmail:
+		a := info.OOBOTP
+		if err := s.OOBOTPAuthenticators.Update(a); err != nil {
+			return err
+		}
+		*info = *a.ToInfo()
+	case model.AuthenticatorTypeOOBSMS:
+		a := info.OOBOTP
+		if err := s.OOBOTPAuthenticators.Update(a); err != nil {
+			return err
+		}
+		*info = *a.ToInfo()
+	default:
+		panic("authenticator: unknown authenticator type for update" + info.Type)
+	}
+
+	return nil
+}
+
 func (s *Service) dispatchAuthenticationFailedEvent(
 	userID string,
 	stage authn.AuthenticationStage,
