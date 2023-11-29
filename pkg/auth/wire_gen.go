@@ -56930,6 +56930,22 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:      verificationConfig,
 		VerifiedClaims:          storePQ,
 	}
+	writer := &accounts.Writer{
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		Users:                  store,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
+		VerifiedClaims:         storePQ,
+	}
 	rawCommands := &user.RawCommands{
 		Store: store,
 		Clock: clockClock,
@@ -57203,6 +57219,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
 		Accounts:             accountsService,
+		AccountWriter:        writer,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
@@ -57741,6 +57758,22 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:      verificationConfig,
 		VerifiedClaims:          storePQ,
 	}
+	writer := &accounts.Writer{
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		Users:                  store,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
+		VerifiedClaims:         storePQ,
+	}
 	rawCommands := &user.RawCommands{
 		Store: store,
 		Clock: clockClock,
@@ -58016,6 +58049,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
 		Accounts:             accountsService,
+		AccountWriter:        writer,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
@@ -58547,6 +58581,22 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:      verificationConfig,
 		VerifiedClaims:          storePQ,
 	}
+	writer := &accounts.Writer{
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		Users:                  store,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
+		VerifiedClaims:         storePQ,
+	}
 	rawCommands := &user.RawCommands{
 		Store: store,
 		Clock: clockClock,
@@ -58822,6 +58872,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
 		Accounts:             accountsService,
+		AccountWriter:        writer,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,
@@ -59390,6 +59441,22 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		VerificationConfig:      verificationConfig,
 		VerifiedClaims:          storePQ,
 	}
+	writer := &accounts.Writer{
+		SQLBuilder:             sqlBuilderApp,
+		SQLExecutor:            sqlExecutor,
+		Users:                  store,
+		LoginIDIdentities:      provider,
+		OAuthIdentities:        oauthProvider,
+		AnonymousIdentities:    anonymousProvider,
+		BiometricIdentities:    biometricProvider,
+		PasskeyIdentities:      passkeyProvider,
+		SIWEIdentities:         siweProvider,
+		PasswordAuthenticators: passwordProvider,
+		PasskeyAuthenticators:  provider2,
+		TOTPAuthenticators:     totpProvider,
+		OOBOTPAuthenticators:   oobProvider,
+		VerifiedClaims:         storePQ,
+	}
 	rawCommands := &user.RawCommands{
 		Store: store,
 		Clock: clockClock,
@@ -59663,6 +59730,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
 		Accounts:             accountsService,
+		AccountWriter:        writer,
 		Users:                userProvider,
 		Identities:           identityFacade,
 		Authenticators:       authenticatorFacade,

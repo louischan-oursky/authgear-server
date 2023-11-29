@@ -30,10 +30,6 @@ func (s *Service) NewUser(id string) *user.User {
 	return user
 }
 
-func (s *Service) CreateUser(u *user.User) error {
-	return s.Users.Create(u)
-}
-
 func (s *Service) UpdateUserLoginTime(u *user.User, loginAt time.Time) *user.User {
 	uu := *u
 	uu.LessRecentLoginAt = uu.MostRecentLoginAt

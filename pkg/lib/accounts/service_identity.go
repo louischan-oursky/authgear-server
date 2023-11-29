@@ -407,53 +407,6 @@ func (s *Service) FindDuplicatedIdentity(info *identity.Info) (duplicate *identi
 	return
 }
 
-func (s *Service) CreateIdentity(info *identity.Info) error {
-	switch info.Type {
-	case model.IdentityTypeLoginID:
-		i := info.LoginID
-		if err := s.LoginIDIdentities.Create(i); err != nil {
-			return err
-		}
-		*info = *i.ToInfo()
-
-	case model.IdentityTypeOAuth:
-		i := info.OAuth
-		if err := s.OAuthIdentities.Create(i); err != nil {
-			return err
-		}
-		*info = *i.ToInfo()
-
-	case model.IdentityTypeAnonymous:
-		i := info.Anonymous
-		if err := s.AnonymousIdentities.Create(i); err != nil {
-			return err
-		}
-		*info = *i.ToInfo()
-
-	case model.IdentityTypeBiometric:
-		i := info.Biometric
-		if err := s.BiometricIdentities.Create(i); err != nil {
-			return err
-		}
-		*info = *i.ToInfo()
-	case model.IdentityTypePasskey:
-		i := info.Passkey
-		if err := s.PasskeyIdentities.Create(i); err != nil {
-			return err
-		}
-		*info = *i.ToInfo()
-	case model.IdentityTypeSIWE:
-		i := info.SIWE
-		if err := s.SIWEIdentities.Create(i); err != nil {
-			return err
-		}
-		*info = *i.ToInfo()
-	default:
-		panic("identity: unknown identity type " + info.Type)
-	}
-	return nil
-}
-
 func (s *Service) GetUpdateIdentityChanges(
 	info *identity.Info,
 	spec *identity.Spec,

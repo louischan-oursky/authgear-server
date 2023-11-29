@@ -91,41 +91,6 @@ func (s *Service) NewAuthenticator(spec *authenticator.Spec) (*authenticator.Inf
 	panic("authenticator: unknown authenticator type " + spec.Type)
 }
 
-func (s *Service) CreateAuthenticator(info *authenticator.Info) error {
-	switch info.Type {
-	case model.AuthenticatorTypePassword:
-		a := info.Password
-		if err := s.PasswordAuthenticators.Create(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-	case model.AuthenticatorTypePasskey:
-		a := info.Passkey
-		if err := s.PasskeyAuthenticators.Create(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-	case model.AuthenticatorTypeTOTP:
-		a := info.TOTP
-		if err := s.TOTPAuthenticators.Create(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-
-	case model.AuthenticatorTypeOOBEmail, model.AuthenticatorTypeOOBSMS:
-		a := info.OOBOTP
-		if err := s.OOBOTPAuthenticators.Create(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-
-	default:
-		panic("authenticator: unknown authenticator type " + info.Type)
-	}
-
-	return nil
-}
-
 func (s *Service) ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info, error) {
 	refs, err := s.listAuthenticatorRefsOfUser(userID)
 	if err != nil {
@@ -303,39 +268,6 @@ func (s *Service) ResetPrimaryPassword(infos []*authenticator.Info, state *otp.S
 		result.RemovedAuthenticators = passwords
 		return result, nil
 	}
-}
-
-func (s *Service) UpdateAuthenticator(info *authenticator.Info) error {
-	switch info.Type {
-	case model.AuthenticatorTypePassword:
-		a := info.Password
-		if err := s.PasswordAuthenticators.UpdatePassword(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-	case model.AuthenticatorTypePasskey:
-		a := info.Passkey
-		if err := s.PasskeyAuthenticators.Update(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-	case model.AuthenticatorTypeOOBEmail:
-		a := info.OOBOTP
-		if err := s.OOBOTPAuthenticators.Update(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-	case model.AuthenticatorTypeOOBSMS:
-		a := info.OOBOTP
-		if err := s.OOBOTPAuthenticators.Update(a); err != nil {
-			return err
-		}
-		*info = *a.ToInfo()
-	default:
-		panic("authenticator: unknown authenticator type for update" + info.Type)
-	}
-
-	return nil
 }
 
 func (s *Service) dispatchAuthenticationFailedEvent(

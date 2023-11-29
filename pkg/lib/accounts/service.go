@@ -29,6 +29,7 @@ type LoginIDIdentities interface {
 	GetByUniqueKey(uniqueKey string) (*identity.LoginID, error)
 
 	WithValue(iden *identity.LoginID, value string, options loginid.CheckerOptions) (*identity.LoginID, error)
+	Update(i *identity.LoginID) error
 }
 
 type OAuthIdentities interface {
@@ -47,6 +48,7 @@ type OAuthIdentities interface {
 	GetByProviderSubject(provider config.ProviderID, subjectID string) (*identity.OAuth, error)
 
 	WithUpdate(iden *identity.OAuth, rawProfile map[string]interface{}, claims map[string]interface{}) *identity.OAuth
+	Update(i *identity.OAuth) error
 }
 
 type AnonymousIdentities interface {
@@ -94,6 +96,8 @@ type PasswordAuthenticators interface {
 	WithPassword(a *authenticator.Password, password string) (*authenticator.Password, error)
 	AuthenticatePure(a *authenticator.Password, password string) (migrated *authenticator.Password, requireForceChange bool, err error)
 	UpdatePassword(*authenticator.Password) error
+
+	Delete(*authenticator.Password) error
 }
 
 type PasskeyAuthenticators interface {
@@ -110,6 +114,8 @@ type PasskeyAuthenticators interface {
 
 	AuthenticatePure(a *authenticator.Passkey, assertionResponse []byte) (updated *authenticator.Passkey, err error)
 	Update(*authenticator.Passkey) error
+
+	Delete(*authenticator.Passkey) error
 }
 
 type TOTPAuthenticators interface {
@@ -119,6 +125,8 @@ type TOTPAuthenticators interface {
 	GetMany(ids []string) ([]*authenticator.TOTP, error)
 
 	Authenticate(a *authenticator.TOTP, code string) error
+
+	Delete(*authenticator.TOTP) error
 }
 
 type OOBOTPAuthenticators interface {
@@ -129,6 +137,8 @@ type OOBOTPAuthenticators interface {
 
 	WithSpec(a *authenticator.OOBOTP, spec *authenticator.OOBOTPSpec) (*authenticator.OOBOTP, error)
 	Update(a *authenticator.OOBOTP) error
+
+	Delete(*authenticator.OOBOTP) error
 }
 
 type OTPCodes interface {
@@ -148,6 +158,8 @@ type AuthenticatorLockout interface {
 type VerifiedClaims interface {
 	ListByUser(userID string) ([]*verification.Claim, error)
 	Create(claim *verification.Claim) error
+
+	Delete(id string) error
 }
 
 type Users interface {

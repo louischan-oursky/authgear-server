@@ -19,10 +19,6 @@ func (s *Service) NewVerifiedClaim(userID string, claimName string, claimValue s
 	}
 }
 
-func (s *Service) CreateVerifiedClaim(claim *verification.Claim) error {
-	return s.VerifiedClaims.Create(claim)
-}
-
 func (s *Service) ListVerifiedClaimsOfUser(userID string) ([]*verification.Claim, error) {
 	return s.VerifiedClaims.ListByUser(userID)
 }

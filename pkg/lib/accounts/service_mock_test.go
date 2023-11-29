@@ -148,6 +148,20 @@ func (mr *MockLoginIDIdentitiesMockRecorder) New(userID, loginID, options interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockLoginIDIdentities)(nil).New), userID, loginID, options)
 }
 
+// Update mocks base method.
+func (m *MockLoginIDIdentities) Update(i *identity.LoginID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", i)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockLoginIDIdentitiesMockRecorder) Update(i interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockLoginIDIdentities)(nil).Update), i)
+}
+
 // WithValue mocks base method.
 func (m *MockLoginIDIdentities) WithValue(iden *identity.LoginID, value string, options loginid.CheckerOptions) (*identity.LoginID, error) {
 	m.ctrl.T.Helper()
@@ -272,6 +286,20 @@ func (m *MockOAuthIdentities) New(userID string, provider config.ProviderID, sub
 func (mr *MockOAuthIdentitiesMockRecorder) New(userID, provider, subjectID, profile, claims interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockOAuthIdentities)(nil).New), userID, provider, subjectID, profile, claims)
+}
+
+// Update mocks base method.
+func (m *MockOAuthIdentities) Update(i *identity.OAuth) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", i)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockOAuthIdentitiesMockRecorder) Update(i interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOAuthIdentities)(nil).Update), i)
 }
 
 // WithUpdate mocks base method.
@@ -727,6 +755,20 @@ func (mr *MockPasswordAuthenticatorsMockRecorder) Create(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockPasswordAuthenticators)(nil).Create), arg0)
 }
 
+// Delete mocks base method.
+func (m *MockPasswordAuthenticators) Delete(arg0 *authenticator.Password) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockPasswordAuthenticatorsMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPasswordAuthenticators)(nil).Delete), arg0)
+}
+
 // GetMany mocks base method.
 func (m *MockPasswordAuthenticators) GetMany(ids []string) ([]*authenticator.Password, error) {
 	m.ctrl.T.Helper()
@@ -838,6 +880,20 @@ func (mr *MockPasskeyAuthenticatorsMockRecorder) Create(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockPasskeyAuthenticators)(nil).Create), arg0)
 }
 
+// Delete mocks base method.
+func (m *MockPasskeyAuthenticators) Delete(arg0 *authenticator.Passkey) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockPasskeyAuthenticatorsMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPasskeyAuthenticators)(nil).Delete), arg0)
+}
+
 // GetMany mocks base method.
 func (m *MockPasskeyAuthenticators) GetMany(ids []string) ([]*authenticator.Passkey, error) {
 	m.ctrl.T.Helper()
@@ -933,6 +989,20 @@ func (mr *MockTOTPAuthenticatorsMockRecorder) Create(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockTOTPAuthenticators)(nil).Create), arg0)
 }
 
+// Delete mocks base method.
+func (m *MockTOTPAuthenticators) Delete(arg0 *authenticator.TOTP) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockTOTPAuthenticatorsMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockTOTPAuthenticators)(nil).Delete), arg0)
+}
+
 // GetMany mocks base method.
 func (m *MockTOTPAuthenticators) GetMany(ids []string) ([]*authenticator.TOTP, error) {
 	m.ctrl.T.Helper()
@@ -997,6 +1067,20 @@ func (m *MockOOBOTPAuthenticators) Create(arg0 *authenticator.OOBOTP) error {
 func (mr *MockOOBOTPAuthenticatorsMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockOOBOTPAuthenticators)(nil).Create), arg0)
+}
+
+// Delete mocks base method.
+func (m *MockOOBOTPAuthenticators) Delete(arg0 *authenticator.OOBOTP) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockOOBOTPAuthenticatorsMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOOBOTPAuthenticators)(nil).Delete), arg0)
 }
 
 // GetMany mocks base method.
@@ -1230,6 +1314,20 @@ func (m *MockVerifiedClaims) Create(claim *verification.Claim) error {
 func (mr *MockVerifiedClaimsMockRecorder) Create(claim interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockVerifiedClaims)(nil).Create), claim)
+}
+
+// Delete mocks base method.
+func (m *MockVerifiedClaims) Delete(id string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockVerifiedClaimsMockRecorder) Delete(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockVerifiedClaims)(nil).Delete), id)
 }
 
 // ListByUser mocks base method.

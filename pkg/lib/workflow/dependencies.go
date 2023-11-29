@@ -31,7 +31,6 @@ import (
 type AccountService interface {
 	// User Create
 	NewUser(id string) *user.User
-	CreateUser(u *user.User) error
 	UpdateUserLoginTime(u *user.User, loginAt time.Time) *user.User
 
 	// User Read
@@ -43,7 +42,6 @@ type AccountService interface {
 
 	// Identity Create
 	GetNewIdentityChanges(spec *identity.Spec, u *user.User, identities []*identity.Info, claims []*verification.Claim) (*accounts.NewIdentityChanges, error)
-	CreateIdentity(info *identity.Info) error
 
 	// Identity Read
 	GetIdentityByID(id string) (*identity.Info, error)
@@ -64,7 +62,6 @@ type AccountService interface {
 
 	// Authenticator Create
 	NewAuthenticator(spec *authenticator.Spec) (*authenticator.Info, error)
-	CreateAuthenticator(info *authenticator.Info) error
 
 	// Authenticator Read
 	ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info, error)
@@ -72,15 +69,28 @@ type AccountService interface {
 	// Authenticator Update
 	VerifyAuthenticatorsWithSpec(infos []*authenticator.Info, spec *authenticator.Spec, options *accounts.VerifyAuthenticatorOptions) (*accounts.VerifyAuthenticatorResult, error)
 	ResetPrimaryPassword(infos []*authenticator.Info, state *otp.State, newPassword string) (*accounts.ResetPrimaryPasswordResult, error)
-	UpdateAuthenticator(info *authenticator.Info) error
 
 	// VerifiedClaim Create
 	NewVerifiedClaim(userID string, claimName string, claimValue string) *verification.Claim
-	CreateVerifiedClaim(claim *verification.Claim) error
 
 	// VerifiedClaim Read
 	ListVerifiedClaimsOfUser(userID string) ([]*verification.Claim, error)
 	GetIdentityVerificationStatus(info *identity.Info, claims []*verification.Claim) ([]verification.ClaimStatus, error)
+}
+
+type AccountWriter interface {
+	CreateUser(u *user.User) error
+	UpdateUser(u *user.User) error
+
+	CreateIdentity(info *identity.Info) error
+	UpdateIdentity(info *identity.Info) error
+
+	CreateAuthenticator(info *authenticator.Info) error
+	UpdateAuthenticator(info *authenticator.Info) error
+	DeleteAuthenticator(info *authenticator.Info) error
+
+	CreateVerifiedClaim(claim *verification.Claim) error
+	DeleteVerifiedClaim(claim *verification.Claim) error
 }
 
 type IdentityService interface {
@@ -209,7 +219,9 @@ type Dependencies struct {
 
 	HTTPRequest *http.Request
 
-	Accounts          AccountService
+	Accounts      AccountService
+	AccountWriter AccountWriter
+
 	Users             UserService
 	Identities        IdentityService
 	Authenticators    AuthenticatorService

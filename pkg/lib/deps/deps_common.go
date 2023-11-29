@@ -247,6 +247,7 @@ var CommonDependencySet = wire.NewSet(
 	wire.NewSet(
 		accounts.DependencySet,
 		wire.Bind(new(workflow.AccountService), new(*accounts.Service)),
+		wire.Bind(new(workflow.AccountWriter), new(*accounts.Writer)),
 	),
 
 	wire.NewSet(
