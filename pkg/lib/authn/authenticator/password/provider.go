@@ -102,6 +102,36 @@ func (p *Provider) Create(a *authenticator.Password) error {
 	return nil
 }
 
+func (p *Provider) AuthenticatePure(a *authenticator.Password, password string) (migrated *authenticator.Password, requireForceChange bool, err error) {
+	err = pwd.Compare([]byte(password), a.PasswordHash)
+	if err != nil {
+		return
+	}
+
+	newHash, err := pwd.TryMigratePure([]byte(password), a.PasswordHash)
+	if err != nil {
+		p.Logger.WithError(err).WithField("authenticator_id", a.ID).
+			Error("Failed to migrate password")
+		return
+	}
+
+	if newHash != nil {
+		now := p.Clock.NowUTC()
+		migratedAuthenticator := *a
+		migratedAuthenticator.PasswordHash = newHash
+		migratedAuthenticator.UpdatedAt = now
+		migrated = &migratedAuthenticator
+	}
+
+	if notAllowedErr := p.PasswordChecker.ValidateCurrentPassword(password); notAllowedErr != nil {
+		if p.Config.ForceChange != nil && *p.Config.ForceChange {
+			requireForceChange = true
+		}
+	}
+
+	return
+}
+
 func (p *Provider) Authenticate(a *authenticator.Password, password string) (requireUpdate bool, err error) {
 	err = pwd.Compare([]byte(password), a.PasswordHash)
 	if err != nil {
