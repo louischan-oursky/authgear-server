@@ -24,6 +24,7 @@ func (c *RawCommands) New(userID string) *User {
 		IsDisabled:         false,
 		DisableReason:      nil,
 		StandardAttributes: make(map[string]interface{}),
+		CustomAttributes:   make(map[string]interface{}),
 	}
 	return user
 }
