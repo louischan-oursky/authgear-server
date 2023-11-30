@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/authgear/authgear-server/pkg/api/model"
-	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/config"
 	"github.com/authgear/authgear-server/pkg/lib/feature/verification"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
@@ -15,7 +15,33 @@ func init() {
 }
 
 type NodeVerifiedAuthenticator struct {
-	Authenticator *authenticator.Info `json:"authenticator,omitempty"`
+	Result           *accounts.VerifyAuthenticatorResult `json:"result,omitempty"`
+	NewVerifiedClaim *verification.Claim                 `json:"new_verified_claim,omitempty"`
+}
+
+func NewNodeVerifiedAuthenticator(ctx context.Context, deps *workflow.Dependencies, result *accounts.VerifyAuthenticatorResult) (*NodeVerifiedAuthenticator, error) {
+	userID := result.UsedAuthenticator.UserID
+
+	// Mark authenticator as verified after login
+	var verifiedClaim *verification.Claim
+
+	// FIXME(workflow): retrieve dependency elsewhere
+	claims, err := deps.Accounts.ListVerifiedClaimsOfUser(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	switch result.UsedAuthenticator.Type {
+	case model.AuthenticatorTypeOOBEmail:
+		verifiedClaim, _ = deps.Accounts.NewVerifiedClaim(claims, userID, string(model.ClaimEmail), result.UsedAuthenticator.OOBOTP.Email)
+	case model.AuthenticatorTypeOOBSMS:
+		verifiedClaim, _ = deps.Accounts.NewVerifiedClaim(claims, userID, string(model.ClaimPhoneNumber), result.UsedAuthenticator.OOBOTP.Phone)
+	}
+
+	return &NodeVerifiedAuthenticator{
+		Result:           result,
+		NewVerifiedClaim: verifiedClaim,
+	}, nil
 }
 
 func (n *NodeVerifiedAuthenticator) Kind() string {
@@ -26,21 +52,8 @@ func (n *NodeVerifiedAuthenticator) Kind() string {
 func (n *NodeVerifiedAuthenticator) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
 		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			// Mark authenticator as verified after login
-			var verifiedClaim *verification.Claim
-			switch n.Authenticator.Type {
-			case model.AuthenticatorTypeOOBEmail:
-				verifiedClaim = deps.Verification.NewVerifiedClaim(n.Authenticator.UserID, string(model.ClaimEmail), n.Authenticator.OOBOTP.Email)
-			case model.AuthenticatorTypeOOBSMS:
-				verifiedClaim = deps.Verification.NewVerifiedClaim(n.Authenticator.UserID, string(model.ClaimPhoneNumber), n.Authenticator.OOBOTP.Phone)
-			}
-
-			if verifiedClaim == nil {
-				return nil
-			}
-
-			if err := deps.Verification.MarkClaimVerified(verifiedClaim); err != nil {
-				return err
+			if n.NewVerifiedClaim != nil {
+				return deps.AccountWriter.CreateVerifiedClaim(n.NewVerifiedClaim)
 			}
 			return nil
 		}),
@@ -60,14 +73,14 @@ func (n *NodeVerifiedAuthenticator) OutputData(ctx context.Context, deps *workfl
 }
 
 func (n *NodeVerifiedAuthenticator) GetAMR() []string {
-	return n.Authenticator.AMR()
+	return n.Result.UsedAuthenticator.AMR()
 }
 
 var _ VerifiedAuthenticationLockoutMethodGetter = &NodeVerifiedAuthenticator{}
 
 func (n *NodeVerifiedAuthenticator) GetVerifiedAuthenticationLockoutMethod() (config.AuthenticationLockoutMethod, bool) {
-	if n.Authenticator != nil {
-		return config.AuthenticationLockoutMethodFromAuthenticatorType(n.Authenticator.Type)
+	if n.Result.UsedAuthenticator != nil {
+		return config.AuthenticationLockoutMethodFromAuthenticatorType(n.Result.UsedAuthenticator.Type)
 	}
 	return "", false
 }

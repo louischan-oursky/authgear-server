@@ -59,7 +59,12 @@ func (n *NodeVerifyEmail) ReactTo(ctx context.Context, deps *workflow.Dependenci
 			return nil, err
 		}
 
-		verifiedClaim := deps.Verification.NewVerifiedClaim(n.UserID, string(model.ClaimEmail), n.Email)
+		// FIXME(workflow): retrieve dependency elsewhere
+		claims, err := deps.Accounts.ListVerifiedClaimsOfUser(n.UserID)
+		if err != nil {
+			return nil, err
+		}
+		verifiedClaim, _ := deps.Accounts.NewVerifiedClaim(claims, n.UserID, string(model.ClaimEmail), n.Email)
 		return workflow.NewNodeSimple(&NodeVerifiedIdentity{
 			IdentityID:       n.IdentityID,
 			NewVerifiedClaim: verifiedClaim,

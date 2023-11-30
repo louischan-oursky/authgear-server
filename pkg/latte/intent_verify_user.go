@@ -61,7 +61,7 @@ func (*IntentVerifyUser) GetEffects(ctx context.Context, deps *workflow.Dependen
 				return nil
 			}
 
-			iden, err := deps.Identities.Get(verified.IdentityID)
+			iden, err := deps.Accounts.GetIdentityByID(verified.IdentityID)
 			if err != nil {
 				return err
 			}

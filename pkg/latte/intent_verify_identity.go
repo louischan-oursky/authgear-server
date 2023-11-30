@@ -51,7 +51,13 @@ func (i *IntentVerifyIdentity) CanReactTo(ctx context.Context, deps *workflow.De
 }
 
 func (i *IntentVerifyIdentity) ReactTo(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows, input workflow.Input) (*workflow.Node, error) {
-	statuses, err := deps.Verification.GetIdentityVerificationStatus(i.Identity)
+	// FIXME(workflow): retrieve dependency elsewhere
+	claims, err := deps.Accounts.ListVerifiedClaimsOfUser(i.Identity.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	statuses, err := deps.Accounts.GetIdentityVerificationStatus(i.Identity, claims)
 	if err != nil {
 		return nil, err
 	}

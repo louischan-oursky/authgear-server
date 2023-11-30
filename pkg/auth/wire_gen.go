@@ -56946,149 +56946,9 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		OOBOTPAuthenticators:   oobProvider,
 		VerifiedClaims:         storePQ,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	commands := &user.Commands{
-		RawCommands:        rawCommands,
-		RawQueries:         rawQueries,
-		Events:             eventService,
-		Verification:       verificationService,
-		UserProfileConfig:  userProfileConfig,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-		Web3:               web3Service,
-	}
-	userProvider := &user.Provider{
-		Commands: commands,
-		Queries:  queries,
-	}
-	storeDeviceTokenRedis := &mfa.StoreDeviceTokenRedis{
-		Redis: appredisHandle,
-		AppID: appID,
-		Clock: clockClock,
-	}
-	storeRecoveryCodePQ := &mfa.StoreRecoveryCodePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	mfaLockout := mfa.Lockout{
-		Config:   authenticationLockoutConfig,
-		RemoteIP: remoteIP,
-		Provider: lockoutService,
-	}
-	mfaService := &mfa.Service{
-		IP:            remoteIP,
-		DeviceTokens:  storeDeviceTokenRedis,
-		RecoveryCodes: storeRecoveryCodePQ,
-		Clock:         clockClock,
-		Config:        authenticationConfig,
-		RateLimiter:   limiter,
-		Lockout:       mfaLockout,
-	}
-	stdattrsService := &stdattrs.Service{
-		ServiceNoEvent: serviceNoEvent,
-		Identities:     serviceService,
-		UserQueries:    rawQueries,
-		UserStore:      store,
-		Events:         eventService,
-	}
-	authorizationStore := &pq.AuthorizationStore{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	storeRedisLogger := idpsession.NewStoreRedisLogger(factory)
-	idpsessionStoreRedis := &idpsession.StoreRedis{
-		Redis:  appredisHandle,
-		AppID:  appID,
-		Clock:  clockClock,
-		Logger: storeRedisLogger,
-	}
-	sessionConfig := appConfig.Session
-	cookieDef := session.NewSessionCookieDef(sessionConfig)
-	idpsessionManager := &idpsession.Manager{
-		Store:     idpsessionStoreRedis,
-		Config:    sessionConfig,
-		Cookies:   cookieManager,
-		CookieDef: cookieDef,
-	}
-	redisLogger := redis.NewLogger(factory)
-	redisStore := &redis.Store{
-		Context:     contextContext,
-		Redis:       appredisHandle,
-		AppID:       appID,
-		Logger:      redisLogger,
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
-	oAuthConfig := appConfig.OAuth
-	eventStoreRedis := &access.EventStoreRedis{
-		Redis: appredisHandle,
-		AppID: appID,
-	}
-	eventProvider := &access.EventProvider{
-		Store: eventStoreRedis,
-	}
-	idpsessionRand := _wireRandValue
-	idpsessionProvider := &idpsession.Provider{
-		Context:         contextContext,
-		RemoteIP:        remoteIP,
-		UserAgentString: userAgentString,
-		AppID:           appID,
-		Redis:           appredisHandle,
-		Store:           idpsessionStoreRedis,
-		AccessEvents:    eventProvider,
-		TrustProxy:      trustProxy,
-		Config:          sessionConfig,
-		Clock:           clockClock,
-		Random:          idpsessionRand,
-	}
 	endpointsEndpoints := &endpoints.Endpoints{
 		HTTPHost:  httpHost,
 		HTTPProto: httpProto,
-	}
-	oauthclientResolver := &oauthclient.Resolver{
-		OAuthConfig:     oAuthConfig,
-		TesterEndpoints: endpointsEndpoints,
-	}
-	offlineGrantService := oauth2.OfflineGrantService{
-		OAuthConfig:    oAuthConfig,
-		Clock:          clockClock,
-		IDPSessions:    idpsessionProvider,
-		ClientResolver: oauthclientResolver,
-	}
-	sessionManager := &oauth2.SessionManager{
-		Store:   redisStore,
-		Config:  oAuthConfig,
-		Service: offlineGrantService,
-	}
-	accountDeletionConfig := appConfig.AccountDeletion
-	accountAnonymizationConfig := appConfig.AccountAnonymization
-	coordinator := &facade.Coordinator{
-		Events:                     eventService,
-		Identities:                 serviceService,
-		Authenticators:             service3,
-		Verification:               verificationService,
-		MFA:                        mfaService,
-		UserCommands:               commands,
-		UserQueries:                queries,
-		StdAttrsService:            stdattrsService,
-		PasswordHistory:            historyStore,
-		OAuth:                      authorizationStore,
-		IDPSessions:                idpsessionManager,
-		OAuthSessions:              sessionManager,
-		IdentityConfig:             identityConfig,
-		AccountDeletionConfig:      accountDeletionConfig,
-		AccountAnonymizationConfig: accountAnonymizationConfig,
-		Clock:                      clockClock,
-	}
-	identityFacade := facade.IdentityFacade{
-		Coordinator: coordinator,
-	}
-	authenticatorFacade := facade.AuthenticatorFacade{
-		Coordinator: coordinator,
 	}
 	messagingLogger := messaging.NewLogger(factory)
 	usageLogger := usage.NewLogger(factory)
@@ -57148,10 +57008,143 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		WhatsappService: whatsappService,
 		UIConfig:        uiConfig,
 	}
-	workflowVerificationFacade := facade.WorkflowVerificationFacade{
-		Verification: verificationService,
-	}
 	forgotpasswordLogger := forgotpassword.NewLogger(factory)
+	storeDeviceTokenRedis := &mfa.StoreDeviceTokenRedis{
+		Redis: appredisHandle,
+		AppID: appID,
+		Clock: clockClock,
+	}
+	storeRecoveryCodePQ := &mfa.StoreRecoveryCodePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	mfaLockout := mfa.Lockout{
+		Config:   authenticationLockoutConfig,
+		RemoteIP: remoteIP,
+		Provider: lockoutService,
+	}
+	mfaService := &mfa.Service{
+		IP:            remoteIP,
+		DeviceTokens:  storeDeviceTokenRedis,
+		RecoveryCodes: storeRecoveryCodePQ,
+		Clock:         clockClock,
+		Config:        authenticationConfig,
+		RateLimiter:   limiter,
+		Lockout:       mfaLockout,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
+	commands := &user.Commands{
+		RawCommands:        rawCommands,
+		RawQueries:         rawQueries,
+		Events:             eventService,
+		Verification:       verificationService,
+		UserProfileConfig:  userProfileConfig,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+		Web3:               web3Service,
+	}
+	stdattrsService := &stdattrs.Service{
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
+	}
+	authorizationStore := &pq.AuthorizationStore{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	storeRedisLogger := idpsession.NewStoreRedisLogger(factory)
+	idpsessionStoreRedis := &idpsession.StoreRedis{
+		Redis:  appredisHandle,
+		AppID:  appID,
+		Clock:  clockClock,
+		Logger: storeRedisLogger,
+	}
+	sessionConfig := appConfig.Session
+	cookieDef := session.NewSessionCookieDef(sessionConfig)
+	idpsessionManager := &idpsession.Manager{
+		Store:     idpsessionStoreRedis,
+		Config:    sessionConfig,
+		Cookies:   cookieManager,
+		CookieDef: cookieDef,
+	}
+	redisLogger := redis.NewLogger(factory)
+	redisStore := &redis.Store{
+		Context:     contextContext,
+		Redis:       appredisHandle,
+		AppID:       appID,
+		Logger:      redisLogger,
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	oAuthConfig := appConfig.OAuth
+	eventStoreRedis := &access.EventStoreRedis{
+		Redis: appredisHandle,
+		AppID: appID,
+	}
+	eventProvider := &access.EventProvider{
+		Store: eventStoreRedis,
+	}
+	idpsessionRand := _wireRandValue
+	idpsessionProvider := &idpsession.Provider{
+		Context:         contextContext,
+		RemoteIP:        remoteIP,
+		UserAgentString: userAgentString,
+		AppID:           appID,
+		Redis:           appredisHandle,
+		Store:           idpsessionStoreRedis,
+		AccessEvents:    eventProvider,
+		TrustProxy:      trustProxy,
+		Config:          sessionConfig,
+		Clock:           clockClock,
+		Random:          idpsessionRand,
+	}
+	oauthclientResolver := &oauthclient.Resolver{
+		OAuthConfig:     oAuthConfig,
+		TesterEndpoints: endpointsEndpoints,
+	}
+	offlineGrantService := oauth2.OfflineGrantService{
+		OAuthConfig:    oAuthConfig,
+		Clock:          clockClock,
+		IDPSessions:    idpsessionProvider,
+		ClientResolver: oauthclientResolver,
+	}
+	sessionManager := &oauth2.SessionManager{
+		Store:   redisStore,
+		Config:  oAuthConfig,
+		Service: offlineGrantService,
+	}
+	accountDeletionConfig := appConfig.AccountDeletion
+	accountAnonymizationConfig := appConfig.AccountAnonymization
+	coordinator := &facade.Coordinator{
+		Events:                     eventService,
+		Identities:                 serviceService,
+		Authenticators:             service3,
+		Verification:               verificationService,
+		MFA:                        mfaService,
+		UserCommands:               commands,
+		UserQueries:                queries,
+		StdAttrsService:            stdattrsService,
+		PasswordHistory:            historyStore,
+		OAuth:                      authorizationStore,
+		IDPSessions:                idpsessionManager,
+		OAuthSessions:              sessionManager,
+		IdentityConfig:             identityConfig,
+		AccountDeletionConfig:      accountDeletionConfig,
+		AccountAnonymizationConfig: accountAnonymizationConfig,
+		Clock:                      clockClock,
+	}
+	identityFacade := facade.IdentityFacade{
+		Coordinator: coordinator,
+	}
+	authenticatorFacade := facade.AuthenticatorFacade{
+		Coordinator: coordinator,
+	}
 	forgotpasswordService := &forgotpassword.Service{
 		Logger:         forgotpasswordLogger,
 		Config:         appConfig,
@@ -57220,13 +57213,9 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		HTTPRequest:          request,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
-		Users:                userProvider,
-		Identities:           identityFacade,
-		Authenticators:       authenticatorFacade,
-		StdAttrsService:      stdattrsService,
+		Lockout:              lockout2,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
-		Verification:         workflowVerificationFacade,
 		ForgotPassword:       forgotpasswordService,
 		ResetPassword:        forgotpasswordService,
 		AccountMigrations:    accountmigrationService,
@@ -57774,24 +57763,69 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		OOBOTPAuthenticators:   oobProvider,
 		VerifiedClaims:         storePQ,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
+	endpointsEndpoints := &endpoints.Endpoints{
+		HTTPHost:  httpHost,
+		HTTPProto: httpProto,
+	}
+	messagingLogger := messaging.NewLogger(factory)
+	usageLogger := usage.NewLogger(factory)
+	usageLimiter := &usage.Limiter{
+		Logger: usageLogger,
+		Clock:  clockClock,
+		AppID:  appID,
+		Redis:  appredisHandle,
+	}
+	messagingConfig := appConfig.Messaging
+	messagingRateLimitsConfig := messagingConfig.RateLimits
+	messagingFeatureConfig := featureConfig.Messaging
+	rateLimitsEnvironmentConfig := &environmentConfig.RateLimits
+	limits := messaging.Limits{
+		Logger:        messagingLogger,
+		RateLimiter:   limiter,
+		UsageLimiter:  usageLimiter,
+		RemoteIP:      remoteIP,
+		Config:        messagingRateLimitsConfig,
+		FeatureConfig: messagingFeatureConfig,
+		EnvConfig:     rateLimitsEnvironmentConfig,
+	}
+	serviceLogger := whatsapp.NewServiceLogger(factory)
+	devMode := environmentConfig.DevMode
+	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
+	testModeWhatsappConfig := testModeConfig.Whatsapp
+	whatsappConfig := messagingConfig.Whatsapp
+	whatsappOnPremisesCredentials := deps.ProvideWhatsappOnPremisesCredentials(secretConfig)
+	tokenStore := &whatsapp.TokenStore{
+		Redis: appredisHandle,
+		AppID: appID,
 		Clock: clockClock,
 	}
-	commands := &user.Commands{
-		RawCommands:        rawCommands,
-		RawQueries:         rawQueries,
-		Events:             eventService,
-		Verification:       verificationService,
-		UserProfileConfig:  userProfileConfig,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-		Web3:               web3Service,
+	onPremisesClient := whatsapp.NewWhatsappOnPremisesClient(whatsappConfig, whatsappOnPremisesCredentials, tokenStore)
+	whatsappService := &whatsapp.Service{
+		Context:                           contextContext,
+		Logger:                            serviceLogger,
+		DevMode:                           devMode,
+		FeatureTestModeWhatsappSuppressed: featureTestModeWhatsappSuppressed,
+		TestModeWhatsappConfig:            testModeWhatsappConfig,
+		Config:                            whatsappConfig,
+		OnPremisesClient:                  onPremisesClient,
+		TokenStore:                        tokenStore,
 	}
-	userProvider := &user.Provider{
-		Commands: commands,
-		Queries:  queries,
+	sender := &messaging.Sender{
+		Limits:                 limits,
+		TaskQueue:              queue,
+		Events:                 eventService,
+		Whatsapp:               whatsappService,
+		MessagingFeatureConfig: messagingFeatureConfig,
 	}
+	uiConfig := appConfig.UI
+	messageSender := &otp.MessageSender{
+		Translation:     translationService,
+		Endpoints:       endpointsEndpoints,
+		Sender:          sender,
+		WhatsappService: whatsappService,
+		UIConfig:        uiConfig,
+	}
+	forgotpasswordLogger := forgotpassword.NewLogger(factory)
 	storeDeviceTokenRedis := &mfa.StoreDeviceTokenRedis{
 		Redis: appredisHandle,
 		AppID: appID,
@@ -57814,6 +57848,20 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Config:        authenticationConfig,
 		RateLimiter:   limiter,
 		Lockout:       mfaLockout,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
+	commands := &user.Commands{
+		RawCommands:        rawCommands,
+		RawQueries:         rawQueries,
+		Events:             eventService,
+		Verification:       verificationService,
+		UserProfileConfig:  userProfileConfig,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
 		ServiceNoEvent: serviceNoEvent,
@@ -57875,10 +57923,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Clock:           clockClock,
 		Random:          idpsessionRand,
 	}
-	endpointsEndpoints := &endpoints.Endpoints{
-		HTTPHost:  httpHost,
-		HTTPProto: httpProto,
-	}
 	oauthclientResolver := &oauthclient.Resolver{
 		OAuthConfig:     oAuthConfig,
 		TesterEndpoints: endpointsEndpoints,
@@ -57920,68 +57964,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	messagingLogger := messaging.NewLogger(factory)
-	usageLogger := usage.NewLogger(factory)
-	usageLimiter := &usage.Limiter{
-		Logger: usageLogger,
-		Clock:  clockClock,
-		AppID:  appID,
-		Redis:  appredisHandle,
-	}
-	messagingConfig := appConfig.Messaging
-	messagingRateLimitsConfig := messagingConfig.RateLimits
-	messagingFeatureConfig := featureConfig.Messaging
-	rateLimitsEnvironmentConfig := &environmentConfig.RateLimits
-	limits := messaging.Limits{
-		Logger:        messagingLogger,
-		RateLimiter:   limiter,
-		UsageLimiter:  usageLimiter,
-		RemoteIP:      remoteIP,
-		Config:        messagingRateLimitsConfig,
-		FeatureConfig: messagingFeatureConfig,
-		EnvConfig:     rateLimitsEnvironmentConfig,
-	}
-	serviceLogger := whatsapp.NewServiceLogger(factory)
-	devMode := environmentConfig.DevMode
-	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
-	testModeWhatsappConfig := testModeConfig.Whatsapp
-	whatsappConfig := messagingConfig.Whatsapp
-	whatsappOnPremisesCredentials := deps.ProvideWhatsappOnPremisesCredentials(secretConfig)
-	tokenStore := &whatsapp.TokenStore{
-		Redis: appredisHandle,
-		AppID: appID,
-		Clock: clockClock,
-	}
-	onPremisesClient := whatsapp.NewWhatsappOnPremisesClient(whatsappConfig, whatsappOnPremisesCredentials, tokenStore)
-	whatsappService := &whatsapp.Service{
-		Context:                           contextContext,
-		Logger:                            serviceLogger,
-		DevMode:                           devMode,
-		FeatureTestModeWhatsappSuppressed: featureTestModeWhatsappSuppressed,
-		TestModeWhatsappConfig:            testModeWhatsappConfig,
-		Config:                            whatsappConfig,
-		OnPremisesClient:                  onPremisesClient,
-		TokenStore:                        tokenStore,
-	}
-	sender := &messaging.Sender{
-		Limits:                 limits,
-		TaskQueue:              queue,
-		Events:                 eventService,
-		Whatsapp:               whatsappService,
-		MessagingFeatureConfig: messagingFeatureConfig,
-	}
-	uiConfig := appConfig.UI
-	messageSender := &otp.MessageSender{
-		Translation:     translationService,
-		Endpoints:       endpointsEndpoints,
-		Sender:          sender,
-		WhatsappService: whatsappService,
-		UIConfig:        uiConfig,
-	}
-	workflowVerificationFacade := facade.WorkflowVerificationFacade{
-		Verification: verificationService,
-	}
-	forgotpasswordLogger := forgotpassword.NewLogger(factory)
 	forgotpasswordService := &forgotpassword.Service{
 		Logger:         forgotpasswordLogger,
 		Config:         appConfig,
@@ -58050,13 +58032,9 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		HTTPRequest:          request,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
-		Users:                userProvider,
-		Identities:           identityFacade,
-		Authenticators:       authenticatorFacade,
-		StdAttrsService:      stdattrsService,
+		Lockout:              lockout2,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
-		Verification:         workflowVerificationFacade,
 		ForgotPassword:       forgotpasswordService,
 		ResetPassword:        forgotpasswordService,
 		AccountMigrations:    accountmigrationService,
@@ -58597,24 +58575,69 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		OOBOTPAuthenticators:   oobProvider,
 		VerifiedClaims:         storePQ,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
+	endpointsEndpoints := &endpoints.Endpoints{
+		HTTPHost:  httpHost,
+		HTTPProto: httpProto,
+	}
+	messagingLogger := messaging.NewLogger(factory)
+	usageLogger := usage.NewLogger(factory)
+	usageLimiter := &usage.Limiter{
+		Logger: usageLogger,
+		Clock:  clockClock,
+		AppID:  appID,
+		Redis:  appredisHandle,
+	}
+	messagingConfig := appConfig.Messaging
+	messagingRateLimitsConfig := messagingConfig.RateLimits
+	messagingFeatureConfig := featureConfig.Messaging
+	rateLimitsEnvironmentConfig := &environmentConfig.RateLimits
+	limits := messaging.Limits{
+		Logger:        messagingLogger,
+		RateLimiter:   limiter,
+		UsageLimiter:  usageLimiter,
+		RemoteIP:      remoteIP,
+		Config:        messagingRateLimitsConfig,
+		FeatureConfig: messagingFeatureConfig,
+		EnvConfig:     rateLimitsEnvironmentConfig,
+	}
+	serviceLogger := whatsapp.NewServiceLogger(factory)
+	devMode := environmentConfig.DevMode
+	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
+	testModeWhatsappConfig := testModeConfig.Whatsapp
+	whatsappConfig := messagingConfig.Whatsapp
+	whatsappOnPremisesCredentials := deps.ProvideWhatsappOnPremisesCredentials(secretConfig)
+	tokenStore := &whatsapp.TokenStore{
+		Redis: appredisHandle,
+		AppID: appID,
 		Clock: clockClock,
 	}
-	commands := &user.Commands{
-		RawCommands:        rawCommands,
-		RawQueries:         rawQueries,
-		Events:             eventService,
-		Verification:       verificationService,
-		UserProfileConfig:  userProfileConfig,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-		Web3:               web3Service,
+	onPremisesClient := whatsapp.NewWhatsappOnPremisesClient(whatsappConfig, whatsappOnPremisesCredentials, tokenStore)
+	whatsappService := &whatsapp.Service{
+		Context:                           contextContext,
+		Logger:                            serviceLogger,
+		DevMode:                           devMode,
+		FeatureTestModeWhatsappSuppressed: featureTestModeWhatsappSuppressed,
+		TestModeWhatsappConfig:            testModeWhatsappConfig,
+		Config:                            whatsappConfig,
+		OnPremisesClient:                  onPremisesClient,
+		TokenStore:                        tokenStore,
 	}
-	userProvider := &user.Provider{
-		Commands: commands,
-		Queries:  queries,
+	sender := &messaging.Sender{
+		Limits:                 limits,
+		TaskQueue:              queue,
+		Events:                 eventService,
+		Whatsapp:               whatsappService,
+		MessagingFeatureConfig: messagingFeatureConfig,
 	}
+	uiConfig := appConfig.UI
+	messageSender := &otp.MessageSender{
+		Translation:     translationService,
+		Endpoints:       endpointsEndpoints,
+		Sender:          sender,
+		WhatsappService: whatsappService,
+		UIConfig:        uiConfig,
+	}
+	forgotpasswordLogger := forgotpassword.NewLogger(factory)
 	storeDeviceTokenRedis := &mfa.StoreDeviceTokenRedis{
 		Redis: appredisHandle,
 		AppID: appID,
@@ -58637,6 +58660,20 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Config:        authenticationConfig,
 		RateLimiter:   limiter,
 		Lockout:       mfaLockout,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
+	commands := &user.Commands{
+		RawCommands:        rawCommands,
+		RawQueries:         rawQueries,
+		Events:             eventService,
+		Verification:       verificationService,
+		UserProfileConfig:  userProfileConfig,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+		Web3:               web3Service,
 	}
 	stdattrsService := &stdattrs.Service{
 		ServiceNoEvent: serviceNoEvent,
@@ -58698,10 +58735,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Clock:           clockClock,
 		Random:          idpsessionRand,
 	}
-	endpointsEndpoints := &endpoints.Endpoints{
-		HTTPHost:  httpHost,
-		HTTPProto: httpProto,
-	}
 	oauthclientResolver := &oauthclient.Resolver{
 		OAuthConfig:     oAuthConfig,
 		TesterEndpoints: endpointsEndpoints,
@@ -58743,68 +58776,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	authenticatorFacade := facade.AuthenticatorFacade{
 		Coordinator: coordinator,
 	}
-	messagingLogger := messaging.NewLogger(factory)
-	usageLogger := usage.NewLogger(factory)
-	usageLimiter := &usage.Limiter{
-		Logger: usageLogger,
-		Clock:  clockClock,
-		AppID:  appID,
-		Redis:  appredisHandle,
-	}
-	messagingConfig := appConfig.Messaging
-	messagingRateLimitsConfig := messagingConfig.RateLimits
-	messagingFeatureConfig := featureConfig.Messaging
-	rateLimitsEnvironmentConfig := &environmentConfig.RateLimits
-	limits := messaging.Limits{
-		Logger:        messagingLogger,
-		RateLimiter:   limiter,
-		UsageLimiter:  usageLimiter,
-		RemoteIP:      remoteIP,
-		Config:        messagingRateLimitsConfig,
-		FeatureConfig: messagingFeatureConfig,
-		EnvConfig:     rateLimitsEnvironmentConfig,
-	}
-	serviceLogger := whatsapp.NewServiceLogger(factory)
-	devMode := environmentConfig.DevMode
-	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
-	testModeWhatsappConfig := testModeConfig.Whatsapp
-	whatsappConfig := messagingConfig.Whatsapp
-	whatsappOnPremisesCredentials := deps.ProvideWhatsappOnPremisesCredentials(secretConfig)
-	tokenStore := &whatsapp.TokenStore{
-		Redis: appredisHandle,
-		AppID: appID,
-		Clock: clockClock,
-	}
-	onPremisesClient := whatsapp.NewWhatsappOnPremisesClient(whatsappConfig, whatsappOnPremisesCredentials, tokenStore)
-	whatsappService := &whatsapp.Service{
-		Context:                           contextContext,
-		Logger:                            serviceLogger,
-		DevMode:                           devMode,
-		FeatureTestModeWhatsappSuppressed: featureTestModeWhatsappSuppressed,
-		TestModeWhatsappConfig:            testModeWhatsappConfig,
-		Config:                            whatsappConfig,
-		OnPremisesClient:                  onPremisesClient,
-		TokenStore:                        tokenStore,
-	}
-	sender := &messaging.Sender{
-		Limits:                 limits,
-		TaskQueue:              queue,
-		Events:                 eventService,
-		Whatsapp:               whatsappService,
-		MessagingFeatureConfig: messagingFeatureConfig,
-	}
-	uiConfig := appConfig.UI
-	messageSender := &otp.MessageSender{
-		Translation:     translationService,
-		Endpoints:       endpointsEndpoints,
-		Sender:          sender,
-		WhatsappService: whatsappService,
-		UIConfig:        uiConfig,
-	}
-	workflowVerificationFacade := facade.WorkflowVerificationFacade{
-		Verification: verificationService,
-	}
-	forgotpasswordLogger := forgotpassword.NewLogger(factory)
 	forgotpasswordService := &forgotpassword.Service{
 		Logger:         forgotpasswordLogger,
 		Config:         appConfig,
@@ -58873,13 +58844,9 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		HTTPRequest:          request,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
-		Users:                userProvider,
-		Identities:           identityFacade,
-		Authenticators:       authenticatorFacade,
-		StdAttrsService:      stdattrsService,
+		Lockout:              lockout2,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
-		Verification:         workflowVerificationFacade,
 		ForgotPassword:       forgotpasswordService,
 		ResetPassword:        forgotpasswordService,
 		AccountMigrations:    accountmigrationService,
@@ -59457,149 +59424,9 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		OOBOTPAuthenticators:   oobProvider,
 		VerifiedClaims:         storePQ,
 	}
-	rawCommands := &user.RawCommands{
-		Store: store,
-		Clock: clockClock,
-	}
-	commands := &user.Commands{
-		RawCommands:        rawCommands,
-		RawQueries:         rawQueries,
-		Events:             eventService,
-		Verification:       verificationService,
-		UserProfileConfig:  userProfileConfig,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-		Web3:               web3Service,
-	}
-	userProvider := &user.Provider{
-		Commands: commands,
-		Queries:  queries,
-	}
-	storeDeviceTokenRedis := &mfa.StoreDeviceTokenRedis{
-		Redis: appredisHandle,
-		AppID: appID,
-		Clock: clockClock,
-	}
-	storeRecoveryCodePQ := &mfa.StoreRecoveryCodePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	mfaLockout := mfa.Lockout{
-		Config:   authenticationLockoutConfig,
-		RemoteIP: remoteIP,
-		Provider: lockoutService,
-	}
-	mfaService := &mfa.Service{
-		IP:            remoteIP,
-		DeviceTokens:  storeDeviceTokenRedis,
-		RecoveryCodes: storeRecoveryCodePQ,
-		Clock:         clockClock,
-		Config:        authenticationConfig,
-		RateLimiter:   limiter,
-		Lockout:       mfaLockout,
-	}
-	stdattrsService := &stdattrs.Service{
-		ServiceNoEvent: serviceNoEvent,
-		Identities:     serviceService,
-		UserQueries:    rawQueries,
-		UserStore:      store,
-		Events:         eventService,
-	}
-	authorizationStore := &pq.AuthorizationStore{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	storeRedisLogger := idpsession.NewStoreRedisLogger(factory)
-	idpsessionStoreRedis := &idpsession.StoreRedis{
-		Redis:  appredisHandle,
-		AppID:  appID,
-		Clock:  clockClock,
-		Logger: storeRedisLogger,
-	}
-	sessionConfig := appConfig.Session
-	cookieDef := session.NewSessionCookieDef(sessionConfig)
-	idpsessionManager := &idpsession.Manager{
-		Store:     idpsessionStoreRedis,
-		Config:    sessionConfig,
-		Cookies:   cookieManager,
-		CookieDef: cookieDef,
-	}
-	redisLogger := redis.NewLogger(factory)
-	redisStore := &redis.Store{
-		Context:     contextContext,
-		Redis:       appredisHandle,
-		AppID:       appID,
-		Logger:      redisLogger,
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
-	oAuthConfig := appConfig.OAuth
-	eventStoreRedis := &access.EventStoreRedis{
-		Redis: appredisHandle,
-		AppID: appID,
-	}
-	eventProvider := &access.EventProvider{
-		Store: eventStoreRedis,
-	}
-	idpsessionRand := _wireRandValue
-	idpsessionProvider := &idpsession.Provider{
-		Context:         contextContext,
-		RemoteIP:        remoteIP,
-		UserAgentString: userAgentString,
-		AppID:           appID,
-		Redis:           appredisHandle,
-		Store:           idpsessionStoreRedis,
-		AccessEvents:    eventProvider,
-		TrustProxy:      trustProxy,
-		Config:          sessionConfig,
-		Clock:           clockClock,
-		Random:          idpsessionRand,
-	}
 	endpointsEndpoints := &endpoints.Endpoints{
 		HTTPHost:  httpHost,
 		HTTPProto: httpProto,
-	}
-	oauthclientResolver := &oauthclient.Resolver{
-		OAuthConfig:     oAuthConfig,
-		TesterEndpoints: endpointsEndpoints,
-	}
-	offlineGrantService := oauth2.OfflineGrantService{
-		OAuthConfig:    oAuthConfig,
-		Clock:          clockClock,
-		IDPSessions:    idpsessionProvider,
-		ClientResolver: oauthclientResolver,
-	}
-	sessionManager := &oauth2.SessionManager{
-		Store:   redisStore,
-		Config:  oAuthConfig,
-		Service: offlineGrantService,
-	}
-	accountDeletionConfig := appConfig.AccountDeletion
-	accountAnonymizationConfig := appConfig.AccountAnonymization
-	coordinator := &facade.Coordinator{
-		Events:                     eventService,
-		Identities:                 serviceService,
-		Authenticators:             service3,
-		Verification:               verificationService,
-		MFA:                        mfaService,
-		UserCommands:               commands,
-		UserQueries:                queries,
-		StdAttrsService:            stdattrsService,
-		PasswordHistory:            historyStore,
-		OAuth:                      authorizationStore,
-		IDPSessions:                idpsessionManager,
-		OAuthSessions:              sessionManager,
-		IdentityConfig:             identityConfig,
-		AccountDeletionConfig:      accountDeletionConfig,
-		AccountAnonymizationConfig: accountAnonymizationConfig,
-		Clock:                      clockClock,
-	}
-	identityFacade := facade.IdentityFacade{
-		Coordinator: coordinator,
-	}
-	authenticatorFacade := facade.AuthenticatorFacade{
-		Coordinator: coordinator,
 	}
 	messagingLogger := messaging.NewLogger(factory)
 	usageLogger := usage.NewLogger(factory)
@@ -59659,10 +59486,143 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		WhatsappService: whatsappService,
 		UIConfig:        uiConfig,
 	}
-	workflowVerificationFacade := facade.WorkflowVerificationFacade{
-		Verification: verificationService,
-	}
 	forgotpasswordLogger := forgotpassword.NewLogger(factory)
+	storeDeviceTokenRedis := &mfa.StoreDeviceTokenRedis{
+		Redis: appredisHandle,
+		AppID: appID,
+		Clock: clockClock,
+	}
+	storeRecoveryCodePQ := &mfa.StoreRecoveryCodePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	mfaLockout := mfa.Lockout{
+		Config:   authenticationLockoutConfig,
+		RemoteIP: remoteIP,
+		Provider: lockoutService,
+	}
+	mfaService := &mfa.Service{
+		IP:            remoteIP,
+		DeviceTokens:  storeDeviceTokenRedis,
+		RecoveryCodes: storeRecoveryCodePQ,
+		Clock:         clockClock,
+		Config:        authenticationConfig,
+		RateLimiter:   limiter,
+		Lockout:       mfaLockout,
+	}
+	rawCommands := &user.RawCommands{
+		Store: store,
+		Clock: clockClock,
+	}
+	commands := &user.Commands{
+		RawCommands:        rawCommands,
+		RawQueries:         rawQueries,
+		Events:             eventService,
+		Verification:       verificationService,
+		UserProfileConfig:  userProfileConfig,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+		Web3:               web3Service,
+	}
+	stdattrsService := &stdattrs.Service{
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
+	}
+	authorizationStore := &pq.AuthorizationStore{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
+	storeRedisLogger := idpsession.NewStoreRedisLogger(factory)
+	idpsessionStoreRedis := &idpsession.StoreRedis{
+		Redis:  appredisHandle,
+		AppID:  appID,
+		Clock:  clockClock,
+		Logger: storeRedisLogger,
+	}
+	sessionConfig := appConfig.Session
+	cookieDef := session.NewSessionCookieDef(sessionConfig)
+	idpsessionManager := &idpsession.Manager{
+		Store:     idpsessionStoreRedis,
+		Config:    sessionConfig,
+		Cookies:   cookieManager,
+		CookieDef: cookieDef,
+	}
+	redisLogger := redis.NewLogger(factory)
+	redisStore := &redis.Store{
+		Context:     contextContext,
+		Redis:       appredisHandle,
+		AppID:       appID,
+		Logger:      redisLogger,
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
+	}
+	oAuthConfig := appConfig.OAuth
+	eventStoreRedis := &access.EventStoreRedis{
+		Redis: appredisHandle,
+		AppID: appID,
+	}
+	eventProvider := &access.EventProvider{
+		Store: eventStoreRedis,
+	}
+	idpsessionRand := _wireRandValue
+	idpsessionProvider := &idpsession.Provider{
+		Context:         contextContext,
+		RemoteIP:        remoteIP,
+		UserAgentString: userAgentString,
+		AppID:           appID,
+		Redis:           appredisHandle,
+		Store:           idpsessionStoreRedis,
+		AccessEvents:    eventProvider,
+		TrustProxy:      trustProxy,
+		Config:          sessionConfig,
+		Clock:           clockClock,
+		Random:          idpsessionRand,
+	}
+	oauthclientResolver := &oauthclient.Resolver{
+		OAuthConfig:     oAuthConfig,
+		TesterEndpoints: endpointsEndpoints,
+	}
+	offlineGrantService := oauth2.OfflineGrantService{
+		OAuthConfig:    oAuthConfig,
+		Clock:          clockClock,
+		IDPSessions:    idpsessionProvider,
+		ClientResolver: oauthclientResolver,
+	}
+	sessionManager := &oauth2.SessionManager{
+		Store:   redisStore,
+		Config:  oAuthConfig,
+		Service: offlineGrantService,
+	}
+	accountDeletionConfig := appConfig.AccountDeletion
+	accountAnonymizationConfig := appConfig.AccountAnonymization
+	coordinator := &facade.Coordinator{
+		Events:                     eventService,
+		Identities:                 serviceService,
+		Authenticators:             service3,
+		Verification:               verificationService,
+		MFA:                        mfaService,
+		UserCommands:               commands,
+		UserQueries:                queries,
+		StdAttrsService:            stdattrsService,
+		PasswordHistory:            historyStore,
+		OAuth:                      authorizationStore,
+		IDPSessions:                idpsessionManager,
+		OAuthSessions:              sessionManager,
+		IdentityConfig:             identityConfig,
+		AccountDeletionConfig:      accountDeletionConfig,
+		AccountAnonymizationConfig: accountAnonymizationConfig,
+		Clock:                      clockClock,
+	}
+	identityFacade := facade.IdentityFacade{
+		Coordinator: coordinator,
+	}
+	authenticatorFacade := facade.AuthenticatorFacade{
+		Coordinator: coordinator,
+	}
 	forgotpasswordService := &forgotpassword.Service{
 		Logger:         forgotpasswordLogger,
 		Config:         appConfig,
@@ -59731,13 +59691,9 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		HTTPRequest:          request,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
-		Users:                userProvider,
-		Identities:           identityFacade,
-		Authenticators:       authenticatorFacade,
-		StdAttrsService:      stdattrsService,
+		Lockout:              lockout2,
 		OTPCodes:             otpService,
 		OTPSender:            messageSender,
-		Verification:         workflowVerificationFacade,
 		ForgotPassword:       forgotpasswordService,
 		ResetPassword:        forgotpasswordService,
 		AccountMigrations:    accountmigrationService,
@@ -79329,17 +79285,16 @@ func newWebAppAuthflowForgotPasswordOTPHandler(p *deps.RequestProvider) http.Han
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
-	userProfileConfig := appConfig.UserProfile
 	storePQ := &verification.StorePQ{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	verificationService := &verification.Service{
-		Config:            verificationConfig,
-		UserProfileConfig: userProfileConfig,
-		Clock:             clockClock,
-		ClaimStore:        storePQ,
+		Config:     verificationConfig,
+		Clock:      clockClock,
+		ClaimStore: storePQ,
 	}
+	userProfileConfig := appConfig.UserProfile
 	imagesCDNHost := environmentConfig.ImagesCDNHost
 	pictureTransformer := &stdattrs.PictureTransformer{
 		HTTPProto:     httpProto,
@@ -79481,12 +79436,11 @@ func newWebAppAuthflowForgotPasswordOTPHandler(p *deps.RequestProvider) http.Han
 		Lockout:       mfaLockout,
 	}
 	stdattrsService := &stdattrs.Service{
-		UserProfileConfig: userProfileConfig,
-		ServiceNoEvent:    serviceNoEvent,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         store,
-		Events:            eventService,
+		ServiceNoEvent: serviceNoEvent,
+		Identities:     serviceService,
+		UserQueries:    rawQueries,
+		UserStore:      store,
+		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
 		SQLBuilder:  sqlBuilderApp,

@@ -6,9 +6,9 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/api"
 	"github.com/authgear/authgear-server/pkg/api/model"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/authn"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
-	"github.com/authgear/authgear-server/pkg/lib/facade"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
 )
 
@@ -47,23 +47,30 @@ func (n *NodeAuthenticatePassword) ReactTo(ctx context.Context, deps *workflow.D
 		} else if err != nil {
 			return nil, err
 		}
-		_, err = deps.Authenticators.VerifyWithSpec(info, &authenticator.Spec{
+		spec := &authenticator.Spec{
 			Password: &authenticator.PasswordSpec{
 				PlainPassword: inputTakePassword.GetPassword(),
 			},
-		}, &facade.VerifyOptions{
-			AuthenticationDetails: facade.NewAuthenticationDetails(
-				info.UserID,
-				authn.AuthenticationStageSecondary,
-				authn.AuthenticationTypePassword,
-			),
-		})
+		}
+		result, err := deps.Accounts.VerifyAuthenticatorsWithSpec(
+			[]*authenticator.Info{info},
+			spec,
+			&accounts.VerifyAuthenticatorOptions{
+				UserID:             info.UserID,
+				Stage:              authn.AuthenticationStageSecondary,
+				AuthenticatorType:  info.Type,
+				AuthenticationType: authn.AuthenticationTypePassword,
+			},
+		)
 		if err != nil {
 			return nil, err
 		}
-		return workflow.NewNodeSimple(&NodeVerifiedAuthenticator{
-			Authenticator: info,
-		}), nil
+
+		n, err := NewNodeVerifiedAuthenticator(ctx, deps, result)
+		if err != nil {
+			return nil, err
+		}
+		return workflow.NewNodeSimple(n), nil
 	}
 	return nil, workflow.ErrIncompatibleInput
 }
@@ -73,14 +80,16 @@ func (n *NodeAuthenticatePassword) OutputData(ctx context.Context, deps *workflo
 }
 
 func (n *NodeAuthenticatePassword) getPasswordAuthenticator(deps *workflow.Dependencies) (*authenticator.Info, error) {
-	ais, err := deps.Authenticators.List(
-		n.UserID,
-		authenticator.KeepKind(n.AuthenticatorKind),
-		authenticator.KeepType(model.AuthenticatorTypePassword),
-	)
+	// FIXME(workflow): retrieve dependency elsewhere
+	ais, err := deps.Accounts.ListAuthenticatorsOfUser(n.UserID)
 	if err != nil {
 		return nil, err
 	}
+	ais = authenticator.ApplyFilters(
+		ais,
+		authenticator.KeepKind(n.AuthenticatorKind),
+		authenticator.KeepType(model.AuthenticatorTypePassword),
+	)
 
 	if len(ais) == 0 {
 		return nil, api.ErrNoAuthenticator

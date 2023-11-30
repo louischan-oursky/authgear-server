@@ -52,40 +52,68 @@ func (i *IntentMigrateLoginID) ReactTo(ctx context.Context, deps *workflow.Depen
 	switch len(workflows.Nearest.Nodes) {
 	case 0:
 		spec := i.MigrateSpec.GetSpec()
-		info, err := deps.Identities.New(i.UserID, spec, identity.NewIdentityOptions{
-			LoginIDEmailByPassBlocklistAllowlist: false,
-		})
+
+		// FIXME(workflow): retrieve dependency elsewhere
+		u, err := deps.Accounts.GetUserByID(i.UserID)
+		if err != nil {
+			return nil, err
+		}
+		identities, err := deps.Accounts.ListIdentitiesOfUser(i.UserID)
+		if err != nil {
+			return nil, err
+		}
+		claims, err := deps.Accounts.ListVerifiedClaimsOfUser(i.UserID)
 		if err != nil {
 			return nil, err
 		}
 
-		duplicate, err := deps.Identities.CheckDuplicated(info)
+		changes, err := deps.Accounts.GetNewIdentityChanges(
+			spec,
+			u,
+			identities,
+			claims,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		duplicate, err := deps.Accounts.FindDuplicatedIdentity(changes.NewIdentity)
 		if err != nil && !errors.Is(err, identity.ErrIdentityAlreadyExists) {
 			return nil, err
 		}
 		// Either err == nil, or err == ErrIdentityAlreadyExists and duplicate is non-nil.
 		if err != nil {
-			spec := info.ToSpec()
+			spec := changes.NewIdentity.ToSpec()
 			otherSpec := duplicate.ToSpec()
 			return nil, identityFillDetails(api.ErrDuplicatedIdentity, &spec, &otherSpec)
 		}
 
 		return workflow.NewNodeSimple(&NodeDoCreateIdentity{
-			Identity: info,
+			NewIdentityChanges: changes,
 		}), nil
 	case 1:
 		iden := i.identityInfo(workflows.Nearest)
-		return workflow.NewNodeSimple(&NodePopulateStandardAttributes{
-			Identity: iden,
-		}), nil
+		n, err := NewNodePopulateStandardAttributes(ctx, deps, iden)
+		if err != nil {
+			return nil, err
+		}
+		return workflow.NewNodeSimple(n), nil
 	case 2:
+		// FIXME(workflow): retrieve dependency elsewhere
+		claims, err := deps.Accounts.ListVerifiedClaimsOfUser(i.UserID)
+		if err != nil {
+			return nil, err
+		}
+
 		iden := i.identityInfo(workflows.Nearest)
 		var verifiedClaim *verification.Claim
 		switch iden.LoginID.LoginIDType {
 		case model.LoginIDKeyTypeEmail:
-			verifiedClaim = deps.Verification.NewVerifiedClaim(i.UserID, string(model.ClaimEmail), iden.LoginID.LoginID)
+
+			verifiedClaim, _ = deps.Accounts.NewVerifiedClaim(claims, i.UserID, string(model.ClaimEmail), iden.LoginID.LoginID)
+
 		case model.LoginIDKeyTypePhone:
-			verifiedClaim = deps.Verification.NewVerifiedClaim(i.UserID, string(model.ClaimPhoneNumber), iden.LoginID.LoginID)
+			verifiedClaim, _ = deps.Accounts.NewVerifiedClaim(claims, i.UserID, string(model.ClaimPhoneNumber), iden.LoginID.LoginID)
 		}
 		return workflow.NewNodeSimple(&NodeVerifiedIdentity{
 			IdentityID:       iden.ID,
@@ -100,7 +128,7 @@ func (i *IntentMigrateLoginID) identityInfo(w *workflow.Workflow) *identity.Info
 	if !ok {
 		panic(fmt.Errorf("workflow: expected NodeCreateIdentity"))
 	}
-	return node.Identity
+	return node.NewIdentityChanges.NewIdentity
 }
 
 func (*IntentMigrateLoginID) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
@@ -116,5 +144,5 @@ func (*IntentMigrateLoginID) GetNewIdentities(w *workflow.Workflow) ([]*identity
 	if !ok {
 		return nil, false
 	}
-	return []*identity.Info{node.Identity}, true
+	return []*identity.Info{node.NewIdentityChanges.NewIdentity}, true
 }

@@ -60,7 +60,7 @@ func (i *IntentForgotPasswordV2) ReactTo(ctx context.Context, deps *workflow.Dep
 				},
 			}
 
-			exactMatch, _, err := deps.Identities.SearchBySpec(spec)
+			exactMatch, _, err := deps.Accounts.SearchIdentities(spec)
 			if err != nil {
 				return nil, err
 			}

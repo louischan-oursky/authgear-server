@@ -3,7 +3,7 @@ package latte
 import (
 	"context"
 
-	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
 )
 
@@ -12,7 +12,7 @@ func init() {
 }
 
 type NodeDoCreateIdentity struct {
-	Identity *identity.Info `json:"identity,omitempty"`
+	NewIdentityChanges *accounts.NewIdentityChanges `json:"new_identity_changes,omitempty"`
 }
 
 func (n *NodeDoCreateIdentity) Kind() string {
@@ -22,9 +22,21 @@ func (n *NodeDoCreateIdentity) Kind() string {
 func (n *NodeDoCreateIdentity) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
 		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			err := deps.Identities.Create(n.Identity)
+			if n.NewIdentityChanges.UpdatedUser != nil {
+				err := deps.AccountWriter.UpdateUser(n.NewIdentityChanges.UpdatedUser)
+				if err != nil {
+					return err
+				}
+			}
+			err := deps.AccountWriter.CreateIdentity(n.NewIdentityChanges.NewIdentity)
 			if err != nil {
 				return err
+			}
+			for _, c := range n.NewIdentityChanges.NewVerifiedClaims {
+				err := deps.AccountWriter.CreateVerifiedClaim(c)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
-	"github.com/authgear/authgear-server/pkg/lib/config"
+	"github.com/authgear/authgear-server/pkg/lib/authn/user"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
 )
 
@@ -13,7 +13,21 @@ func init() {
 }
 
 type NodePopulateStandardAttributes struct {
-	Identity *identity.Info `json:"identity,omitempty"`
+	Identity    *identity.Info `json:"identity,omitempty"`
+	UpdatedUser *user.User     `json:"updated_user,omitempty"`
+}
+
+func NewNodePopulateStandardAttributes(ctx context.Context, deps *workflow.Dependencies, info *identity.Info) (*NodePopulateStandardAttributes, error) {
+	// FIXME(workflow): retrieve dependency elsewhere
+	u, err := deps.Accounts.GetUserByID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	u = deps.Accounts.PopulateStandardAttribute(u, info)
+	return &NodePopulateStandardAttributes{
+		Identity:    info,
+		UpdatedUser: u,
+	}, nil
 }
 
 func (n *NodePopulateStandardAttributes) Kind() string {
@@ -23,17 +37,7 @@ func (n *NodePopulateStandardAttributes) Kind() string {
 func (n *NodePopulateStandardAttributes) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
 		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			if deps.Config.UserProfile.StandardAttributes.Population.Strategy == config.StandardAttributesPopulationStrategyOnSignup {
-				err := deps.StdAttrsService.PopulateStandardAttributes(
-					n.Identity.UserID,
-					n.Identity,
-				)
-				if err != nil {
-					return err
-				}
-			}
-
-			return nil
+			return deps.AccountWriter.UpdateUser(n.UpdatedUser)
 		}),
 	}, nil
 }

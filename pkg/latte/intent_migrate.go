@@ -6,7 +6,6 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
-	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/session"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
 	"github.com/authgear/authgear-server/pkg/util/uuid"
@@ -61,8 +60,10 @@ func (i *IntentMigrate) ReactTo(ctx context.Context, deps *workflow.Dependencies
 	// Check the migration token
 	switch len(workflows.Nearest.Nodes) {
 	case 0:
+		userID := uuid.New()
+		u := deps.Accounts.NewUser(userID)
 		return workflow.NewNodeSimple(&NodeDoCreateUser{
-			UserID: uuid.New(),
+			User: u,
 		}), nil
 	case 1:
 		return workflow.NewSubWorkflow(&IntentMigrateAccount{
@@ -112,43 +113,45 @@ func (i *IntentMigrate) GetEffects(ctx context.Context, deps *workflow.Dependenc
 			}
 			return nil
 		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			var identities []*identity.Info
-			identityWorkflows := workflow.FindSubWorkflows[NewIdentityGetter](workflows.Nearest)
-			for _, subWorkflow := range identityWorkflows {
-				if iden, ok := subWorkflow.Intent.(NewIdentityGetter).GetNewIdentities(subWorkflow); ok {
-					identities = append(identities, iden...)
-				}
-			}
+		// FIXME(workflow): dispatch user.pre_create and apply mutation
+		// FIXME(workflow): dispatch user.created
+		//workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		//	var identities []*identity.Info
+		//	identityWorkflows := workflow.FindSubWorkflows[NewIdentityGetter](workflows.Nearest)
+		//	for _, subWorkflow := range identityWorkflows {
+		//		if iden, ok := subWorkflow.Intent.(NewIdentityGetter).GetNewIdentities(subWorkflow); ok {
+		//			identities = append(identities, iden...)
+		//		}
+		//	}
 
-			var authenticators []*authenticator.Info
-			authenticatorWorkflows := workflow.FindSubWorkflows[NewAuthenticatorGetter](workflows.Nearest)
-			for _, subWorkflow := range authenticatorWorkflows {
-				if a, ok := subWorkflow.Intent.(NewAuthenticatorGetter).GetNewAuthenticators(subWorkflow); ok {
-					authenticators = append(authenticators, a...)
-				}
-			}
+		//	var authenticators []*authenticator.Info
+		//	authenticatorWorkflows := workflow.FindSubWorkflows[NewAuthenticatorGetter](workflows.Nearest)
+		//	for _, subWorkflow := range authenticatorWorkflows {
+		//		if a, ok := subWorkflow.Intent.(NewAuthenticatorGetter).GetNewAuthenticators(subWorkflow); ok {
+		//			authenticators = append(authenticators, a...)
+		//		}
+		//	}
 
-			userID := i.userID(workflows.Nearest)
-			isAdminAPI := false
+		//	userID := i.userID(workflows.Nearest)
+		//	isAdminAPI := false
 
-			u, err := deps.Users.GetRaw(userID)
-			if err != nil {
-				return err
-			}
+		//	u, err := deps.Users.GetRaw(userID)
+		//	if err != nil {
+		//		return err
+		//	}
 
-			err = deps.Users.AfterCreate(
-				u,
-				identities,
-				authenticators,
-				isAdminAPI,
-			)
-			if err != nil {
-				return err
-			}
+		//	err = deps.Users.AfterCreate(
+		//		u,
+		//		identities,
+		//		authenticators,
+		//		isAdminAPI,
+		//	)
+		//	if err != nil {
+		//		return err
+		//	}
 
-			return nil
-		}),
+		//	return nil
+		//}),
 	}, nil
 }
 
@@ -161,5 +164,5 @@ func (i *IntentMigrate) userID(w *workflow.Workflow) string {
 	if !ok {
 		panic(fmt.Errorf("expected userID"))
 	}
-	return node.UserID
+	return node.User.ID
 }

@@ -69,7 +69,7 @@ func (i *IntentChangeEmail) ReactTo(ctx context.Context, deps *workflow.Dependen
 					Value: loginID,
 				},
 			}
-			exactMatch, _, err := deps.Identities.SearchBySpec(spec)
+			exactMatch, _, err := deps.Accounts.SearchIdentities(spec)
 			if err != nil {
 				return nil, err
 			}
@@ -84,9 +84,11 @@ func (i *IntentChangeEmail) ReactTo(ctx context.Context, deps *workflow.Dependen
 		}
 	case 1:
 		iden := i.newIdentityInfo(workflows.Nearest)
-		return workflow.NewNodeSimple(&NodePopulateStandardAttributes{
-			Identity: iden,
-		}), nil
+		n, err := NewNodePopulateStandardAttributes(ctx, deps, iden)
+		if err != nil {
+			return nil, err
+		}
+		return workflow.NewNodeSimple(n), nil
 	case 2:
 		iden := i.newIdentityInfo(workflows.Nearest)
 		return workflow.NewSubWorkflow(&IntentVerifyIdentity{
@@ -105,7 +107,7 @@ func (i *IntentChangeEmail) newIdentityInfo(w *workflow.Workflow) *identity.Info
 		panic(fmt.Errorf("workflow: expected NodeDoUpdateIdentity"))
 	}
 
-	return node.IdentityAfterUpdate
+	return node.Changes.UpdatedIdentity
 }
 
 func (i *IntentChangeEmail) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {

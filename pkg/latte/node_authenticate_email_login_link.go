@@ -7,6 +7,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/api"
 	"github.com/authgear/authgear-server/pkg/api/apierrors"
 	"github.com/authgear/authgear-server/pkg/api/model"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
 	"github.com/authgear/authgear-server/pkg/lib/authn/otp"
 	"github.com/authgear/authgear-server/pkg/lib/infra/mail"
@@ -74,9 +75,14 @@ func (n *NodeAuthenticateEmailLoginLink) ReactTo(ctx context.Context, deps *work
 		} else if err != nil {
 			return nil, err
 		}
-		return workflow.NewNodeSimple(&NodeVerifiedAuthenticator{
-			Authenticator: info,
-		}), nil
+		n, err := NewNodeVerifiedAuthenticator(ctx, deps, &accounts.VerifyAuthenticatorResult{
+			UsedAuthenticator: info,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return workflow.NewNodeSimple(n), nil
 	}
 	return nil, workflow.ErrIncompatibleInput
 }

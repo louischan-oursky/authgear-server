@@ -60,7 +60,13 @@ func (n *NodeVerifyPhoneSMS) ReactTo(ctx context.Context, deps *workflow.Depende
 			return nil, err
 		}
 
-		verifiedClaim := deps.Verification.NewVerifiedClaim(n.UserID, string(model.ClaimPhoneNumber), n.PhoneNumber)
+		// FIXME(workflow): retrieve dependency elsewhere
+		claims, err := deps.Accounts.ListVerifiedClaimsOfUser(n.UserID)
+		if err != nil {
+			return nil, err
+		}
+		verifiedClaim, _ := deps.Accounts.NewVerifiedClaim(claims, n.UserID, string(model.ClaimPhoneNumber), n.PhoneNumber)
+
 		return workflow.NewNodeSimple(&NodeVerifiedIdentity{
 			IdentityID:       n.IdentityID,
 			NewVerifiedClaim: verifiedClaim,

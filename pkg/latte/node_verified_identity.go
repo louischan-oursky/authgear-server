@@ -23,14 +23,10 @@ func (n *NodeVerifiedIdentity) Kind() string {
 func (n *NodeVerifiedIdentity) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
 		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			if n.NewVerifiedClaim == nil {
-				// Verified already; skip marking
-				return nil
+			if n.NewVerifiedClaim != nil {
+				return deps.AccountWriter.CreateVerifiedClaim(n.NewVerifiedClaim)
 			}
 
-			if err := deps.Verification.MarkClaimVerified(n.NewVerifiedClaim); err != nil {
-				return err
-			}
 			return nil
 		}),
 	}, nil

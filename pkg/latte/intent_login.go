@@ -144,7 +144,7 @@ func (i *IntentLogin) GetEffects(ctx context.Context, deps *workflow.Dependencie
 			if err != nil {
 				return err
 			}
-			err = deps.Authenticators.ClearLockoutAttempts(userID, methods)
+			err = deps.Lockout.ClearAttempts(userID, methods)
 			if err != nil {
 				return err
 			}
@@ -162,7 +162,8 @@ func (i *IntentLogin) OutputData(ctx context.Context, deps *workflow.Dependencie
 		return nil, nil
 	}
 	userID := i.userID()
-	identities, err := deps.Identities.ListByUser(userID)
+	// FIXME(workflow): retrieve dependency elsewhere
+	identities, err := deps.Accounts.ListIdentitiesOfUser(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -181,10 +182,12 @@ func (i *IntentLogin) OutputData(ctx context.Context, deps *workflow.Dependencie
 }
 
 func (i *IntentLogin) getAuthenticator(deps *workflow.Dependencies, filters ...authenticator.Filter) (*authenticator.Info, error) {
-	ais, err := deps.Authenticators.List(i.Identity.UserID, filters...)
+	// FIXME(workflow): retrieve dependency elsewhere
+	ais, err := deps.Accounts.ListAuthenticatorsOfUser(i.Identity.UserID)
 	if err != nil {
 		return nil, err
 	}
+	ais = authenticator.ApplyFilters(ais, filters...)
 
 	if len(ais) == 0 {
 		return nil, api.ErrNoAuthenticator

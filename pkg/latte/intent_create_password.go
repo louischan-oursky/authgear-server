@@ -6,7 +6,6 @@ import (
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
-	"github.com/authgear/authgear-server/pkg/util/uuid"
 	"github.com/authgear/authgear-server/pkg/util/validation"
 )
 
@@ -54,9 +53,7 @@ func (i *IntentCreatePassword) ReactTo(ctx context.Context, deps *workflow.Depen
 			},
 		}
 
-		authenticatorID := uuid.New()
-
-		info, err := deps.Authenticators.NewWithAuthenticatorID(authenticatorID, spec)
+		info, err := deps.Accounts.NewAuthenticator(spec)
 		if err != nil {
 			return nil, err
 		}

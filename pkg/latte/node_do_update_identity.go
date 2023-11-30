@@ -2,12 +2,11 @@ package latte
 
 import (
 	"context"
-	"errors"
 
-	"github.com/authgear/authgear-server/pkg/api"
 	"github.com/authgear/authgear-server/pkg/api/event"
 	"github.com/authgear/authgear-server/pkg/api/event/nonblocking"
 	"github.com/authgear/authgear-server/pkg/api/model"
+	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
 )
@@ -17,9 +16,8 @@ func init() {
 }
 
 type NodeDoUpdateIdentity struct {
-	IdentityBeforeUpdate *identity.Info `json:"identity_before_update"`
-	IdentityAfterUpdate  *identity.Info `json:"identity_after_update"`
-	IsAdminAPI           bool           `json:"is_admin_api"`
+	IdentityBeforeUpdate *identity.Info                  `json:"identity_before_update"`
+	Changes              *accounts.UpdateIdentityChanges `json:"changes,omitempty"`
 }
 
 func (n *NodeDoUpdateIdentity) Kind() string {
@@ -29,19 +27,30 @@ func (n *NodeDoUpdateIdentity) Kind() string {
 func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
 		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			if _, err := deps.Identities.CheckDuplicated(n.IdentityAfterUpdate); err != nil {
-				if errors.Is(err, identity.ErrIdentityAlreadyExists) {
-					s1 := n.IdentityBeforeUpdate.ToSpec()
-					s2 := n.IdentityAfterUpdate.ToSpec()
-					return identityFillDetails(api.ErrDuplicatedIdentity, &s2, &s1)
-				}
+			err := deps.AccountWriter.UpdateIdentity(n.Changes.UpdatedIdentity)
+			if err != nil {
 				return err
 			}
 
-			if err := deps.Identities.Update(n.IdentityBeforeUpdate, n.IdentityAfterUpdate); err != nil {
-				s1 := n.IdentityBeforeUpdate.ToSpec()
-				s2 := n.IdentityAfterUpdate.ToSpec()
-				return identityFillDetails(err, &s2, &s1)
+			if n.Changes.UpdatedUser != nil {
+				err = deps.AccountWriter.UpdateUser(n.Changes.UpdatedUser)
+				if err != nil {
+					return err
+				}
+			}
+
+			for _, c := range n.Changes.NewVerifiedClaims {
+				err = deps.AccountWriter.CreateVerifiedClaim(c)
+				if err != nil {
+					return err
+				}
+			}
+
+			for _, c := range n.Changes.RemovedVerifiedClaims {
+				err = deps.AccountWriter.DeleteVerifiedClaim(c)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
@@ -49,20 +58,21 @@ func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.De
 		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 			userRef := model.UserRef{
 				Meta: model.Meta{
-					ID: n.IdentityAfterUpdate.UserID,
+					ID: n.Changes.UpdatedIdentity.UserID,
 				},
 			}
 
+			isAdminAPI := false
 			var e event.Payload
-			switch n.IdentityAfterUpdate.Type {
+			switch n.Changes.UpdatedIdentity.Type {
 			case model.IdentityTypeLoginID:
-				loginIDType := n.IdentityAfterUpdate.LoginID.LoginIDType
+				loginIDType := n.Changes.UpdatedIdentity.LoginID.LoginIDType
 				if payload, ok := nonblocking.NewIdentityLoginIDUpdatedEventPayload(
 					userRef,
-					n.IdentityAfterUpdate.ToModel(),
+					n.Changes.UpdatedIdentity.ToModel(),
 					n.IdentityBeforeUpdate.ToModel(),
 					string(loginIDType),
-					n.IsAdminAPI,
+					isAdminAPI,
 				); ok {
 					e = payload
 				}

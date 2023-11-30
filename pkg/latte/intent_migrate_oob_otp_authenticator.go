@@ -5,7 +5,6 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
-	"github.com/authgear/authgear-server/pkg/util/uuid"
 	"github.com/authgear/authgear-server/pkg/util/validation"
 )
 
@@ -41,8 +40,7 @@ func (i *IntentMigrateOOBOTPAuthenticator) ReactTo(ctx context.Context, deps *wo
 	spec.UserID = i.UserID
 	spec.IsDefault = i.AuthenticatorIsDefault
 
-	authenticatorID := uuid.New()
-	info, err := deps.Authenticators.NewWithAuthenticatorID(authenticatorID, spec)
+	info, err := deps.Accounts.NewAuthenticator(spec)
 	if err != nil {
 		return nil, err
 	}

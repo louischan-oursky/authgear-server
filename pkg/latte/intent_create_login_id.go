@@ -72,33 +72,52 @@ func (i *IntentCreateLoginID) ReactTo(ctx context.Context, deps *workflow.Depend
 				},
 			}
 
-			info, err := deps.Identities.New(i.UserID, spec, identity.NewIdentityOptions{
-				LoginIDEmailByPassBlocklistAllowlist: false,
-			})
+			// FIXME(workflow): retrieve dependency elsewhere
+			u, err := deps.Accounts.GetUserByID(i.UserID)
+			if err != nil {
+				return nil, err
+			}
+			identities, err := deps.Accounts.ListIdentitiesOfUser(i.UserID)
+			if err != nil {
+				return nil, err
+			}
+			claims, err := deps.Accounts.ListVerifiedClaimsOfUser(i.UserID)
 			if err != nil {
 				return nil, err
 			}
 
-			duplicate, err := deps.Identities.CheckDuplicated(info)
+			changes, err := deps.Accounts.GetNewIdentityChanges(
+				spec,
+				u,
+				identities,
+				claims,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			duplicate, err := deps.Accounts.FindDuplicatedIdentity(changes.NewIdentity)
 			if err != nil && !errors.Is(err, identity.ErrIdentityAlreadyExists) {
 				return nil, err
 			}
 			// Either err == nil, or err == ErrIdentityAlreadyExists and duplicate is non-nil.
 			if err != nil {
-				spec := info.ToSpec()
+				spec := changes.NewIdentity.ToSpec()
 				otherSpec := duplicate.ToSpec()
 				return nil, identityFillDetails(api.ErrDuplicatedIdentity, &spec, &otherSpec)
 			}
 
 			return workflow.NewNodeSimple(&NodeDoCreateIdentity{
-				Identity: info,
+				NewIdentityChanges: changes,
 			}), nil
 		}
 	case 1:
 		iden := i.identityInfo(workflows.Nearest)
-		return workflow.NewNodeSimple(&NodePopulateStandardAttributes{
-			Identity: iden,
-		}), nil
+		n, err := NewNodePopulateStandardAttributes(ctx, deps, iden)
+		if err != nil {
+			return nil, err
+		}
+		return workflow.NewNodeSimple(n), nil
 	case 2:
 		iden := i.identityInfo(workflows.Nearest)
 		intent := &IntentVerifyIdentity{
@@ -123,7 +142,7 @@ func (i *IntentCreateLoginID) identityInfo(w *workflow.Workflow) *identity.Info 
 		panic(fmt.Errorf("workflow: expected NodeCreateIdentity"))
 	}
 
-	return node.Identity
+	return node.NewIdentityChanges.NewIdentity
 }
 
 func (*IntentCreateLoginID) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
@@ -139,7 +158,7 @@ func (*IntentCreateLoginID) GetNewIdentities(w *workflow.Workflow) ([]*identity.
 	if !ok {
 		return nil, false
 	}
-	return []*identity.Info{node.Identity}, true
+	return []*identity.Info{node.NewIdentityChanges.NewIdentity}, true
 }
 
 func (*IntentCreateLoginID) GetNewAuthenticators(w *workflow.Workflow) ([]*authenticator.Info, bool) {

@@ -13,7 +13,8 @@ func selectForgotPasswordLoginID(
 	deps *workflow.Dependencies,
 	userID string,
 	channel ForgotPasswordChannel) (string, error) {
-	loginIDs, err := deps.Identities.ListByUser(userID)
+	// FIXME(workflow): retrieve dependency elsewhere
+	loginIDs, err := deps.Accounts.ListIdentitiesOfUser(userID)
 	if err != nil {
 		return "", err
 	}
