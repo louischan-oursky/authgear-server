@@ -18,11 +18,17 @@ import (
 )
 
 type VerifyAuthenticatorOptions struct {
-	UserID             string
-	Stage              authn.AuthenticationStage
-	AuthenticatorType  model.AuthenticatorType
-	AuthenticationType authn.AuthenticationType
+	// UserID is required
+	UserID string
+	// AuthenticatorType is required
+	AuthenticatorType model.AuthenticatorType
 
+	// Stage is optional.
+	// If State and AuthenticationType are provided, then authentication failed event will be fired.
+	Stage authn.AuthenticationStage
+	// AuthenticationType is optional.
+	AuthenticationType authn.AuthenticationType
+	// OOBChannel is optional.
 	OOBChannel model.AuthenticatorOOBChannel
 }
 
@@ -197,7 +203,7 @@ func (s *Service) UpdateAuthenticatorWithSpec(info *authenticator.Info, spec *au
 
 func (s *Service) VerifyAuthenticatorsWithSpec(infos []*authenticator.Info, spec *authenticator.Spec, options *VerifyAuthenticatorOptions) (*VerifyAuthenticatorResult, error) {
 	result, err := s.verifyAuthenticatorsWithSpec(infos, spec, options)
-	if errors.Is(err, api.ErrInvalidCredentials) {
+	if errors.Is(err, api.ErrInvalidCredentials) && options.Stage != "" && options.AuthenticationType != "" {
 		eventerr := s.dispatchAuthenticationFailedEvent(
 			options.UserID,
 			options.Stage,
