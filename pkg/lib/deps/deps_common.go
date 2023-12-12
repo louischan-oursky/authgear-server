@@ -201,6 +201,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(user.CustomAttributesService), new(*featurecustomattrs.ServiceNoEvent)),
 		wire.Bind(new(hook.CustomAttributesServiceNoEvent), new(*featurecustomattrs.ServiceNoEvent)),
 		wire.Bind(new(authenticationflow.CustomAttrsService), new(*featurecustomattrs.Service)),
+		wire.Bind(new(accounts.CustomAttributes), new(*featurecustomattrs.ServiceNoEvent)),
 	),
 
 	wire.NewSet(

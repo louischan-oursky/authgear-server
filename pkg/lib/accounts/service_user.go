@@ -77,3 +77,15 @@ func (s *Service) ReplaceStandardAttributes(role accesscontrol.Role, u *user.Use
 	uu.UpdatedAt = s.Clock.NowUTC()
 	return &uu, nil
 }
+
+func (s *Service) ReplaceCustomAttributes(role accesscontrol.Role, u *user.User, reprForm map[string]interface{}) (*user.User, error) {
+	storageForm, err := s.CustomAttributes.UpdateAllCustomAttributes0(role, u, reprForm)
+	if err != nil {
+		return nil, err
+	}
+
+	uu := *u
+	uu.CustomAttributes = storageForm
+	uu.UpdatedAt = s.Clock.NowUTC()
+	return &uu, nil
+}

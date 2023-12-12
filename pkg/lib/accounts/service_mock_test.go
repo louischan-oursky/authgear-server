@@ -1450,6 +1450,44 @@ func (mr *MockStandardAttributesMockRecorder) UpdateStandardAttributes0(role, u,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStandardAttributes0", reflect.TypeOf((*MockStandardAttributes)(nil).UpdateStandardAttributes0), role, u, identities, stdAttrsToUpdate)
 }
 
+// MockCustomAttributes is a mock of CustomAttributes interface.
+type MockCustomAttributes struct {
+	ctrl     *gomock.Controller
+	recorder *MockCustomAttributesMockRecorder
+}
+
+// MockCustomAttributesMockRecorder is the mock recorder for MockCustomAttributes.
+type MockCustomAttributesMockRecorder struct {
+	mock *MockCustomAttributes
+}
+
+// NewMockCustomAttributes creates a new mock instance.
+func NewMockCustomAttributes(ctrl *gomock.Controller) *MockCustomAttributes {
+	mock := &MockCustomAttributes{ctrl: ctrl}
+	mock.recorder = &MockCustomAttributesMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCustomAttributes) EXPECT() *MockCustomAttributesMockRecorder {
+	return m.recorder
+}
+
+// UpdateAllCustomAttributes0 mocks base method.
+func (m *MockCustomAttributes) UpdateAllCustomAttributes0(role accesscontrol.Role, u *user.User, reprForm map[string]interface{}) (map[string]interface{}, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAllCustomAttributes0", role, u, reprForm)
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAllCustomAttributes0 indicates an expected call of UpdateAllCustomAttributes0.
+func (mr *MockCustomAttributesMockRecorder) UpdateAllCustomAttributes0(role, u, reprForm interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAllCustomAttributes0", reflect.TypeOf((*MockCustomAttributes)(nil).UpdateAllCustomAttributes0), role, u, reprForm)
+}
+
 // MockEvents is a mock of Events interface.
 type MockEvents struct {
 	ctrl     *gomock.Controller

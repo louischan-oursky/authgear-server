@@ -172,6 +172,10 @@ type StandardAttributes interface {
 	PopulateIdentityAwareStandardAttributes0(originalStdAttrs map[string]interface{}, unsortedIdentities []*identity.Info) (map[string]interface{}, bool)
 }
 
+type CustomAttributes interface {
+	UpdateAllCustomAttributes0(role accesscontrol.Role, u *user.User, reprForm map[string]interface{}) (storageForm map[string]interface{}, err error)
+}
+
 type Events interface {
 	DispatchEvent(payload event.NonBlockingPayload) error
 }
@@ -186,6 +190,7 @@ type Service struct {
 
 	Users              Users
 	StandardAttributes StandardAttributes
+	CustomAttributes   CustomAttributes
 
 	IdentityConfig      *config.IdentityConfig
 	LoginIDIdentities   LoginIDIdentities

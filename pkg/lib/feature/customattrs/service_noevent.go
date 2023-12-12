@@ -205,32 +205,46 @@ func (s *ServiceNoEvent) UpdateCustomAttributesWithForm(role accesscontrol.Role,
 	return s.updateCustomAttributes(role, userID, pointers, reprForm)
 }
 
-func (s *ServiceNoEvent) updateCustomAttributes(role accesscontrol.Role, userID string, pointers []string, reprForm map[string]interface{}) error {
+func (s *ServiceNoEvent) UpdateAllCustomAttributes0(role accesscontrol.Role, u *user.User, reprForm map[string]interface{}) (storageForm map[string]interface{}, err error) {
+	pointers := s.allPointers()
+	return s.UpdateCustomAttributes0(role, u, pointers, reprForm)
+}
+
+func (s *ServiceNoEvent) UpdateCustomAttributes0(role accesscontrol.Role, u *user.User, pointers []string, reprForm map[string]interface{}) (storageForm map[string]interface{}, err error) {
 	incoming := customattrs.T(reprForm)
 
-	err := s.validate(pointers, incoming)
+	err = s.validate(pointers, incoming)
 	if err != nil {
-		return err
+		return
 	}
 
-	user, err := s.UserQueries.GetRaw(userID)
+	original, err := s.fromStorageForm(u.CustomAttributes)
 	if err != nil {
-		return err
-	}
-
-	original, err := s.fromStorageForm(user.CustomAttributes)
-	if err != nil {
-		return err
+		return
 	}
 
 	accessControl := s.Config.CustomAttributes.GetAccessControl()
 
 	updated, err := original.Update(accessControl, role, pointers, incoming)
 	if err != nil {
+		return
+	}
+
+	storageForm, err = s.toStorageForm(updated)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *ServiceNoEvent) updateCustomAttributes(role accesscontrol.Role, userID string, pointers []string, reprForm map[string]interface{}) error {
+	user, err := s.UserQueries.GetRaw(userID)
+	if err != nil {
 		return err
 	}
 
-	storageForm, err := s.toStorageForm(updated)
+	storageForm, err := s.UpdateCustomAttributes0(role, user, pointers, reprForm)
 	if err != nil {
 		return err
 	}
