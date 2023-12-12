@@ -56486,42 +56486,18 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	hookLogger := hook.NewLogger(factory)
-	hookConfig := appConfig.Hook
-	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
-	webHookImpl := hook.WebHookImpl{
-		Secret: webhookKeyMaterials,
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
 	}
-	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
-	asyncHTTPClient := hook.NewAsyncHTTPClient()
-	eventWebHookImpl := &hook.EventWebHookImpl{
-		WebHookImpl: webHookImpl,
-		SyncHTTP:    syncHTTPClient,
-		AsyncHTTP:   asyncHTTPClient,
+	rawQueries := &user.RawQueries{
+		Store: store,
 	}
-	manager := appContext.Resources
-	denoHook := hook.DenoHook{
-		Context:         contextContext,
-		ResourceManager: manager,
-	}
-	denoEndpoint := environmentConfig.DenoEndpoint
-	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
-	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
-	eventDenoHookImpl := &hook.EventDenoHookImpl{
-		DenoHook:        denoHook,
-		SyncDenoClient:  syncDenoClient,
-		AsyncDenoClient: asyncDenoClient,
-	}
-	userProfileConfig := appConfig.UserProfile
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
-	store := &service.Store{
+	serviceStore := &service.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -56530,6 +56506,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	loginIDConfig := identityConfig.LoginID
+	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
 		Config:    loginIDConfig,
 		Resources: manager,
@@ -56594,6 +56571,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -56638,14 +56616,14 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -56669,7 +56647,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Authentication:        authenticationConfig,
 		Identity:              identityConfig,
 		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 store,
+		Store:                 serviceStore,
 		LoginID:               provider,
 		OAuth:                 oauthProvider,
 		Anonymous:             anonymousProvider,
@@ -56677,64 +56655,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: userStore,
-	}
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
-	}
-	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
-		Config:      userProfileConfig,
-		UserQueries: rawQueries,
-		UserStore:   userStore,
-	}
-	sink := &hook.Sink{
-		Logger:             hookLogger,
-		Config:             hookConfig,
-		Clock:              clockClock,
-		EventWebHook:       eventWebHookImpl,
-		EventDenoHook:      eventDenoHookImpl,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-	}
-	auditLogger := audit.NewLogger(factory)
-	writeHandle := appProvider.AuditWriteDatabase
-	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
-	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
-	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
-	writeStore := &audit.WriteStore{
-		SQLBuilder:  auditdbSQLBuilderApp,
-		SQLExecutor: writeSQLExecutor,
-	}
-	auditSink := &audit.Sink{
-		Logger:   auditLogger,
-		Database: writeHandle,
-		Store:    writeStore,
-	}
-	elasticsearchLogger := elasticsearch.NewLogger(factory)
-	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
-	client := elasticsearch.NewClient(elasticsearchCredentials)
-	serviceStore := &service2.Store{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -56767,12 +56688,12 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -56846,7 +56767,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          serviceStore,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -56857,10 +56778,34 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
+	}
+	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
+		Config:      userProfileConfig,
+		UserQueries: rawQueries,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -56869,7 +56814,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -56877,6 +56822,61 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		CustomAttributes:   customattrsServiceNoEvent,
 		Web3:               web3Service,
 	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	hookLogger := hook.NewLogger(factory)
+	hookConfig := appConfig.Hook
+	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
+	webHookImpl := hook.WebHookImpl{
+		Secret: webhookKeyMaterials,
+	}
+	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
+	asyncHTTPClient := hook.NewAsyncHTTPClient()
+	eventWebHookImpl := &hook.EventWebHookImpl{
+		WebHookImpl: webHookImpl,
+		SyncHTTP:    syncHTTPClient,
+		AsyncHTTP:   asyncHTTPClient,
+	}
+	denoHook := hook.DenoHook{
+		Context:         contextContext,
+		ResourceManager: manager,
+	}
+	denoEndpoint := environmentConfig.DenoEndpoint
+	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
+	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
+	eventDenoHookImpl := &hook.EventDenoHookImpl{
+		DenoHook:        denoHook,
+		SyncDenoClient:  syncDenoClient,
+		AsyncDenoClient: asyncDenoClient,
+	}
+	sink := &hook.Sink{
+		Logger:             hookLogger,
+		Config:             hookConfig,
+		Clock:              clockClock,
+		EventWebHook:       eventWebHookImpl,
+		EventDenoHook:      eventDenoHookImpl,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+	}
+	auditLogger := audit.NewLogger(factory)
+	writeHandle := appProvider.AuditWriteDatabase
+	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
+	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
+	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
+	writeStore := &audit.WriteStore{
+		SQLBuilder:  auditdbSQLBuilderApp,
+		SQLExecutor: writeSQLExecutor,
+	}
+	auditSink := &audit.Sink{
+		Logger:   auditLogger,
+		Database: writeHandle,
+		Store:    writeStore,
+	}
+	elasticsearchLogger := elasticsearch.NewLogger(factory)
+	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
+	client := elasticsearch.NewClient(elasticsearchCredentials)
 	queue := appProvider.TaskQueue
 	elasticsearchService := elasticsearch.Service{
 		AppID:     appID,
@@ -56891,7 +56891,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
+	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
 	serviceRateLimits := &service2.RateLimits{
 		IP:          remoteIP,
 		Config:      authenticationConfig,
@@ -56908,7 +56908,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor:             sqlExecutor,
 		AppConfig:               appConfig,
 		Events:                  nonblockingEventService,
-		Users:                   userStore,
+		Users:                   store,
 		StandardAttributes:      serviceNoEvent,
 		IdentityConfig:          identityConfig,
 		LoginIDIdentities:       provider,
@@ -56930,7 +56930,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	writer := &accounts.Writer{
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
-		Users:                  userStore,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -56971,7 +56971,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	resolverImpl := &event.ResolverImpl{
 		Users: queries,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	serviceLogger := whatsapp.NewServiceLogger(factory)
 	devMode := environmentConfig.DevMode
 	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
@@ -57034,7 +57034,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	commands := &user.Commands{
@@ -57051,7 +57051,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -57212,6 +57212,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Users:                queries,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
 		Lockout:              lockout2,
@@ -57304,42 +57305,18 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	hookLogger := hook.NewLogger(factory)
-	hookConfig := appConfig.Hook
-	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
-	webHookImpl := hook.WebHookImpl{
-		Secret: webhookKeyMaterials,
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
 	}
-	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
-	asyncHTTPClient := hook.NewAsyncHTTPClient()
-	eventWebHookImpl := &hook.EventWebHookImpl{
-		WebHookImpl: webHookImpl,
-		SyncHTTP:    syncHTTPClient,
-		AsyncHTTP:   asyncHTTPClient,
+	rawQueries := &user.RawQueries{
+		Store: store,
 	}
-	manager := appContext.Resources
-	denoHook := hook.DenoHook{
-		Context:         contextContext,
-		ResourceManager: manager,
-	}
-	denoEndpoint := environmentConfig.DenoEndpoint
-	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
-	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
-	eventDenoHookImpl := &hook.EventDenoHookImpl{
-		DenoHook:        denoHook,
-		SyncDenoClient:  syncDenoClient,
-		AsyncDenoClient: asyncDenoClient,
-	}
-	userProfileConfig := appConfig.UserProfile
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
-	store := &service.Store{
+	serviceStore := &service.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -57348,6 +57325,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	loginIDConfig := identityConfig.LoginID
+	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
 		Config:    loginIDConfig,
 		Resources: manager,
@@ -57412,6 +57390,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -57456,14 +57435,14 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -57487,7 +57466,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Authentication:        authenticationConfig,
 		Identity:              identityConfig,
 		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 store,
+		Store:                 serviceStore,
 		LoginID:               provider,
 		OAuth:                 oauthProvider,
 		Anonymous:             anonymousProvider,
@@ -57495,64 +57474,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: userStore,
-	}
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
-	}
-	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
-		Config:      userProfileConfig,
-		UserQueries: rawQueries,
-		UserStore:   userStore,
-	}
-	sink := &hook.Sink{
-		Logger:             hookLogger,
-		Config:             hookConfig,
-		Clock:              clockClock,
-		EventWebHook:       eventWebHookImpl,
-		EventDenoHook:      eventDenoHookImpl,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-	}
-	auditLogger := audit.NewLogger(factory)
-	writeHandle := appProvider.AuditWriteDatabase
-	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
-	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
-	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
-	writeStore := &audit.WriteStore{
-		SQLBuilder:  auditdbSQLBuilderApp,
-		SQLExecutor: writeSQLExecutor,
-	}
-	auditSink := &audit.Sink{
-		Logger:   auditLogger,
-		Database: writeHandle,
-		Store:    writeStore,
-	}
-	elasticsearchLogger := elasticsearch.NewLogger(factory)
-	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
-	client := elasticsearch.NewClient(elasticsearchCredentials)
-	serviceStore := &service2.Store{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -57585,12 +57507,12 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -57664,7 +57586,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          serviceStore,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -57675,10 +57597,34 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
+	}
+	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
+		Config:      userProfileConfig,
+		UserQueries: rawQueries,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -57687,7 +57633,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -57695,6 +57641,61 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		CustomAttributes:   customattrsServiceNoEvent,
 		Web3:               web3Service,
 	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	hookLogger := hook.NewLogger(factory)
+	hookConfig := appConfig.Hook
+	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
+	webHookImpl := hook.WebHookImpl{
+		Secret: webhookKeyMaterials,
+	}
+	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
+	asyncHTTPClient := hook.NewAsyncHTTPClient()
+	eventWebHookImpl := &hook.EventWebHookImpl{
+		WebHookImpl: webHookImpl,
+		SyncHTTP:    syncHTTPClient,
+		AsyncHTTP:   asyncHTTPClient,
+	}
+	denoHook := hook.DenoHook{
+		Context:         contextContext,
+		ResourceManager: manager,
+	}
+	denoEndpoint := environmentConfig.DenoEndpoint
+	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
+	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
+	eventDenoHookImpl := &hook.EventDenoHookImpl{
+		DenoHook:        denoHook,
+		SyncDenoClient:  syncDenoClient,
+		AsyncDenoClient: asyncDenoClient,
+	}
+	sink := &hook.Sink{
+		Logger:             hookLogger,
+		Config:             hookConfig,
+		Clock:              clockClock,
+		EventWebHook:       eventWebHookImpl,
+		EventDenoHook:      eventDenoHookImpl,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+	}
+	auditLogger := audit.NewLogger(factory)
+	writeHandle := appProvider.AuditWriteDatabase
+	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
+	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
+	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
+	writeStore := &audit.WriteStore{
+		SQLBuilder:  auditdbSQLBuilderApp,
+		SQLExecutor: writeSQLExecutor,
+	}
+	auditSink := &audit.Sink{
+		Logger:   auditLogger,
+		Database: writeHandle,
+		Store:    writeStore,
+	}
+	elasticsearchLogger := elasticsearch.NewLogger(factory)
+	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
+	client := elasticsearch.NewClient(elasticsearchCredentials)
 	queue := appProvider.TaskQueue
 	elasticsearchService := elasticsearch.Service{
 		AppID:     appID,
@@ -57709,7 +57710,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
+	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
 	serviceRateLimits := &service2.RateLimits{
 		IP:          remoteIP,
 		Config:      authenticationConfig,
@@ -57726,7 +57727,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor:             sqlExecutor,
 		AppConfig:               appConfig,
 		Events:                  nonblockingEventService,
-		Users:                   userStore,
+		Users:                   store,
 		StandardAttributes:      serviceNoEvent,
 		IdentityConfig:          identityConfig,
 		LoginIDIdentities:       provider,
@@ -57748,7 +57749,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	writer := &accounts.Writer{
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
-		Users:                  userStore,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -57789,7 +57790,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	resolverImpl := &event.ResolverImpl{
 		Users: queries,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	serviceLogger := whatsapp.NewServiceLogger(factory)
 	devMode := environmentConfig.DevMode
 	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
@@ -57852,7 +57853,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	commands := &user.Commands{
@@ -57869,7 +57870,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -58032,6 +58033,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Users:                queries,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
 		Lockout:              lockout2,
@@ -58117,42 +58119,18 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	hookLogger := hook.NewLogger(factory)
-	hookConfig := appConfig.Hook
-	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
-	webHookImpl := hook.WebHookImpl{
-		Secret: webhookKeyMaterials,
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
 	}
-	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
-	asyncHTTPClient := hook.NewAsyncHTTPClient()
-	eventWebHookImpl := &hook.EventWebHookImpl{
-		WebHookImpl: webHookImpl,
-		SyncHTTP:    syncHTTPClient,
-		AsyncHTTP:   asyncHTTPClient,
+	rawQueries := &user.RawQueries{
+		Store: store,
 	}
-	manager := appContext.Resources
-	denoHook := hook.DenoHook{
-		Context:         contextContext,
-		ResourceManager: manager,
-	}
-	denoEndpoint := environmentConfig.DenoEndpoint
-	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
-	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
-	eventDenoHookImpl := &hook.EventDenoHookImpl{
-		DenoHook:        denoHook,
-		SyncDenoClient:  syncDenoClient,
-		AsyncDenoClient: asyncDenoClient,
-	}
-	userProfileConfig := appConfig.UserProfile
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
-	store := &service.Store{
+	serviceStore := &service.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -58161,6 +58139,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	loginIDConfig := identityConfig.LoginID
+	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
 		Config:    loginIDConfig,
 		Resources: manager,
@@ -58225,6 +58204,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -58269,14 +58249,14 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -58300,7 +58280,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Authentication:        authenticationConfig,
 		Identity:              identityConfig,
 		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 store,
+		Store:                 serviceStore,
 		LoginID:               provider,
 		OAuth:                 oauthProvider,
 		Anonymous:             anonymousProvider,
@@ -58308,64 +58288,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: userStore,
-	}
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
-	}
-	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
-		Config:      userProfileConfig,
-		UserQueries: rawQueries,
-		UserStore:   userStore,
-	}
-	sink := &hook.Sink{
-		Logger:             hookLogger,
-		Config:             hookConfig,
-		Clock:              clockClock,
-		EventWebHook:       eventWebHookImpl,
-		EventDenoHook:      eventDenoHookImpl,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-	}
-	auditLogger := audit.NewLogger(factory)
-	writeHandle := appProvider.AuditWriteDatabase
-	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
-	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
-	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
-	writeStore := &audit.WriteStore{
-		SQLBuilder:  auditdbSQLBuilderApp,
-		SQLExecutor: writeSQLExecutor,
-	}
-	auditSink := &audit.Sink{
-		Logger:   auditLogger,
-		Database: writeHandle,
-		Store:    writeStore,
-	}
-	elasticsearchLogger := elasticsearch.NewLogger(factory)
-	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
-	client := elasticsearch.NewClient(elasticsearchCredentials)
-	serviceStore := &service2.Store{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -58398,12 +58321,12 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -58477,7 +58400,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          serviceStore,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -58488,10 +58411,34 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
+	}
+	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
+		Config:      userProfileConfig,
+		UserQueries: rawQueries,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -58500,7 +58447,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -58508,6 +58455,61 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		CustomAttributes:   customattrsServiceNoEvent,
 		Web3:               web3Service,
 	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	hookLogger := hook.NewLogger(factory)
+	hookConfig := appConfig.Hook
+	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
+	webHookImpl := hook.WebHookImpl{
+		Secret: webhookKeyMaterials,
+	}
+	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
+	asyncHTTPClient := hook.NewAsyncHTTPClient()
+	eventWebHookImpl := &hook.EventWebHookImpl{
+		WebHookImpl: webHookImpl,
+		SyncHTTP:    syncHTTPClient,
+		AsyncHTTP:   asyncHTTPClient,
+	}
+	denoHook := hook.DenoHook{
+		Context:         contextContext,
+		ResourceManager: manager,
+	}
+	denoEndpoint := environmentConfig.DenoEndpoint
+	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
+	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
+	eventDenoHookImpl := &hook.EventDenoHookImpl{
+		DenoHook:        denoHook,
+		SyncDenoClient:  syncDenoClient,
+		AsyncDenoClient: asyncDenoClient,
+	}
+	sink := &hook.Sink{
+		Logger:             hookLogger,
+		Config:             hookConfig,
+		Clock:              clockClock,
+		EventWebHook:       eventWebHookImpl,
+		EventDenoHook:      eventDenoHookImpl,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+	}
+	auditLogger := audit.NewLogger(factory)
+	writeHandle := appProvider.AuditWriteDatabase
+	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
+	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
+	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
+	writeStore := &audit.WriteStore{
+		SQLBuilder:  auditdbSQLBuilderApp,
+		SQLExecutor: writeSQLExecutor,
+	}
+	auditSink := &audit.Sink{
+		Logger:   auditLogger,
+		Database: writeHandle,
+		Store:    writeStore,
+	}
+	elasticsearchLogger := elasticsearch.NewLogger(factory)
+	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
+	client := elasticsearch.NewClient(elasticsearchCredentials)
 	queue := appProvider.TaskQueue
 	elasticsearchService := elasticsearch.Service{
 		AppID:     appID,
@@ -58522,7 +58524,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
+	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
 	serviceRateLimits := &service2.RateLimits{
 		IP:          remoteIP,
 		Config:      authenticationConfig,
@@ -58539,7 +58541,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor:             sqlExecutor,
 		AppConfig:               appConfig,
 		Events:                  nonblockingEventService,
-		Users:                   userStore,
+		Users:                   store,
 		StandardAttributes:      serviceNoEvent,
 		IdentityConfig:          identityConfig,
 		LoginIDIdentities:       provider,
@@ -58561,7 +58563,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	writer := &accounts.Writer{
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
-		Users:                  userStore,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -58602,7 +58604,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	resolverImpl := &event.ResolverImpl{
 		Users: queries,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	serviceLogger := whatsapp.NewServiceLogger(factory)
 	devMode := environmentConfig.DevMode
 	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
@@ -58665,7 +58667,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	commands := &user.Commands{
@@ -58682,7 +58684,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -58845,6 +58847,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Users:                queries,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
 		Lockout:              lockout2,
@@ -58967,42 +58970,18 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
 	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
-	userAgentString := deps.ProvideUserAgentString(request)
-	logger := event.NewLogger(factory)
-	localizationConfig := appConfig.Localization
-	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
-	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
-	hookLogger := hook.NewLogger(factory)
-	hookConfig := appConfig.Hook
-	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
-	webHookImpl := hook.WebHookImpl{
-		Secret: webhookKeyMaterials,
+	store := &user.Store{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+		Clock:       clockClock,
 	}
-	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
-	asyncHTTPClient := hook.NewAsyncHTTPClient()
-	eventWebHookImpl := &hook.EventWebHookImpl{
-		WebHookImpl: webHookImpl,
-		SyncHTTP:    syncHTTPClient,
-		AsyncHTTP:   asyncHTTPClient,
+	rawQueries := &user.RawQueries{
+		Store: store,
 	}
-	manager := appContext.Resources
-	denoHook := hook.DenoHook{
-		Context:         contextContext,
-		ResourceManager: manager,
-	}
-	denoEndpoint := environmentConfig.DenoEndpoint
-	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
-	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
-	eventDenoHookImpl := &hook.EventDenoHookImpl{
-		DenoHook:        denoHook,
-		SyncDenoClient:  syncDenoClient,
-		AsyncDenoClient: asyncDenoClient,
-	}
-	userProfileConfig := appConfig.UserProfile
 	authenticationConfig := appConfig.Authentication
 	identityConfig := appConfig.Identity
 	identityFeatureConfig := featureConfig.Identity
-	store := &service.Store{
+	serviceStore := &service.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -59011,6 +58990,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor: sqlExecutor,
 	}
 	loginIDConfig := identityConfig.LoginID
+	manager := appContext.Resources
 	typeCheckerFactory := &loginid.TypeCheckerFactory{
 		Config:    loginIDConfig,
 		Resources: manager,
@@ -59075,6 +59055,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	engine := &template.Engine{
 		Resolver: resolver,
 	}
+	localizationConfig := appConfig.Localization
 	httpProto := deps.ProvideHTTPProto(request, trustProxy)
 	httpHost := deps.ProvideHTTPHost(request, trustProxy)
 	httpOrigin := httputil.MakeHTTPOrigin(httpProto, httpHost)
@@ -59119,14 +59100,14 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 		Clock:   clockClock,
 	}
-	ratelimitLogger := ratelimit.NewLogger(factory)
+	logger := ratelimit.NewLogger(factory)
 	storageRedis := &ratelimit.StorageRedis{
 		AppID: appID,
 		Redis: appredisHandle,
 	}
 	rateLimitsFeatureConfig := featureConfig.RateLimits
 	limiter := &ratelimit.Limiter{
-		Logger:  ratelimitLogger,
+		Logger:  logger,
 		Storage: storageRedis,
 		Config:  rateLimitsFeatureConfig,
 	}
@@ -59150,7 +59131,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Authentication:        authenticationConfig,
 		Identity:              identityConfig,
 		IdentityFeatureConfig: identityFeatureConfig,
-		Store:                 store,
+		Store:                 serviceStore,
 		LoginID:               provider,
 		OAuth:                 oauthProvider,
 		Anonymous:             anonymousProvider,
@@ -59158,64 +59139,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Passkey:               passkeyProvider,
 		SIWE:                  siweProvider,
 	}
-	userStore := &user.Store{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-		Clock:       clockClock,
-	}
-	rawQueries := &user.RawQueries{
-		Store: userStore,
-	}
-	storePQ := &verification.StorePQ{
-		SQLBuilder:  sqlBuilderApp,
-		SQLExecutor: sqlExecutor,
-	}
-	imagesCDNHost := environmentConfig.ImagesCDNHost
-	pictureTransformer := &stdattrs.PictureTransformer{
-		HTTPProto:     httpProto,
-		HTTPHost:      httpHost,
-		ImagesCDNHost: imagesCDNHost,
-	}
-	serviceNoEvent := &stdattrs.ServiceNoEvent{
-		UserProfileConfig: userProfileConfig,
-		Identities:        serviceService,
-		UserQueries:       rawQueries,
-		UserStore:         userStore,
-		ClaimStore:        storePQ,
-		Transformer:       pictureTransformer,
-	}
-	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
-		Config:      userProfileConfig,
-		UserQueries: rawQueries,
-		UserStore:   userStore,
-	}
-	sink := &hook.Sink{
-		Logger:             hookLogger,
-		Config:             hookConfig,
-		Clock:              clockClock,
-		EventWebHook:       eventWebHookImpl,
-		EventDenoHook:      eventDenoHookImpl,
-		StandardAttributes: serviceNoEvent,
-		CustomAttributes:   customattrsServiceNoEvent,
-	}
-	auditLogger := audit.NewLogger(factory)
-	writeHandle := appProvider.AuditWriteDatabase
-	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
-	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
-	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
-	writeStore := &audit.WriteStore{
-		SQLBuilder:  auditdbSQLBuilderApp,
-		SQLExecutor: writeSQLExecutor,
-	}
-	auditSink := &audit.Sink{
-		Logger:   auditLogger,
-		Database: writeHandle,
-		Store:    writeStore,
-	}
-	elasticsearchLogger := elasticsearch.NewLogger(factory)
-	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
-	client := elasticsearch.NewClient(elasticsearchCredentials)
-	serviceStore := &service2.Store{
+	store3 := &service2.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
@@ -59248,12 +59172,12 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		PasswordChecker: passwordChecker,
 		Housekeeper:     housekeeper,
 	}
-	store3 := &passkey3.Store{
+	store4 := &passkey3.Store{
 		SQLBuilder:  sqlBuilderApp,
 		SQLExecutor: sqlExecutor,
 	}
 	provider2 := &passkey3.Provider{
-		Store:   store3,
+		Store:   store4,
 		Clock:   clockClock,
 		Passkey: passkeyService,
 	}
@@ -59327,7 +59251,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Provider: lockoutService,
 	}
 	service3 := &service2.Service{
-		Store:          serviceStore,
+		Store:          store3,
 		Config:         appConfig,
 		Password:       passwordProvider,
 		Passkey:        provider2,
@@ -59338,10 +59262,34 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Lockout:        serviceLockout,
 	}
 	verificationConfig := appConfig.Verification
+	storePQ := &verification.StorePQ{
+		SQLBuilder:  sqlBuilderApp,
+		SQLExecutor: sqlExecutor,
+	}
 	verificationService := &verification.Service{
 		Config:     verificationConfig,
 		Clock:      clockClock,
 		ClaimStore: storePQ,
+	}
+	userProfileConfig := appConfig.UserProfile
+	imagesCDNHost := environmentConfig.ImagesCDNHost
+	pictureTransformer := &stdattrs.PictureTransformer{
+		HTTPProto:     httpProto,
+		HTTPHost:      httpHost,
+		ImagesCDNHost: imagesCDNHost,
+	}
+	serviceNoEvent := &stdattrs.ServiceNoEvent{
+		UserProfileConfig: userProfileConfig,
+		Identities:        serviceService,
+		UserQueries:       rawQueries,
+		UserStore:         store,
+		ClaimStore:        storePQ,
+		Transformer:       pictureTransformer,
+	}
+	customattrsServiceNoEvent := &customattrs.ServiceNoEvent{
+		Config:      userProfileConfig,
+		UserQueries: rawQueries,
+		UserStore:   store,
 	}
 	nftIndexerAPIEndpoint := environmentConfig.NFTIndexerAPIEndpoint
 	web3Service := &web3.Service{
@@ -59350,7 +59298,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	}
 	queries := &user.Queries{
 		RawQueries:         rawQueries,
-		Store:              userStore,
+		Store:              store,
 		Identities:         serviceService,
 		Authenticators:     service3,
 		Verification:       verificationService,
@@ -59358,6 +59306,61 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		CustomAttributes:   customattrsServiceNoEvent,
 		Web3:               web3Service,
 	}
+	userAgentString := deps.ProvideUserAgentString(request)
+	eventLogger := event.NewLogger(factory)
+	sqlBuilder := appdb.NewSQLBuilder(databaseCredentials)
+	storeImpl := event.NewStoreImpl(sqlBuilder, sqlExecutor)
+	hookLogger := hook.NewLogger(factory)
+	hookConfig := appConfig.Hook
+	webhookKeyMaterials := deps.ProvideWebhookKeyMaterials(secretConfig)
+	webHookImpl := hook.WebHookImpl{
+		Secret: webhookKeyMaterials,
+	}
+	syncHTTPClient := hook.NewSyncHTTPClient(hookConfig)
+	asyncHTTPClient := hook.NewAsyncHTTPClient()
+	eventWebHookImpl := &hook.EventWebHookImpl{
+		WebHookImpl: webHookImpl,
+		SyncHTTP:    syncHTTPClient,
+		AsyncHTTP:   asyncHTTPClient,
+	}
+	denoHook := hook.DenoHook{
+		Context:         contextContext,
+		ResourceManager: manager,
+	}
+	denoEndpoint := environmentConfig.DenoEndpoint
+	syncDenoClient := hook.NewSyncDenoClient(denoEndpoint, hookConfig, hookLogger)
+	asyncDenoClient := hook.NewAsyncDenoClient(denoEndpoint, hookLogger)
+	eventDenoHookImpl := &hook.EventDenoHookImpl{
+		DenoHook:        denoHook,
+		SyncDenoClient:  syncDenoClient,
+		AsyncDenoClient: asyncDenoClient,
+	}
+	sink := &hook.Sink{
+		Logger:             hookLogger,
+		Config:             hookConfig,
+		Clock:              clockClock,
+		EventWebHook:       eventWebHookImpl,
+		EventDenoHook:      eventDenoHookImpl,
+		StandardAttributes: serviceNoEvent,
+		CustomAttributes:   customattrsServiceNoEvent,
+	}
+	auditLogger := audit.NewLogger(factory)
+	writeHandle := appProvider.AuditWriteDatabase
+	auditDatabaseCredentials := deps.ProvideAuditDatabaseCredentials(secretConfig)
+	auditdbSQLBuilderApp := auditdb.NewSQLBuilderApp(auditDatabaseCredentials, appID)
+	writeSQLExecutor := auditdb.NewWriteSQLExecutor(contextContext, writeHandle)
+	writeStore := &audit.WriteStore{
+		SQLBuilder:  auditdbSQLBuilderApp,
+		SQLExecutor: writeSQLExecutor,
+	}
+	auditSink := &audit.Sink{
+		Logger:   auditLogger,
+		Database: writeHandle,
+		Store:    writeStore,
+	}
+	elasticsearchLogger := elasticsearch.NewLogger(factory)
+	elasticsearchCredentials := deps.ProvideElasticsearchCredentials(secretConfig)
+	client := elasticsearch.NewClient(elasticsearchCredentials)
 	queue := appProvider.TaskQueue
 	elasticsearchService := elasticsearch.Service{
 		AppID:     appID,
@@ -59372,7 +59375,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Service:  elasticsearchService,
 		Database: handle,
 	}
-	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
+	nonblockingEventService := event.NewNonblockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink, auditSink, elasticsearchSink)
 	serviceRateLimits := &service2.RateLimits{
 		IP:          remoteIP,
 		Config:      authenticationConfig,
@@ -59389,7 +59392,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		SQLExecutor:             sqlExecutor,
 		AppConfig:               appConfig,
 		Events:                  nonblockingEventService,
-		Users:                   userStore,
+		Users:                   store,
 		StandardAttributes:      serviceNoEvent,
 		IdentityConfig:          identityConfig,
 		LoginIDIdentities:       provider,
@@ -59411,7 +59414,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	writer := &accounts.Writer{
 		SQLBuilder:             sqlBuilderApp,
 		SQLExecutor:            sqlExecutor,
-		Users:                  userStore,
+		Users:                  store,
 		LoginIDIdentities:      provider,
 		OAuthIdentities:        oauthProvider,
 		AnonymousIdentities:    anonymousProvider,
@@ -59452,7 +59455,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	resolverImpl := &event.ResolverImpl{
 		Users: queries,
 	}
-	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, logger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
+	eventService := event.NewService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, resolverImpl, sink, auditSink, elasticsearchSink)
 	serviceLogger := whatsapp.NewServiceLogger(factory)
 	devMode := environmentConfig.DevMode
 	featureTestModeWhatsappSuppressed := deps.ProvideTestModeWhatsappSuppressed(testModeFeatureConfig)
@@ -59515,7 +59518,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Lockout:       mfaLockout,
 	}
 	rawCommands := &user.RawCommands{
-		Store: userStore,
+		Store: store,
 		Clock: clockClock,
 	}
 	commands := &user.Commands{
@@ -59532,7 +59535,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		ServiceNoEvent: serviceNoEvent,
 		Identities:     serviceService,
 		UserQueries:    rawQueries,
-		UserStore:      userStore,
+		UserStore:      store,
 		Events:         eventService,
 	}
 	authorizationStore := &pq.AuthorizationStore{
@@ -59693,6 +59696,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		Clock:                clockClock,
 		RemoteIP:             remoteIP,
 		HTTPRequest:          request,
+		Users:                queries,
 		Accounts:             accountsService,
 		AccountWriter:        writer,
 		Lockout:              lockout2,

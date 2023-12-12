@@ -27,6 +27,10 @@ import (
 	"github.com/authgear/authgear-server/pkg/util/httputil"
 )
 
+type UserService interface {
+	Get(id string, role accesscontrol.Role) (*model.User, error)
+}
+
 type AccountService interface {
 	// User Create
 	NewUser(id string) *user.User
@@ -175,6 +179,7 @@ type Dependencies struct {
 
 	HTTPRequest *http.Request
 
+	Users         UserService
 	Accounts      AccountService
 	AccountWriter AccountWriter
 	Lockout       LockoutService
