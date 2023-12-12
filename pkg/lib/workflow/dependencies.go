@@ -42,6 +42,7 @@ type AccountService interface {
 	// User Update
 	PopulateStandardAttribute(u *user.User, info *identity.Info) *user.User
 	UpdateStandardAttributesWithList(role accesscontrol.Role, u *user.User, identities []*identity.Info, attrs attrs.List) (*user.User, error)
+	ReplaceStandardAttributes(role accesscontrol.Role, u *user.User, identities []*identity.Info, stdAttrs map[string]interface{}) (*user.User, error)
 
 	// Identity Create
 	GetNewIdentityChanges(spec *identity.Spec, u *user.User, identities []*identity.Info, claims []*verification.Claim) (*accounts.NewIdentityChanges, error)

@@ -65,3 +65,15 @@ func (s *Service) UpdateStandardAttributesWithList(role accesscontrol.Role, u *u
 	uu.UpdatedAt = s.Clock.NowUTC()
 	return &uu, nil
 }
+
+func (s *Service) ReplaceStandardAttributes(role accesscontrol.Role, u *user.User, identities []*identity.Info, stdAttrs map[string]interface{}) (*user.User, error) {
+	stdAttrs, err := s.StandardAttributes.UpdateStandardAttributes0(role, u, identities, stdAttrs)
+	if err != nil {
+		return nil, err
+	}
+
+	uu := *u
+	uu.StandardAttributes = stdAttrs
+	uu.UpdatedAt = s.Clock.NowUTC()
+	return &uu, nil
+}
