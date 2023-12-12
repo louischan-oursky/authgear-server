@@ -281,7 +281,7 @@ func (s *Service) dispatchAuthenticationFailedEvent(
 	stage authn.AuthenticationStage,
 	authenticationType authn.AuthenticationType,
 ) error {
-	return s.Events.DispatchErrorEvent(&nonblocking.AuthenticationFailedEventPayload{
+	return s.Events.DispatchEvent(&nonblocking.AuthenticationFailedEventPayload{
 		UserRef: model.UserRef{
 			Meta: model.Meta{
 				ID: userID,

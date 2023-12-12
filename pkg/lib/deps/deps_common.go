@@ -123,7 +123,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(facade.EventService), new(*event.Service)),
 		wire.Bind(new(oauthhandler.EventService), new(*event.Service)),
 		wire.Bind(new(oauth.EventService), new(*event.Service)),
-		wire.Bind(new(accounts.Events), new(*event.Service)),
+		wire.Bind(new(accounts.Events), new(*event.NonblockingEventService)),
 	),
 
 	wire.NewSet(

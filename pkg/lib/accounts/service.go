@@ -173,7 +173,7 @@ type StandardAttributes interface {
 }
 
 type Events interface {
-	DispatchErrorEvent(payload event.NonBlockingPayload) error
+	DispatchEvent(payload event.NonBlockingPayload) error
 }
 
 type Service struct {

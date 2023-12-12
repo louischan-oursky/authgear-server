@@ -1473,16 +1473,16 @@ func (m *MockEvents) EXPECT() *MockEventsMockRecorder {
 	return m.recorder
 }
 
-// DispatchErrorEvent mocks base method.
-func (m *MockEvents) DispatchErrorEvent(payload event.NonBlockingPayload) error {
+// DispatchEvent mocks base method.
+func (m *MockEvents) DispatchEvent(payload event.NonBlockingPayload) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DispatchErrorEvent", payload)
+	ret := m.ctrl.Call(m, "DispatchEvent", payload)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DispatchErrorEvent indicates an expected call of DispatchErrorEvent.
-func (mr *MockEventsMockRecorder) DispatchErrorEvent(payload interface{}) *gomock.Call {
+// DispatchEvent indicates an expected call of DispatchEvent.
+func (mr *MockEventsMockRecorder) DispatchEvent(payload interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DispatchErrorEvent", reflect.TypeOf((*MockEvents)(nil).DispatchErrorEvent), payload)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DispatchEvent", reflect.TypeOf((*MockEvents)(nil).DispatchEvent), payload)
 }

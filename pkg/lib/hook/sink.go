@@ -48,6 +48,20 @@ type Sink struct {
 	CustomAttributes   CustomAttributesServiceNoEvent
 }
 
+func (s *Sink) ReceiveBlockingEventNoApply(e *event.Event) (mutations *event.Mutations, err error) {
+	if s.WillDeliverBlockingEvent(e.Type) {
+		mutations, err = s.DeliverBlockingEventNoApply(e)
+		if err != nil {
+			if !apierrors.IsKind(err, WebHookDisallowed) {
+				err = fmt.Errorf("failed to dispatch event: %w", err)
+			}
+			return
+		}
+	}
+
+	return
+}
+
 func (s *Sink) ReceiveBlockingEvent(e *event.Event) (err error) {
 	if s.WillDeliverBlockingEvent(e.Type) {
 		err = s.DeliverBlockingEvent(e)
@@ -130,6 +144,49 @@ func (s *Sink) DeliverBlockingEvent(e *event.Event) error {
 	}
 
 	return nil
+}
+
+func (s *Sink) DeliverBlockingEventNoApply(e *event.Event) (*event.Mutations, error) {
+	startTime := s.Clock.NowMonotonic()
+	totalTimeout := s.Config.SyncTotalTimeout.Duration()
+
+	var lastMutations *event.Mutations
+	for _, hook := range s.Config.BlockingHandlers {
+		if hook.Event != string(e.Type) {
+			continue
+		}
+
+		elapsed := s.Clock.NowMonotonic().Sub(startTime)
+		if elapsed > totalTimeout {
+			return nil, WebHookDeliveryTimeout.NewWithInfo("webhook delivery timeout", apierrors.Details{
+				"elapsed": elapsed,
+				"limit":   totalTimeout,
+			})
+		}
+
+		resp, err := s.deliverBlockingEvent(hook, e)
+		if err != nil {
+			return nil, err
+		}
+
+		if !resp.IsAllowed {
+			return nil, newErrorOperationDisallowed(
+				string(e.Type),
+				[]OperationDisallowedItem{{
+					Title:  resp.Title,
+					Reason: resp.Reason,
+				}},
+			)
+		}
+
+		var applied bool
+		applied = e.ApplyMutations(resp.Mutations)
+		if applied {
+			lastMutations = &resp.Mutations
+		}
+	}
+
+	return lastMutations, nil
 }
 
 func (s *Sink) DeliverNonBlockingEvent(e *event.Event) error {
