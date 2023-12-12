@@ -168,6 +168,7 @@ func (s *Service) ListIdentitiesByClaim(name string, value string) ([]*identity.
 	return infos, nil
 }
 
+// nolint:gocognit
 func (s *Service) ListIdentitiesOfUser(userID string) ([]*identity.Info, error) {
 	refs, err := s.listIdentityRefsOfUser(userID)
 	if err != nil {

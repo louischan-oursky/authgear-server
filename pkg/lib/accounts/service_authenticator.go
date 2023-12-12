@@ -97,6 +97,7 @@ func (s *Service) NewAuthenticator(spec *authenticator.Spec) (*authenticator.Inf
 	panic("authenticator: unknown authenticator type " + spec.Type)
 }
 
+// nolint:gocognit
 func (s *Service) ListAuthenticatorsOfUser(userID string) ([]*authenticator.Info, error) {
 	refs, err := s.listAuthenticatorRefsOfUser(userID)
 	if err != nil {

@@ -112,6 +112,7 @@ func (i *IntentSignup) ReactTo(ctx context.Context, deps *workflow.Dependencies,
 	return nil, workflow.ErrIncompatibleInput
 }
 
+// nolint:gocognit
 func (i *IntentSignup) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
 		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
