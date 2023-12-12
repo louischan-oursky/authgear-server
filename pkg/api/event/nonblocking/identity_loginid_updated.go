@@ -20,6 +20,25 @@ type IdentityLoginIDUpdatedEventPayload struct {
 	AdminAPI    bool           `json:"-"`
 }
 
+func NewIdentityLoginIDUpdatedEventPayloadUserModel(
+	userModel model.User,
+	newIdentity model.Identity,
+	oldIdentity model.Identity,
+	loginIDType string,
+	adminAPI bool,
+) (*IdentityLoginIDUpdatedEventPayload, bool) {
+	if !checkIdentityEventSupportLoginIDType(loginIDType) {
+		return nil, false
+	}
+	return &IdentityLoginIDUpdatedEventPayload{
+		UserModel:   userModel,
+		NewIdentity: newIdentity,
+		OldIdentity: oldIdentity,
+		LoginIDType: loginIDType,
+		AdminAPI:    adminAPI,
+	}, true
+}
+
 func NewIdentityLoginIDUpdatedEventPayload(
 	userRef model.UserRef,
 	newIdentity model.Identity,

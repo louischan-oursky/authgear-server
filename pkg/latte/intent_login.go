@@ -12,6 +12,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/infra/mail"
 	"github.com/authgear/authgear-server/pkg/lib/session"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
+	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 	"github.com/authgear/authgear-server/pkg/util/validation"
 )
 
@@ -122,15 +123,14 @@ func (i *IntentLogin) GetEffects(ctx context.Context, deps *workflow.Dependencie
 			}
 
 			// ref: https://github.com/authgear/authgear-server/issues/2930
-			userRef := model.UserRef{
-				Meta: model.Meta{
-					ID: i.userID(),
-				},
+			userModel, err := deps.Users.Get(i.userID(), accesscontrol.RoleGreatest)
+			if err != nil {
+				return err
 			}
-			err := deps.Events.DispatchEvent(&nonblocking.UserAuthenticatedEventPayload{
-				UserRef:  userRef,
-				Session:  *session.ToAPIModel(),
-				AdminAPI: false,
+			err = deps.NonBlockingEvents.DispatchEvent(&nonblocking.UserAuthenticatedEventPayload{
+				UserModel: *userModel,
+				Session:   *session.ToAPIModel(),
+				AdminAPI:  false,
 			})
 			if err != nil {
 				return err

@@ -9,6 +9,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/lib/accounts"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
+	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 )
 
 func init() {
@@ -56,19 +57,18 @@ func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.De
 			return nil
 		}),
 		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			userRef := model.UserRef{
-				Meta: model.Meta{
-					ID: n.Changes.UpdatedIdentity.UserID,
-				},
+			userModel, err := deps.Users.Get(n.Changes.UpdatedIdentity.UserID, accesscontrol.RoleGreatest)
+			if err != nil {
+				return err
 			}
 
 			isAdminAPI := false
-			var e event.Payload
+			var e event.NonBlockingPayload
 			switch n.Changes.UpdatedIdentity.Type {
 			case model.IdentityTypeLoginID:
 				loginIDType := n.Changes.UpdatedIdentity.LoginID.LoginIDType
-				if payload, ok := nonblocking.NewIdentityLoginIDUpdatedEventPayload(
-					userRef,
+				if payload, ok := nonblocking.NewIdentityLoginIDUpdatedEventPayloadUserModel(
+					*userModel,
 					n.Changes.UpdatedIdentity.ToModel(),
 					n.IdentityBeforeUpdate.ToModel(),
 					string(loginIDType),
@@ -79,7 +79,7 @@ func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.De
 			}
 
 			if e != nil {
-				err := deps.Events.DispatchEvent(e)
+				err := deps.NonBlockingEvents.DispatchEvent(e)
 				if err != nil {
 					return err
 				}

@@ -113,7 +113,8 @@ var CommonDependencySet = wire.NewSet(
 	wire.NewSet(
 		event.DependencySet,
 		wire.Bind(new(interaction.EventService), new(*event.Service)),
-		wire.Bind(new(workflow.EventService), new(*event.Service)),
+		wire.Bind(new(workflow.BlockingEventService), new(*event.BlockingEventService)),
+		wire.Bind(new(workflow.NonblockingEventService), new(*event.NonblockingEventService)),
 		wire.Bind(new(authenticationflow.EventService), new(*event.Service)),
 		wire.Bind(new(user.EventService), new(*event.Service)),
 		wire.Bind(new(session.EventService), new(*event.Service)),

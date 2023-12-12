@@ -129,9 +129,12 @@ type RateLimiter interface {
 	Cancel(r *ratelimit.Reservation)
 }
 
-type EventService interface {
-	DispatchEvent(payload event.Payload) error
-	DispatchErrorEvent(payload event.NonBlockingPayload) error
+type BlockingEventService interface {
+	DispatchEvent(payload event.BlockingPayload) (*event.Mutations, error)
+}
+
+type NonblockingEventService interface {
+	DispatchEvent(payload event.NonBlockingPayload) error
 }
 
 type IDPSessionService interface {
@@ -199,9 +202,10 @@ type Dependencies struct {
 
 	Cookies CookieManager
 
-	Events         EventService
-	RateLimiter    RateLimiter
-	WorkflowEvents EventStore
+	BlockingEvents    BlockingEventService
+	NonBlockingEvents NonblockingEventService
+	RateLimiter       RateLimiter
+	WorkflowEvents    EventStore
 
 	OfflineGrants OfflineGrantStore
 }

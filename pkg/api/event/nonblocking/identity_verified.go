@@ -19,6 +19,24 @@ type IdentityVerifiedEventPayload struct {
 	AdminAPI    bool           `json:"-"`
 }
 
+func NewIdentityVerifiedEventPayloadUserModel(
+	userModel model.User,
+	identity model.Identity,
+	claimName string,
+	adminAPI bool,
+) (*IdentityVerifiedEventPayload, bool) {
+	loginIDType, ok := model.GetClaimLoginIDKeyType(model.ClaimName(claimName))
+	if !ok {
+		return nil, false
+	}
+	return &IdentityVerifiedEventPayload{
+		UserModel:   userModel,
+		Identity:    identity,
+		LoginIDType: string(loginIDType),
+		AdminAPI:    adminAPI,
+	}, true
+}
+
 func NewIdentityVerifiedEventPayload(
 	userRef model.UserRef,
 	identity model.Identity,

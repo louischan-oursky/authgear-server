@@ -57200,6 +57200,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 	}
 	mfaCookieDef := mfa.NewDeviceTokenCookieDef(authenticationConfig)
+	blockingEventService := event.NewBlockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink)
 	workflowStoreImpl := &workflow.StoreImpl{
 		Redis:   appredisHandle,
 		AppID:   appID,
@@ -57228,7 +57229,8 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 		SessionCookie:        cookieDef,
 		MFADeviceTokenCookie: mfaCookieDef,
 		Cookies:              cookieManager,
-		Events:               eventService,
+		BlockingEvents:       blockingEventService,
+		NonBlockingEvents:    nonblockingEventService,
 		RateLimiter:          limiter,
 		WorkflowEvents:       eventStoreImpl,
 		OfflineGrants:        redisStore,
@@ -58021,6 +58023,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 	}
 	mfaCookieDef := mfa.NewDeviceTokenCookieDef(authenticationConfig)
+	blockingEventService := event.NewBlockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink)
 	workflowStoreImpl := &workflow.StoreImpl{
 		Redis:   appredisHandle,
 		AppID:   appID,
@@ -58049,7 +58052,8 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 		SessionCookie:        cookieDef,
 		MFADeviceTokenCookie: mfaCookieDef,
 		Cookies:              cookieManager,
-		Events:               eventService,
+		BlockingEvents:       blockingEventService,
+		NonBlockingEvents:    nonblockingEventService,
 		RateLimiter:          limiter,
 		WorkflowEvents:       eventStoreImpl,
 		OfflineGrants:        redisStore,
@@ -58835,6 +58839,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 	}
 	mfaCookieDef := mfa.NewDeviceTokenCookieDef(authenticationConfig)
+	blockingEventService := event.NewBlockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink)
 	workflowStoreImpl := &workflow.StoreImpl{
 		Redis:   appredisHandle,
 		AppID:   appID,
@@ -58863,7 +58868,8 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 		SessionCookie:        cookieDef,
 		MFADeviceTokenCookie: mfaCookieDef,
 		Cookies:              cookieManager,
-		Events:               eventService,
+		BlockingEvents:       blockingEventService,
+		NonBlockingEvents:    nonblockingEventService,
 		RateLimiter:          limiter,
 		WorkflowEvents:       eventStoreImpl,
 		OfflineGrants:        redisStore,
@@ -59684,6 +59690,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		AppID:   appID,
 	}
 	mfaCookieDef := mfa.NewDeviceTokenCookieDef(authenticationConfig)
+	blockingEventService := event.NewBlockingEventService(contextContext, appID, remoteIP, userAgentString, eventLogger, handle, clockClock, localizationConfig, storeImpl, sink)
 	workflowStoreImpl := &workflow.StoreImpl{
 		Redis:   appredisHandle,
 		AppID:   appID,
@@ -59712,7 +59719,8 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 		SessionCookie:        cookieDef,
 		MFADeviceTokenCookie: mfaCookieDef,
 		Cookies:              cookieManager,
-		Events:               eventService,
+		BlockingEvents:       blockingEventService,
+		NonBlockingEvents:    nonblockingEventService,
 		RateLimiter:          limiter,
 		WorkflowEvents:       eventStoreImpl,
 		OfflineGrants:        redisStore,
