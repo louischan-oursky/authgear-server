@@ -10,6 +10,7 @@ import (
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
+	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 )
 
 func init() {
@@ -47,18 +48,17 @@ func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.De
 			return nil
 		}),
 		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			userRef := model.UserRef{
-				Meta: model.Meta{
-					ID: n.IdentityAfterUpdate.UserID,
-				},
+			userModel, err := deps.Users.Get(n.IdentityAfterUpdate.UserID, accesscontrol.RoleGreatest)
+			if err != nil {
+				return err
 			}
 
-			var e event.Payload
+			var e event.NonBlockingPayload
 			switch n.IdentityAfterUpdate.Type {
 			case model.IdentityTypeLoginID:
 				loginIDType := n.IdentityAfterUpdate.LoginID.LoginIDType
-				if payload, ok := nonblocking.NewIdentityLoginIDUpdatedEventPayload(
-					userRef,
+				if payload, ok := nonblocking.NewIdentityLoginIDUpdatedEventPayloadUserModel(
+					*userModel,
 					n.IdentityAfterUpdate.ToModel(),
 					n.IdentityBeforeUpdate.ToModel(),
 					string(loginIDType),
@@ -69,7 +69,8 @@ func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.De
 			}
 
 			if e != nil {
-				err := deps.Events.DispatchEvent(e)
+				// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
+				err := deps.NonblockingEvents.DispatchEvent(e)
 				if err != nil {
 					return err
 				}

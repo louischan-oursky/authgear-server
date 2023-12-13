@@ -86,21 +86,19 @@ type RateLimiter interface {
 	Cancel(r *ratelimit.Reservation)
 }
 
-type EventService interface {
-	DispatchEvent(payload event.Payload) error
-	DispatchErrorEvent(payload event.NonBlockingPayload) error
+type BlockingEventService interface {
+	DispatchEvent(payload event.BlockingPayload) (mutations *event.Mutations, err error)
+}
+
+type NonblockingEventService interface {
+	DispatchEvent(payload event.NonBlockingPayload) error
 }
 
 type UserService interface {
+	Get(id string, role accesscontrol.Role) (*model.User, error)
 	GetRaw(id string) (*user.User, error)
 	Create(userID string) (*user.User, error)
 	UpdateLoginTime(userID string, t time.Time) error
-	AfterCreate(
-		user *user.User,
-		identities []*identity.Info,
-		authenticators []*authenticator.Info,
-		isAdminAPI bool,
-	) error
 }
 
 type IDPSessionService interface {
@@ -116,6 +114,14 @@ type SessionService interface {
 type StdAttrsService interface {
 	PopulateStandardAttributes(userID string, iden *identity.Info) error
 	UpdateStandardAttributesWithList(role accesscontrol.Role, userID string, attrs attrs.List) error
+}
+
+type StandardAttributesServiceNoEvent interface {
+	UpdateStandardAttributes(role accesscontrol.Role, userID string, stdAttrs map[string]interface{}) error
+}
+
+type CustomAttributesServiceNoEvent interface {
+	UpdateAllCustomAttributes(role accesscontrol.Role, userID string, reprForm map[string]interface{}) error
 }
 
 type AuthenticationInfoService interface {
@@ -165,6 +171,9 @@ type Dependencies struct {
 	AccountMigrations AccountMigrationService
 	Captcha           CaptchaService
 
+	StandardAttributesServiceNoEvent StandardAttributesServiceNoEvent
+	CustomAttributesServiceNoEvent   CustomAttributesServiceNoEvent
+
 	IDPSessions          IDPSessionService
 	Sessions             SessionService
 	AuthenticationInfos  AuthenticationInfoService
@@ -173,9 +182,10 @@ type Dependencies struct {
 
 	Cookies CookieManager
 
-	Events         EventService
-	RateLimiter    RateLimiter
-	WorkflowEvents EventStore
+	BlockingEvents    BlockingEventService
+	NonblockingEvents NonblockingEventService
+	RateLimiter       RateLimiter
+	WorkflowEvents    EventStore
 
 	OfflineGrants OfflineGrantStore
 }

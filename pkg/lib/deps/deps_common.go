@@ -112,7 +112,8 @@ var CommonDependencySet = wire.NewSet(
 	wire.NewSet(
 		event.DependencySet,
 		wire.Bind(new(interaction.EventService), new(*event.Service)),
-		wire.Bind(new(workflow.EventService), new(*event.Service)),
+		wire.Bind(new(workflow.BlockingEventService), new(*event.BlockingEventService)),
+		wire.Bind(new(workflow.NonblockingEventService), new(*event.NonblockingEventService)),
 		wire.Bind(new(authenticationflow.EventService), new(*event.Service)),
 		wire.Bind(new(user.EventService), new(*event.Service)),
 		wire.Bind(new(session.EventService), new(*event.Service)),
@@ -190,6 +191,7 @@ var CommonDependencySet = wire.NewSet(
 		featurecustomattrs.DependencySet,
 		wire.Bind(new(user.CustomAttributesService), new(*featurecustomattrs.ServiceNoEvent)),
 		wire.Bind(new(hook.CustomAttributesServiceNoEvent), new(*featurecustomattrs.ServiceNoEvent)),
+		wire.Bind(new(workflow.CustomAttributesServiceNoEvent), new(*featurecustomattrs.ServiceNoEvent)),
 		wire.Bind(new(authenticationflow.CustomAttrsService), new(*featurecustomattrs.Service)),
 	),
 
@@ -406,6 +408,7 @@ var CommonDependencySet = wire.NewSet(
 		wire.Bind(new(workflow.StdAttrsService), new(*featurestdattrs.Service)),
 		wire.Bind(new(authenticationflow.StdAttrsService), new(*featurestdattrs.Service)),
 		wire.Bind(new(hook.StandardAttributesServiceNoEvent), new(*featurestdattrs.ServiceNoEvent)),
+		wire.Bind(new(workflow.StandardAttributesServiceNoEvent), new(*featurestdattrs.ServiceNoEvent)),
 	),
 
 	presign.DependencySet,

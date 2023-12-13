@@ -5,9 +5,9 @@ import (
 
 	"github.com/authgear/authgear-server/pkg/api/apierrors"
 	"github.com/authgear/authgear-server/pkg/api/event/nonblocking"
-	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/session"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
+	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 	"github.com/authgear/authgear-server/pkg/util/validation"
 )
 
@@ -66,13 +66,19 @@ func (*IntentVerifyUser) GetEffects(ctx context.Context, deps *workflow.Dependen
 				return err
 			}
 
-			if payload, ok := nonblocking.NewIdentityVerifiedEventPayload(
-				model.UserRef{Meta: model.Meta{ID: iden.UserID}},
+			userModel, err := deps.Users.Get(iden.UserID, accesscontrol.RoleGreatest)
+			if err != nil {
+				return err
+			}
+
+			if payload, ok := nonblocking.NewIdentityVerifiedEventPayloadUserModel(
+				*userModel,
 				iden.ToModel(),
 				string(verified.NewVerifiedClaim.Name),
 				false,
 			); ok {
-				err := deps.Events.DispatchEvent(payload)
+				// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
+				err := deps.NonblockingEvents.DispatchEvent(payload)
 				if err != nil {
 					return err
 				}

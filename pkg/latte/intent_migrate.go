@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/authgear/authgear-server/pkg/api/event"
+	"github.com/authgear/authgear-server/pkg/api/event/blocking"
+	"github.com/authgear/authgear-server/pkg/api/event/nonblocking"
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
-	"github.com/authgear/authgear-server/pkg/lib/authn/identity"
 	"github.com/authgear/authgear-server/pkg/lib/session"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
+	"github.com/authgear/authgear-server/pkg/util/accesscontrol"
 	"github.com/authgear/authgear-server/pkg/util/uuid"
 	"github.com/authgear/authgear-server/pkg/util/validation"
 )
@@ -113,36 +116,71 @@ func (i *IntentMigrate) GetEffects(ctx context.Context, deps *workflow.Dependenc
 			return nil
 		}),
 		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			var identities []*identity.Info
-			identityWorkflows := workflow.FindSubWorkflows[NewIdentityGetter](workflows.Nearest)
-			for _, subWorkflow := range identityWorkflows {
-				if iden, ok := subWorkflow.Intent.(NewIdentityGetter).GetNewIdentities(subWorkflow); ok {
-					identities = append(identities, iden...)
-				}
-			}
-
-			var authenticators []*authenticator.Info
-			authenticatorWorkflows := workflow.FindSubWorkflows[NewAuthenticatorGetter](workflows.Nearest)
-			for _, subWorkflow := range authenticatorWorkflows {
-				if a, ok := subWorkflow.Intent.(NewAuthenticatorGetter).GetNewAuthenticators(subWorkflow); ok {
-					authenticators = append(authenticators, a...)
-				}
-			}
-
 			userID := i.userID(workflows.Nearest)
 			isAdminAPI := false
 
-			u, err := deps.Users.GetRaw(userID)
+			identities, err := deps.Identities.ListByUser(userID)
+			if err != nil {
+				return err
+			}
+			var identityModels []model.Identity
+			for _, i := range identities {
+				identityModels = append(identityModels, i.ToModel())
+			}
+
+			userModel, err := deps.Users.Get(userID, accesscontrol.RoleGreatest)
 			if err != nil {
 				return err
 			}
 
-			err = deps.Users.AfterCreate(
-				u,
-				identities,
-				authenticators,
-				isAdminAPI,
-			)
+			// FIXME(workflow): Use new lifecycle to dispatch blocking hook.
+			mutations, err := deps.BlockingEvents.DispatchEvent(&blocking.UserPreCreateBlockingEventPayload{
+				UserModel:  *userModel,
+				UserRef:    *userModel.ToRef(),
+				Identities: identityModels,
+				AdminAPI:   isAdminAPI,
+			})
+			if err != nil {
+				return err
+			}
+			// FIXME(workflow): Use new lifecycle to apply mutations.
+			if mutations != nil {
+				err = blocking.PerformEffectsOnUser(event.MutationsEffectContext{
+					StandardAttributes: deps.StandardAttributesServiceNoEvent,
+					CustomAttributes:   deps.CustomAttributesServiceNoEvent,
+				}, userID, mutations.User)
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}),
+		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+			userID := i.userID(workflows.Nearest)
+			isAdminAPI := false
+
+			identities, err := deps.Identities.ListByUser(userID)
+			if err != nil {
+				return err
+			}
+			var identityModels []model.Identity
+			for _, i := range identities {
+				identityModels = append(identityModels, i.ToModel())
+			}
+
+			userModel, err := deps.Users.Get(userID, accesscontrol.RoleGreatest)
+			if err != nil {
+				return err
+			}
+
+			// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
+			err = deps.NonblockingEvents.DispatchEvent(&nonblocking.UserCreatedEventPayload{
+				UserModel:  *userModel,
+				UserRef:    *userModel.ToRef(),
+				Identities: identityModels,
+				AdminAPI:   isAdminAPI,
+			})
 			if err != nil {
 				return err
 			}
