@@ -298,12 +298,6 @@ func (s *Service) feedInput(ctx context.Context, session *Session, instanceID st
 		return
 	}
 
-	// Apply the run-effects.
-	err = workflow.ApplyRunEffects(ctx, s.Deps, NewWorkflows(workflow))
-	if err != nil {
-		return
-	}
-
 	err = workflow.Accept(ctx, s.Deps, NewWorkflows(workflow), input)
 	isEOF := errors.Is(err, ErrEOF)
 	if err != nil && !isEOF {
