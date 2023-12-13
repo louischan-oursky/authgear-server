@@ -51,7 +51,6 @@ type Store interface {
 
 type ServiceDatabase interface {
 	WithTx(do func() error) (err error)
-	ReadOnly(do func() error) (err error)
 }
 
 type ServiceUIInfoResolver interface {
@@ -79,10 +78,7 @@ func (s *Service) CreateNewWorkflow(intent Intent, sessionOptions *SessionOption
 	var workflow *Workflow
 	var workflowOutput *WorkflowOutput
 	var action *WorkflowAction
-	err = s.Database.ReadOnly(func() error {
-		workflow, workflowOutput, action, err = s.createNewWorkflow(ctx, session, intent)
-		return err
-	})
+	workflow, workflowOutput, action, err = s.createNewWorkflow(ctx, session, intent)
 	isEOF := errors.Is(err, ErrEOF)
 	if err != nil && !isEOF {
 		return
@@ -188,10 +184,7 @@ func (s *Service) Get(workflowID string, instanceID string, userAgentID string) 
 
 	ctx := session.Context(s.ContextDoNotUseDirectly)
 
-	err = s.Database.ReadOnly(func() error {
-		output, err = s.get(ctx, session, w)
-		return err
-	})
+	output, err = s.get(ctx, session, w)
 	return
 }
 
@@ -243,10 +236,7 @@ func (s *Service) FeedInput(workflowID string, instanceID string, userAgentID st
 
 	var workflowOutput *WorkflowOutput
 	var action *WorkflowAction
-	err = s.Database.ReadOnly(func() error {
-		workflow, workflowOutput, action, err = s.feedInput(ctx, session, instanceID, input)
-		return err
-	})
+	workflow, workflowOutput, action, err = s.feedInput(ctx, session, instanceID, input)
 	isEOF := errors.Is(err, ErrEOF)
 	if err != nil && !isEOF {
 		return
