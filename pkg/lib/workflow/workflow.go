@@ -140,30 +140,6 @@ func (w *Workflow) Accept(ctx context.Context, deps *Dependencies, workflows Wor
 
 func (w *Workflow) appendNode(ctx context.Context, deps *Dependencies, workflows Workflows, node Node) error {
 	w.Nodes = append(w.Nodes, node)
-
-	err := node.Traverse(WorkflowTraverser{
-		NodeSimple: func(nodeSimple NodeSimple, w *Workflow) error {
-			effs, err := nodeSimple.GetEffects(ctx, deps, workflows.Replace(w))
-			if err != nil {
-				return err
-			}
-			for _, eff := range effs {
-				if runEff, ok := eff.(RunEffect); ok {
-					err = applyRunEffect(ctx, deps, runEff)
-					if err != nil {
-						return err
-					}
-				}
-			}
-			return nil
-		},
-		// Intent cannot have run-effect.
-		// We do not bother traversing intents here.
-	}, w)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
