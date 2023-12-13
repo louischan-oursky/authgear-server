@@ -20,6 +20,7 @@ import (
 
 type Database interface {
 	UseHook(hook db.TransactionHook)
+	ReadOnly(f func() error) error
 }
 
 type Sink interface {

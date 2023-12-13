@@ -48,7 +48,13 @@ func (s *NonblockingEventService) DispatchEvent(payload event.NonBlockingPayload
 }
 
 func (s *NonblockingEventService) nextSeq() (seq int64, err error) {
-	seq, err = s.Store.NextSequenceNumber()
+	err = s.Database.ReadOnly(func() error {
+		seq, err = s.Store.NextSequenceNumber()
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return
 	}

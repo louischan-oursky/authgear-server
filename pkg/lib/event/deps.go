@@ -76,6 +76,7 @@ func NewBlockingEventService(
 		RemoteIP:        remoteIP,
 		UserAgentString: userAgentString,
 		Logger:          logger,
+		Database:        database,
 		Clock:           clock,
 		Localization:    localization,
 		Store:           store,

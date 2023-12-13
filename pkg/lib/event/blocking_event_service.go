@@ -26,6 +26,7 @@ type BlockingEventService struct {
 	RemoteIP        httputil.RemoteIP
 	UserAgentString httputil.UserAgentString
 	Logger          Logger
+	Database        Database
 	Clock           clock.Clock
 	Localization    *config.LocalizationConfig
 	Store           Store
@@ -50,7 +51,13 @@ func (s *BlockingEventService) DispatchEvent(payload event.BlockingPayload) (mut
 }
 
 func (s *BlockingEventService) nextSeq() (seq int64, err error) {
-	seq, err = s.Store.NextSequenceNumber()
+	err = s.Database.ReadOnly(func() error {
+		seq, err = s.Store.NextSequenceNumber()
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return
 	}
