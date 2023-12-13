@@ -92,10 +92,7 @@ func (s *Service) CreateNewWorkflow(intent Intent, sessionOptions *SessionOption
 
 	var cookies []*http.Cookie
 	if isEOF {
-		err = s.Database.WithTx(func() error {
-			cookies, err = s.finishWorkflow(ctx, workflow)
-			return err
-		})
+		cookies, err = s.finishWorkflow(ctx, workflow)
 		if err != nil {
 			return
 		}
@@ -259,10 +256,7 @@ func (s *Service) FeedInput(workflowID string, instanceID string, userAgentID st
 
 	var cookies []*http.Cookie
 	if isEOF {
-		err = s.Database.WithTx(func() error {
-			cookies, err = s.finishWorkflow(ctx, workflow)
-			return err
-		})
+		cookies, err = s.finishWorkflow(ctx, workflow)
 		if err != nil {
 			return
 		}
@@ -329,13 +323,48 @@ func (s *Service) feedInput(ctx context.Context, session *Session, instanceID st
 
 func (s *Service) finishWorkflow(ctx context.Context, workflow *Workflow) (cookies []*http.Cookie, err error) {
 	// When the workflow is finished, we have the following things to do:
-	// 1. Apply all effects.
-	// 2. Collect cookies.
-	err = workflow.ApplyAllEffects(ctx, s.Deps, NewWorkflows(workflow))
+	// 1. Collect run effects.
+	// 2. Run BeforeCommit and collect extra RunEffects.
+	// 3. Apply the run effects.
+	// 4. Run AfterCommit.
+	// 5. Collect cookies.
+
+	// 1
+	runEffects, err := workflow.CollectRunEffects(ctx, s.Deps, NewWorkflows(workflow))
 	if err != nil {
 		return
 	}
 
+	// 2
+	extraRunEffects, err := RunBeforeCommit(ctx, s.Deps, NewWorkflows(workflow))
+	if err != nil {
+		return
+	}
+
+	// 3
+	var allRunEffects []RunEffect
+	allRunEffects = append(allRunEffects, runEffects...)
+	allRunEffects = append(allRunEffects, extraRunEffects...)
+	err = s.Database.WithTx(func() error {
+		for _, eff := range allRunEffects {
+			err := applyRunEffect(ctx, s.Deps, eff)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+
+	// 4
+	err = RunAfterCommit(ctx, s.Deps, NewWorkflows(workflow))
+	if err != nil {
+		return
+	}
+
+	// 5
 	cookies, err = workflow.CollectCookies(ctx, s.Deps, NewWorkflows(workflow))
 	if err != nil {
 		return

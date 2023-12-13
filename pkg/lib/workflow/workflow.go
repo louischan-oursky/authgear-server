@@ -143,8 +143,8 @@ func (w *Workflow) appendNode(ctx context.Context, deps *Dependencies, workflows
 	return nil
 }
 
-func (w *Workflow) ApplyRunEffects(ctx context.Context, deps *Dependencies, workflows Workflows) error {
-	err := w.Traverse(WorkflowTraverser{
+func (w *Workflow) CollectRunEffects(ctx context.Context, deps *Dependencies, workflows Workflows) (runEffects []RunEffect, err error) {
+	err = w.Traverse(WorkflowTraverser{
 		NodeSimple: func(nodeSimple NodeSimple, w *Workflow) error {
 			effs, err := nodeSimple.GetEffects(ctx, deps, workflows.Replace(w))
 			if err != nil {
@@ -152,10 +152,7 @@ func (w *Workflow) ApplyRunEffects(ctx context.Context, deps *Dependencies, work
 			}
 			for _, eff := range effs {
 				if runEff, ok := eff.(RunEffect); ok {
-					err = applyRunEffect(ctx, deps, runEff)
-					if err != nil {
-						return err
-					}
+					runEffects = append(runEffects, runEff)
 				}
 			}
 			return nil
@@ -175,55 +172,10 @@ func (w *Workflow) ApplyRunEffects(ctx context.Context, deps *Dependencies, work
 		},
 	})
 	if err != nil {
-		return err
+		return
 	}
 
-	return nil
-}
-
-func (w *Workflow) ApplyAllEffects(ctx context.Context, deps *Dependencies, workflows Workflows) error {
-	err := w.ApplyRunEffects(ctx, deps, workflows.Replace(w))
-	if err != nil {
-		return err
-	}
-
-	err = w.Traverse(WorkflowTraverser{
-		NodeSimple: func(nodeSimple NodeSimple, w *Workflow) error {
-			effs, err := nodeSimple.GetEffects(ctx, deps, workflows.Replace(w))
-			if err != nil {
-				return err
-			}
-			for _, eff := range effs {
-				if onCommitEff, ok := eff.(OnCommitEffect); ok {
-					err = applyOnCommitEffect(ctx, deps, onCommitEff)
-					if err != nil {
-						return err
-					}
-				}
-			}
-			return nil
-		},
-		Intent: func(intent Intent, w *Workflow) error {
-			effs, err := intent.GetEffects(ctx, deps, workflows.Replace(w))
-			if err != nil {
-				return err
-			}
-			for _, eff := range effs {
-				if onCommitEff, ok := eff.(OnCommitEffect); ok {
-					err = applyOnCommitEffect(ctx, deps, onCommitEff)
-					if err != nil {
-						return err
-					}
-				}
-			}
-			return nil
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return
 }
 
 func (w *Workflow) CollectCookies(ctx context.Context, deps *Dependencies, workflows Workflows) (cookies []*http.Cookie, err error) {
