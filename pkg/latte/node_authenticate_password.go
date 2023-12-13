@@ -47,7 +47,7 @@ func (n *NodeAuthenticatePassword) ReactTo(ctx context.Context, deps *workflow.D
 		} else if err != nil {
 			return nil, err
 		}
-		_, err = deps.Authenticators.VerifyWithSpec(info, &authenticator.Spec{
+		_, _, err = deps.Authenticators.VerifyWithSpecPure(info, &authenticator.Spec{
 			Password: &authenticator.PasswordSpec{
 				PlainPassword: inputTakePassword.GetPassword(),
 			},

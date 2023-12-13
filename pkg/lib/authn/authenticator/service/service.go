@@ -25,6 +25,7 @@ type PasswordAuthenticatorProvider interface {
 	UpdatePassword(*authenticator.Password) error
 	Delete(*authenticator.Password) error
 	Authenticate(a *authenticator.Password, password string) (requireUpdate bool, err error)
+	AuthenticatePure(a *authenticator.Password, password string) (migrated *authenticator.Password, requireForceChange bool, err error)
 }
 
 type PasskeyAuthenticatorProvider interface {
@@ -42,6 +43,7 @@ type PasskeyAuthenticatorProvider interface {
 	Update(*authenticator.Passkey) error
 	Delete(*authenticator.Passkey) error
 	Authenticate(a *authenticator.Passkey, assertionResponse []byte) (requireUpdate bool, err error)
+	AuthenticatePure(a *authenticator.Passkey, assertionResponse []byte) (updated *authenticator.Passkey, err error)
 }
 
 type TOTPAuthenticatorProvider interface {
@@ -573,6 +575,79 @@ func (s *Service) verifyWithSpec(info *authenticator.Info, spec *authenticator.S
 	panic("authenticator: unhandled authenticator type " + info.Type)
 }
 
+func (s *Service) verifyWithSpecPure(info *authenticator.Info, spec *authenticator.Spec, options *VerifyOptions) (updatedAuthenticator *authenticator.Info, requireForceChange bool, err error) {
+	switch info.Type {
+	case model.AuthenticatorTypePassword:
+		plainPassword := spec.Password.PlainPassword
+		a := info.Password
+		var migratedPassword *authenticator.Password
+		migratedPassword, requireForceChange, err = s.Password.AuthenticatePure(a, plainPassword)
+		if err != nil {
+			err = api.ErrInvalidCredentials
+			return
+		}
+		if migratedPassword != nil {
+			updatedAuthenticator = migratedPassword.ToInfo()
+		}
+
+		return
+	case model.AuthenticatorTypePasskey:
+		assertionResponse := spec.Passkey.AssertionResponse
+		a := info.Passkey
+		var updatedPasskey *authenticator.Passkey
+		updatedPasskey, err = s.Passkey.AuthenticatePure(a, assertionResponse)
+		if err != nil {
+			err = api.ErrInvalidCredentials
+			return
+		}
+		if updatedPasskey != nil {
+			updatedAuthenticator = updatedPasskey.ToInfo()
+		}
+
+		return
+	case model.AuthenticatorTypeTOTP:
+		code := spec.TOTP.Code
+		a := info.TOTP
+		if s.TOTP.Authenticate(a, code) != nil {
+			err = api.ErrInvalidCredentials
+			return
+		}
+		// Do not update info because by definition TOTP does not update itself during verification.
+
+		return
+	case model.AuthenticatorTypeOOBEmail, model.AuthenticatorTypeOOBSMS:
+		var channel model.AuthenticatorOOBChannel
+		if options.OOBChannel != nil {
+			channel = *options.OOBChannel
+		} else {
+			switch info.Type {
+			case model.AuthenticatorTypeOOBEmail:
+				channel = model.AuthenticatorOOBChannelEmail
+			case model.AuthenticatorTypeOOBSMS:
+				channel = model.AuthenticatorOOBChannelSMS
+			}
+		}
+		kind := otp.KindOOBOTP(s.Config, channel)
+
+		code := spec.OOBOTP.Code
+		a := info.OOBOTP
+		err = s.OTPCodeService.VerifyOTP(kind, a.ToTarget(), code, &otp.VerifyOptions{
+			UserID: info.UserID,
+		})
+		if apierrors.IsKind(err, otp.InvalidOTPCode) {
+			err = api.ErrInvalidCredentials
+			return
+		} else if err != nil {
+			return
+		}
+		// Do not update info because by definition OOBOTP does not update itself during verification.
+
+		return
+	}
+
+	panic("authenticator: unhandled authenticator type " + info.Type)
+}
+
 // Given a list of authenticators, try to verify one of them
 func (s *Service) VerifyOneWithSpec(
 	userID string,
@@ -611,6 +686,82 @@ func (s *Service) VerifyOneWithSpec(
 		// For both cases we should break the loop and return
 		if err == nil {
 			info = thisInfo
+		}
+		break
+	}
+
+	switch {
+	case info == nil && err == nil:
+		// If we reach here, it means infos is empty.
+		// Here is one case that infos is empty.
+		// The end-user remove their passkey in Authgear, but keep the passkey in their browser.
+		// Authgear will see an passkey that it does not know.
+		err = api.ErrInvalidCredentials
+	case info != nil && err == nil:
+		// Authenticated.
+		break
+	case info == nil && err != nil:
+		// Some error.
+		break
+	default:
+		panic(fmt.Errorf("unexpected post condition: info != nil && err != nil"))
+	}
+
+	// If error is ErrInvalidCredentials, consume rate limit token and increment lockout attempt
+	if errors.Is(err, api.ErrInvalidCredentials) {
+		r.Consume()
+		lockErr := s.Lockout.MakeAttempt(userID, authenticatorType)
+		if lockErr != nil {
+			err = errors.Join(lockErr, err)
+			return
+		}
+		return
+	}
+	// else, simply return the error if any
+	return
+}
+
+func (s *Service) VerifyOneWithSpecPure(
+	userID string,
+	authenticatorType model.AuthenticatorType,
+	infos []*authenticator.Info,
+	spec *authenticator.Spec,
+	options *VerifyOptions) (info *authenticator.Info, updated *authenticator.Info, requireForceChange bool, err error) {
+	if options == nil {
+		options = &VerifyOptions{}
+	}
+
+	r := s.RateLimits.Reserve(userID, authenticatorType)
+	defer s.RateLimits.Cancel(r)
+
+	if err = r.Error(); err != nil {
+		return
+	}
+
+	// Check if it is already locked
+	err = s.Lockout.Check(userID)
+	if err != nil {
+		return
+	}
+
+	for _, thisInfo := range infos {
+		if thisInfo.UserID != userID || thisInfo.Type != authenticatorType {
+			// Ensure all authenticators are in same type of the same user
+			err = fmt.Errorf("only authenticators with same type of same user can be verified together")
+			return
+		}
+		var updatedInfo *authenticator.Info
+		var forceChange bool
+		updatedInfo, forceChange, err = s.verifyWithSpecPure(thisInfo, spec, options)
+		if errors.Is(err, api.ErrInvalidCredentials) {
+			continue
+		}
+		// unexpected errors or no error
+		// For both cases we should break the loop and return
+		if err == nil {
+			info = thisInfo
+			updated = updatedInfo
+			requireForceChange = forceChange
 		}
 		break
 	}

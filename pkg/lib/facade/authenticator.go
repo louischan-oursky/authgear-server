@@ -48,8 +48,16 @@ func (a AuthenticatorFacade) VerifyWithSpec(info *authenticator.Info, spec *auth
 	return a.Coordinator.AuthenticatorVerifyWithSpec(info, spec, options)
 }
 
+func (a AuthenticatorFacade) VerifyWithSpecPure(info *authenticator.Info, spec *authenticator.Spec, options *VerifyOptions) (updated *authenticator.Info, requireForceChange bool, err error) {
+	return a.Coordinator.AuthenticatorVerifyWithSpecPure(info, spec, options)
+}
+
 func (a AuthenticatorFacade) VerifyOneWithSpec(userID string, authenticatorType apimodel.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *VerifyOptions) (info *authenticator.Info, requireUpdate bool, err error) {
 	return a.Coordinator.AuthenticatorVerifyOneWithSpec(userID, authenticatorType, infos, spec, options)
+}
+
+func (a AuthenticatorFacade) VerifyOneWithSpecPure(userID string, authenticatorType apimodel.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *VerifyOptions) (info *authenticator.Info, updated *authenticator.Info, requireForceChange bool, err error) {
+	return a.Coordinator.AuthenticatorVerifyOneWithSpecPure(userID, authenticatorType, infos, spec, options)
 }
 
 func (a AuthenticatorFacade) ClearLockoutAttempts(userID string, usedMethods []config.AuthenticationLockoutMethod) error {

@@ -51,6 +51,7 @@ type AuthenticatorService interface {
 	Update(authenticatorInfo *authenticator.Info) error
 	Delete(authenticatorInfo *authenticator.Info) error
 	VerifyOneWithSpec(userID string, authenticatorType model.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *service.VerifyOptions) (info *authenticator.Info, requireUpdate bool, err error)
+	VerifyOneWithSpecPure(userID string, authenticatorType model.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *service.VerifyOptions) (info *authenticator.Info, updated *authenticator.Info, requireForceChange bool, err error)
 	UpdateOrphans(oldInfo *identity.Info, newInfo *identity.Info) error
 	RemoveOrphans(identities []*identity.Info) error
 	ClearLockoutAttempts(userID string, usedMethods []config.AuthenticationLockoutMethod) error
@@ -357,6 +358,17 @@ func (c *Coordinator) AuthenticatorVerifyWithSpec(info *authenticator.Info, spec
 	return
 }
 
+func (c *Coordinator) AuthenticatorVerifyWithSpecPure(info *authenticator.Info, spec *authenticator.Spec, options *VerifyOptions) (updated *authenticator.Info, requireForceChange bool, err error) {
+	_, updated, requireForceChange, err = c.AuthenticatorVerifyOneWithSpecPure(
+		info.UserID,
+		info.Type,
+		[]*authenticator.Info{info},
+		spec,
+		options,
+	)
+	return
+}
+
 func (c *Coordinator) dispatchAuthenticationFailedEvent(userID string,
 	stage authn.AuthenticationStage,
 	authenticationType authn.AuthenticationType) error {
@@ -392,6 +404,25 @@ func (c *Coordinator) AuthenticatorVerifyOneWithSpec(userID string, authenticato
 		)
 		if eventerr != nil {
 			return nil, false, eventerr
+		}
+		err = c.addAuthenticationTypeToError(err, options.AuthenticationDetails.AuthenticationType)
+	}
+	return
+}
+
+func (c *Coordinator) AuthenticatorVerifyOneWithSpecPure(userID string, authenticatorType model.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *VerifyOptions) (info *authenticator.Info, updated *authenticator.Info, requireForceChange bool, err error) {
+	if options == nil {
+		options = &VerifyOptions{}
+	}
+	info, updated, requireForceChange, err = c.Authenticators.VerifyOneWithSpecPure(userID, authenticatorType, infos, spec, options.toServiceOptions())
+	if err != nil && errors.Is(err, api.ErrInvalidCredentials) && options.AuthenticationDetails != nil {
+		eventerr := c.dispatchAuthenticationFailedEvent(
+			options.AuthenticationDetails.UserID,
+			options.AuthenticationDetails.Stage,
+			options.AuthenticationDetails.AuthenticationType,
+		)
+		if eventerr != nil {
+			return nil, nil, false, eventerr
 		}
 		err = c.addAuthenticationTypeToError(err, options.AuthenticationDetails.AuthenticationType)
 	}

@@ -58,7 +58,7 @@ func (n *NodeAuthenticateOOBOTPPhone) ReactTo(ctx context.Context, deps *workflo
 		return nil, workflow.ErrSameNode
 	case workflow.AsInput(input, &inputTakeOOBOTPCode):
 		info := n.Authenticator
-		_, err := deps.Authenticators.VerifyWithSpec(info, &authenticator.Spec{
+		_, _, err := deps.Authenticators.VerifyWithSpecPure(info, &authenticator.Spec{
 			OOBOTP: &authenticator.OOBOTPSpec{
 				Code: inputTakeOOBOTPCode.GetCode(),
 			},

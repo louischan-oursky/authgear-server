@@ -46,8 +46,8 @@ type AuthenticatorService interface {
 	Update(authenticatorInfo *authenticator.Info) error
 	List(userID string, filters ...authenticator.Filter) ([]*authenticator.Info, error)
 	WithSpec(authenticatorInfo *authenticator.Info, spec *authenticator.Spec) (changed bool, info *authenticator.Info, err error)
-	VerifyWithSpec(info *authenticator.Info, spec *authenticator.Spec, options *facade.VerifyOptions) (requireUpdate bool, err error)
-	VerifyOneWithSpec(userID string, authenticatorType model.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *facade.VerifyOptions) (info *authenticator.Info, requireUpdate bool, err error)
+	VerifyWithSpecPure(info *authenticator.Info, spec *authenticator.Spec, options *facade.VerifyOptions) (updated *authenticator.Info, requireForceChange bool, err error)
+	VerifyOneWithSpecPure(userID string, authenticatorType model.AuthenticatorType, infos []*authenticator.Info, spec *authenticator.Spec, options *facade.VerifyOptions) (info *authenticator.Info, updated *authenticator.Info, requireForceChange bool, err error)
 	ClearLockoutAttempts(userID string, usedMethods []config.AuthenticationLockoutMethod) error
 }
 
