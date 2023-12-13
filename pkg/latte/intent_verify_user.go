@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/authgear/authgear-server/pkg/api/apierrors"
+	"github.com/authgear/authgear-server/pkg/api/event"
 	"github.com/authgear/authgear-server/pkg/api/event/nonblocking"
 	"github.com/authgear/authgear-server/pkg/lib/session"
 	"github.com/authgear/authgear-server/pkg/lib/workflow"
@@ -24,6 +25,8 @@ var IntentVerifyUserSchema = validation.NewSimpleSchema(`
 
 type IntentVerifyUser struct {
 }
+
+var _ workflow.AfterCommit = &IntentVerifyUser{}
 
 func (*IntentVerifyUser) Kind() string {
 	return "latte.IntentVerifyUser"
@@ -52,41 +55,50 @@ func (*IntentVerifyUser) ReactTo(ctx context.Context, deps *workflow.Dependencie
 }
 
 func (*IntentVerifyUser) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
-	return []workflow.Effect{
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			verifyIdentity, workflow := workflow.MustFindSubWorkflow[*IntentFindVerifyIdentity](workflows.Nearest)
-			verified, ok := verifyIdentity.VerifiedIdentity(workflow)
-			if !ok || verified.NewVerifiedClaim == nil {
-				// No actual verification is done; skipping event
-				return nil
-			}
+	return
+}
 
-			iden, err := deps.Identities.Get(verified.IdentityID)
-			if err != nil {
-				return err
-			}
+func (*IntentVerifyUser) AfterCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) error {
+	verifyIdentity, workflow := workflow.MustFindSubWorkflow[*IntentFindVerifyIdentity](workflows.Nearest)
+	verified, ok := verifyIdentity.VerifiedIdentity(workflow)
+	if !ok || verified.NewVerifiedClaim == nil {
+		// No actual verification is done; skipping event
+		return nil
+	}
 
-			userModel, err := deps.Users.Get(iden.UserID, accesscontrol.RoleGreatest)
-			if err != nil {
-				return err
-			}
+	var payload event.NonBlockingPayload
+	err := deps.Database.ReadOnly(func() error {
+		iden, err := deps.Identities.Get(verified.IdentityID)
+		if err != nil {
+			return err
+		}
 
-			if payload, ok := nonblocking.NewIdentityVerifiedEventPayloadUserModel(
-				*userModel,
-				iden.ToModel(),
-				string(verified.NewVerifiedClaim.Name),
-				false,
-			); ok {
-				// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
-				err := deps.NonblockingEvents.DispatchEvent(payload)
-				if err != nil {
-					return err
-				}
-			}
+		userModel, err := deps.Users.Get(iden.UserID, accesscontrol.RoleGreatest)
+		if err != nil {
+			return err
+		}
 
-			return nil
-		}),
-	}, nil
+		payload, ok = nonblocking.NewIdentityVerifiedEventPayloadUserModel(
+			*userModel,
+			iden.ToModel(),
+			string(verified.NewVerifiedClaim.Name),
+			false,
+		)
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if payload != nil {
+		err := deps.NonblockingEvents.DispatchEvent(payload)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (i *IntentVerifyUser) OutputData(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (interface{}, error) {

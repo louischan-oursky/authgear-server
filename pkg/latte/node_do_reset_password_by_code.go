@@ -15,13 +15,19 @@ type NodeDoResetPasswordByCode struct {
 	NewPassword string `json:"new_password"`
 }
 
+var _ workflow.BeforeCommit = &NodeDoResetPasswordByCode{}
+
 func (n *NodeDoResetPasswordByCode) Kind() string {
 	return "latte.NodeDoResetPasswordByCode"
 }
 
 func (n *NodeDoResetPasswordByCode) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
+	return
+}
+
+func (n *NodeDoResetPasswordByCode) BeforeCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 			err := deps.ResetPassword.ResetPassword(n.Code, n.NewPassword)
 			return err
 		}),

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/authgear/authgear-server/pkg/api"
+	"github.com/authgear/authgear-server/pkg/api/event"
 	"github.com/authgear/authgear-server/pkg/api/event/nonblocking"
 	"github.com/authgear/authgear-server/pkg/api/model"
 	"github.com/authgear/authgear-server/pkg/lib/authn/authenticator"
@@ -30,6 +31,9 @@ type IntentLogin struct {
 	CaptchaProtectedIntent
 	Identity *identity.Info `json:"identity,omitempty"`
 }
+
+var _ workflow.BeforeCommit = &IntentLogin{}
+var _ workflow.AfterCommit = &IntentLogin{}
 
 func (*IntentLogin) Kind() string {
 	return "latte.IntentLogin"
@@ -114,33 +118,13 @@ func (i *IntentLogin) ReactTo(ctx context.Context, deps *workflow.Dependencies, 
 }
 
 func (i *IntentLogin) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
+	return
+}
+
+func (i *IntentLogin) BeforeCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			createSession, workflow := workflow.MustFindSubWorkflow[*IntentEnsureSession](workflows.Nearest)
-			session := createSession.GetSession(workflow)
-			if session == nil {
-				return nil
-			}
-
-			// ref: https://github.com/authgear/authgear-server/issues/2930
-			userModel, err := deps.Users.Get(i.userID(), accesscontrol.RoleGreatest)
-			if err != nil {
-				return err
-			}
-			// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
-			err = deps.NonblockingEvents.DispatchEvent(&nonblocking.UserAuthenticatedEventPayload{
-				UserModel: *userModel,
-				UserRef:   *userModel.ToRef(),
-				Session:   *session.ToAPIModel(),
-				AdminAPI:  false,
-			})
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+			// Clear lockout attempt
 			userID := i.userID()
 			methods, err := i.getVerifiedAuthenticationLockoutMethods(workflows.Nearest)
 			if err != nil {
@@ -153,6 +137,43 @@ func (i *IntentLogin) GetEffects(ctx context.Context, deps *workflow.Dependencie
 			return nil
 		}),
 	}, nil
+}
+
+func (i *IntentLogin) AfterCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) error {
+	// Dispatch user.authenticated.
+	createSession, workflow := workflow.MustFindSubWorkflow[*IntentEnsureSession](workflows.Nearest)
+	session := createSession.GetSession(workflow)
+	if session == nil {
+		return nil
+	}
+
+	var payload event.NonBlockingPayload
+	err := deps.Database.ReadOnly(func() error {
+		// ref: https://github.com/authgear/authgear-server/issues/2930
+		userModel, err := deps.Users.Get(i.userID(), accesscontrol.RoleGreatest)
+		if err != nil {
+			return err
+		}
+
+		payload = &nonblocking.UserAuthenticatedEventPayload{
+			UserModel: *userModel,
+			UserRef:   *userModel.ToRef(),
+			Session:   *session.ToAPIModel(),
+			AdminAPI:  false,
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = deps.NonblockingEvents.DispatchEvent(payload)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (i *IntentLogin) OutputData(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (interface{}, error) {

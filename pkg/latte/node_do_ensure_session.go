@@ -16,6 +16,7 @@ func init() {
 
 var _ workflow.CookieGetter = &NodeDoEnsureSession{}
 var _ workflow.AuthenticationInfoEntryGetter = &NodeDoEnsureSession{}
+var _ workflow.BeforeCommit = &NodeDoEnsureSession{}
 
 type NodeDoEnsureSession struct {
 	UserID                  string                    `json:"user_id"`
@@ -33,15 +34,19 @@ func (n *NodeDoEnsureSession) Kind() string {
 }
 
 func (n *NodeDoEnsureSession) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
+	return
+}
+
+func (n *NodeDoEnsureSession) BeforeCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
 	return []workflow.Effect{
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 			return deps.AuthenticationInfos.Save(n.AuthenticationInfoEntry)
 		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 			now := deps.Clock.NowUTC()
 			return deps.Users.UpdateLoginTime(n.UserID, now)
 		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 			if n.SessionToCreate == nil {
 				return nil
 			}
@@ -61,7 +66,7 @@ func (n *NodeDoEnsureSession) GetEffects(ctx context.Context, deps *workflow.Dep
 
 			return nil
 		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
+		workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 			if n.UpdateSessionID == "" {
 				return nil
 			}

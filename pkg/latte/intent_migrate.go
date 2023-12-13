@@ -29,6 +29,9 @@ var IntentMigrateSchema = validation.NewSimpleSchema(`
 
 type IntentMigrate struct{}
 
+var _ workflow.BeforeCommit = &IntentMigrate{}
+var _ workflow.AfterCommit = &IntentMigrate{}
+
 func (*IntentMigrate) Kind() string {
 	return "latte.IntentMigrate"
 }
@@ -105,46 +108,52 @@ func (i *IntentMigrate) ReactTo(ctx context.Context, deps *workflow.Dependencies
 }
 
 func (i *IntentMigrate) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {
-	return []workflow.Effect{
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			// Apply ratelimit on sign up.
-			spec := SignupPerIPRateLimitBucketSpec(deps.Config.Authentication, false, string(deps.RemoteIP))
-			err := deps.RateLimiter.Allow(spec)
-			if err != nil {
-				return err
-			}
-			return nil
-		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			userID := i.userID(workflows.Nearest)
-			isAdminAPI := false
+	return
+}
 
-			identities, err := deps.Identities.ListByUser(userID)
-			if err != nil {
-				return err
-			}
-			var identityModels []model.Identity
-			for _, i := range identities {
-				identityModels = append(identityModels, i.ToModel())
-			}
+func (i *IntentMigrate) BeforeCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) ([]workflow.Effect, error) {
+	// Apply ratelimit on sign up.
+	spec := SignupPerIPRateLimitBucketSpec(deps.Config.Authentication, false, string(deps.RemoteIP))
+	err := deps.RateLimiter.Allow(spec)
+	if err != nil {
+		return nil, err
+	}
 
-			userModel, err := deps.Users.Get(userID, accesscontrol.RoleGreatest)
-			if err != nil {
-				return err
-			}
+	userID := i.userID(workflows.Nearest)
 
-			// FIXME(workflow): Use new lifecycle to dispatch blocking hook.
-			mutations, err := deps.BlockingEvents.DispatchEvent(&blocking.UserPreCreateBlockingEventPayload{
-				UserModel:  *userModel,
-				UserRef:    *userModel.ToRef(),
-				Identities: identityModels,
-				AdminAPI:   isAdminAPI,
-			})
-			if err != nil {
-				return err
-			}
-			// FIXME(workflow): Use new lifecycle to apply mutations.
-			if mutations != nil {
+	var mutations *event.Mutations
+	err = workflow.WithRunEffects(ctx, deps, workflows, func() error {
+		isAdminAPI := false
+
+		identities, err := deps.Identities.ListByUser(userID)
+		if err != nil {
+			return err
+		}
+		var identityModels []model.Identity
+		for _, i := range identities {
+			identityModels = append(identityModels, i.ToModel())
+		}
+
+		userModel, err := deps.Users.Get(userID, accesscontrol.RoleGreatest)
+		if err != nil {
+			return err
+		}
+
+		mutations, err = deps.BlockingEvents.DispatchEvent(&blocking.UserPreCreateBlockingEventPayload{
+			UserModel:  *userModel,
+			UserRef:    *userModel.ToRef(),
+			Identities: identityModels,
+			AdminAPI:   isAdminAPI,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if mutations != nil {
+		return []workflow.Effect{
+			workflow.RunEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
 				err = blocking.PerformEffectsOnUser(event.MutationsEffectContext{
 					StandardAttributes: deps.StandardAttributesServiceNoEvent,
 					CustomAttributes:   deps.CustomAttributesServiceNoEvent,
@@ -152,42 +161,53 @@ func (i *IntentMigrate) GetEffects(ctx context.Context, deps *workflow.Dependenc
 				if err != nil {
 					return err
 				}
-			}
 
-			return nil
-		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			userID := i.userID(workflows.Nearest)
-			isAdminAPI := false
+				return nil
+			}),
+		}, nil
+	}
 
-			identities, err := deps.Identities.ListByUser(userID)
-			if err != nil {
-				return err
-			}
-			var identityModels []model.Identity
-			for _, i := range identities {
-				identityModels = append(identityModels, i.ToModel())
-			}
+	return nil, nil
+}
 
-			userModel, err := deps.Users.Get(userID, accesscontrol.RoleGreatest)
-			if err != nil {
-				return err
-			}
+func (i *IntentMigrate) AfterCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) error {
+	userID := i.userID(workflows.Nearest)
+	isAdminAPI := false
 
-			// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
-			err = deps.NonblockingEvents.DispatchEvent(&nonblocking.UserCreatedEventPayload{
-				UserModel:  *userModel,
-				UserRef:    *userModel.ToRef(),
-				Identities: identityModels,
-				AdminAPI:   isAdminAPI,
-			})
-			if err != nil {
-				return err
-			}
+	var payload event.NonBlockingPayload
+	err := deps.Database.ReadOnly(func() error {
+		identities, err := deps.Identities.ListByUser(userID)
+		if err != nil {
+			return err
+		}
+		var identityModels []model.Identity
+		for _, i := range identities {
+			identityModels = append(identityModels, i.ToModel())
+		}
 
-			return nil
-		}),
-	}, nil
+		userModel, err := deps.Users.Get(userID, accesscontrol.RoleGreatest)
+		if err != nil {
+			return err
+		}
+
+		payload = &nonblocking.UserCreatedEventPayload{
+			UserModel:  *userModel,
+			UserRef:    *userModel.ToRef(),
+			Identities: identityModels,
+			AdminAPI:   isAdminAPI,
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = deps.NonblockingEvents.DispatchEvent(payload)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (*IntentMigrate) OutputData(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (interface{}, error) {

@@ -23,6 +23,8 @@ type NodeDoUpdateIdentity struct {
 	IsAdminAPI           bool           `json:"is_admin_api"`
 }
 
+var _ workflow.AfterCommit = &NodeDoUpdateIdentity{}
+
 func (n *NodeDoUpdateIdentity) Kind() string {
 	return "latte.NodeDoUpdateIdentity"
 }
@@ -47,38 +49,43 @@ func (n *NodeDoUpdateIdentity) GetEffects(ctx context.Context, deps *workflow.De
 
 			return nil
 		}),
-		workflow.OnCommitEffect(func(ctx context.Context, deps *workflow.Dependencies) error {
-			userModel, err := deps.Users.Get(n.IdentityAfterUpdate.UserID, accesscontrol.RoleGreatest)
-			if err != nil {
-				return err
-			}
-
-			var e event.NonBlockingPayload
-			switch n.IdentityAfterUpdate.Type {
-			case model.IdentityTypeLoginID:
-				loginIDType := n.IdentityAfterUpdate.LoginID.LoginIDType
-				if payload, ok := nonblocking.NewIdentityLoginIDUpdatedEventPayloadUserModel(
-					*userModel,
-					n.IdentityAfterUpdate.ToModel(),
-					n.IdentityBeforeUpdate.ToModel(),
-					string(loginIDType),
-					n.IsAdminAPI,
-				); ok {
-					e = payload
-				}
-			}
-
-			if e != nil {
-				// FIXME(workflow): Use new lifecycle to dispatch nonblocking hook.
-				err := deps.NonblockingEvents.DispatchEvent(e)
-				if err != nil {
-					return err
-				}
-			}
-
-			return nil
-		}),
 	}, nil
+}
+
+func (n *NodeDoUpdateIdentity) AfterCommit(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) error {
+	var payload event.NonBlockingPayload
+	err := deps.Database.ReadOnly(func() error {
+		userModel, err := deps.Users.Get(n.IdentityAfterUpdate.UserID, accesscontrol.RoleGreatest)
+		if err != nil {
+			return err
+		}
+
+		switch n.IdentityAfterUpdate.Type {
+		case model.IdentityTypeLoginID:
+			loginIDType := n.IdentityAfterUpdate.LoginID.LoginIDType
+			payload, _ = nonblocking.NewIdentityLoginIDUpdatedEventPayloadUserModel(
+				*userModel,
+				n.IdentityAfterUpdate.ToModel(),
+				n.IdentityBeforeUpdate.ToModel(),
+				string(loginIDType),
+				n.IsAdminAPI,
+			)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if payload != nil {
+		err := deps.NonblockingEvents.DispatchEvent(payload)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (*NodeDoUpdateIdentity) CanReactTo(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) ([]workflow.Input, error) {

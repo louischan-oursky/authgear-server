@@ -40,14 +40,7 @@ func (*testMarshalIntent0) JSONSchema() *validation.SimpleSchema {
 }
 
 func (i *testMarshalIntent0) GetEffects(ctx context.Context, deps *Dependencies, workflows Workflows) ([]Effect, error) {
-	return []Effect{
-		OnCommitEffect(func(ctx context.Context, deps *Dependencies) error {
-			if w, ok := GetEffectWriter(ctx); ok {
-				fmt.Fprintf(w, "on-commit-effect: %v\n", i.Intent0)
-			}
-			return nil
-		}),
-	}, nil
+	return nil, nil
 }
 
 func (*testMarshalIntent0) CanReactTo(ctx context.Context, deps *Dependencies, workflows Workflows) ([]Input, error) {
@@ -77,14 +70,7 @@ func (*testMarshalIntent1) JSONSchema() *validation.SimpleSchema {
 }
 
 func (i *testMarshalIntent1) GetEffects(ctx context.Context, deps *Dependencies, workflows Workflows) ([]Effect, error) {
-	return []Effect{
-		OnCommitEffect(func(ctx context.Context, deps *Dependencies) error {
-			if w, ok := GetEffectWriter(ctx); ok {
-				fmt.Fprintf(w, "on-commit-effect: %v\n", i.Intent1)
-			}
-			return nil
-		}),
-	}, nil
+	return nil, nil
 }
 
 func (*testMarshalIntent1) CanReactTo(ctx context.Context, deps *Dependencies, workflows Workflows) ([]Input, error) {
@@ -114,12 +100,6 @@ func (n *testMarshalNode0) GetEffects(ctx context.Context, deps *Dependencies, w
 		RunEffect(func(ctx context.Context, deps *Dependencies) error {
 			if w, ok := GetEffectWriter(ctx); ok {
 				fmt.Fprintf(w, "run-effect: %v\n", n.Node0)
-			}
-			return nil
-		}),
-		OnCommitEffect(func(ctx context.Context, deps *Dependencies) error {
-			if w, ok := GetEffectWriter(ctx); ok {
-				fmt.Fprintf(w, "on-commit-effect: %v\n", n.Node0)
 			}
 			return nil
 		}),
@@ -153,12 +133,6 @@ func (n *testMarshalNode1) GetEffects(ctx context.Context, deps *Dependencies, w
 		RunEffect(func(ctx context.Context, deps *Dependencies) error {
 			if w, ok := GetEffectWriter(ctx); ok {
 				fmt.Fprintf(w, "run-effect: %v\n", n.Node1)
-			}
-			return nil
-		}),
-		OnCommitEffect(func(ctx context.Context, deps *Dependencies) error {
-			if w, ok := GetEffectWriter(ctx); ok {
-				fmt.Fprintf(w, "on-commit-effect: %v\n", n.Node1)
 			}
 			return nil
 		}),
