@@ -56477,13 +56477,13 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	cookieManager := deps.NewCookieManager(request, trustProxy, httpConfig)
 	contextContext := deps.ProvideRequestContext(request)
 	featureConfig := config.FeatureConfig
+	handle := appProvider.AppDatabase
 	clockClock := _wireSystemClockValue
 	remoteIP := deps.ProvideRemoteIP(request, trustProxy)
 	secretConfig := config.SecretConfig
 	databaseCredentials := deps.ProvideDatabaseCredentials(secretConfig)
 	appID := appConfig.ID
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
-	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -57165,6 +57165,7 @@ func newAPIWorkflowNewHandler(p *deps.RequestProvider) http.Handler {
 	dependencies := &workflow.Dependencies{
 		Config:                           appConfig,
 		FeatureConfig:                    featureConfig,
+		Database:                         handle,
 		Clock:                            clockClock,
 		RemoteIP:                         remoteIP,
 		HTTPRequest:                      request,
@@ -57254,6 +57255,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	config := appContext.Config
 	appConfig := config.AppConfig
 	featureConfig := config.FeatureConfig
+	handle := appProvider.AppDatabase
 	clockClock := _wireSystemClockValue
 	rootProvider := appProvider.RootProvider
 	environmentConfig := rootProvider.EnvironmentConfig
@@ -57263,7 +57265,6 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	databaseCredentials := deps.ProvideDatabaseCredentials(secretConfig)
 	appID := appConfig.ID
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
-	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -57947,6 +57948,7 @@ func newAPIWorkflowGetHandler(p *deps.RequestProvider) http.Handler {
 	dependencies := &workflow.Dependencies{
 		Config:                           appConfig,
 		FeatureConfig:                    featureConfig,
+		Database:                         handle,
 		Clock:                            clockClock,
 		RemoteIP:                         remoteIP,
 		HTTPRequest:                      request,
@@ -58029,6 +58031,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	config := appContext.Config
 	appConfig := config.AppConfig
 	featureConfig := config.FeatureConfig
+	handle := appProvider.AppDatabase
 	clockClock := _wireSystemClockValue
 	rootProvider := appProvider.RootProvider
 	environmentConfig := rootProvider.EnvironmentConfig
@@ -58038,7 +58041,6 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	databaseCredentials := deps.ProvideDatabaseCredentials(secretConfig)
 	appID := appConfig.ID
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
-	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -58722,6 +58724,7 @@ func newAPIWorkflowInputHandler(p *deps.RequestProvider) http.Handler {
 	dependencies := &workflow.Dependencies{
 		Config:                           appConfig,
 		FeatureConfig:                    featureConfig,
+		Database:                         handle,
 		Clock:                            clockClock,
 		RemoteIP:                         remoteIP,
 		HTTPRequest:                      request,
@@ -58844,13 +58847,13 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	cookieManager := deps.NewCookieManager(request, trustProxy, httpConfig)
 	contextContext := deps.ProvideRequestContext(request)
 	featureConfig := config.FeatureConfig
+	handle := appProvider.AppDatabase
 	clockClock := _wireSystemClockValue
 	remoteIP := deps.ProvideRemoteIP(request, trustProxy)
 	secretConfig := config.SecretConfig
 	databaseCredentials := deps.ProvideDatabaseCredentials(secretConfig)
 	appID := appConfig.ID
 	sqlBuilderApp := appdb.NewSQLBuilderApp(databaseCredentials, appID)
-	handle := appProvider.AppDatabase
 	sqlExecutor := appdb.NewSQLExecutor(contextContext, handle)
 	store := &user.Store{
 		SQLBuilder:  sqlBuilderApp,
@@ -59532,6 +59535,7 @@ func newAPIWorkflowV2Handler(p *deps.RequestProvider) http.Handler {
 	dependencies := &workflow.Dependencies{
 		Config:                           appConfig,
 		FeatureConfig:                    featureConfig,
+		Database:                         handle,
 		Clock:                            clockClock,
 		RemoteIP:                         remoteIP,
 		HTTPRequest:                      request,

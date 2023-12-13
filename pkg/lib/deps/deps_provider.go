@@ -81,6 +81,7 @@ var appRootDeps = wire.NewSet(
 
 	wire.Bind(new(event.Database), new(*appdb.Handle)),
 	wire.Bind(new(workflow.ServiceDatabase), new(*appdb.Handle)),
+	wire.Bind(new(workflow.Database), new(*appdb.Handle)),
 	wire.Bind(new(authenticationflow.ServiceDatabase), new(*appdb.Handle)),
 	wire.Bind(new(template.ResourceManager), new(*resource.Manager)),
 	wire.Bind(new(loginid.ResourceManager), new(*resource.Manager)),

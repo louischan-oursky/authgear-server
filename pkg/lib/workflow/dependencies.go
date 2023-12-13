@@ -27,6 +27,10 @@ import (
 	"github.com/authgear/authgear-server/pkg/util/httputil"
 )
 
+type Database interface {
+	ReadOnly(do func() error) (err error)
+}
+
 type IdentityService interface {
 	Get(id string) (*identity.Info, error)
 	SearchBySpec(spec *identity.Spec) (exactMatch *identity.Info, otherMatches []*identity.Info, err error)
@@ -153,6 +157,8 @@ type OfflineGrantStore interface {
 type Dependencies struct {
 	Config        *config.AppConfig
 	FeatureConfig *config.FeatureConfig
+
+	Database Database
 
 	Clock    clock.Clock
 	RemoteIP httputil.RemoteIP
