@@ -199,12 +199,6 @@ func (s *Service) Get(workflowID string, instanceID string, userAgentID string) 
 }
 
 func (s *Service) get(ctx context.Context, session *Session, w *Workflow) (output *ServiceOutput, err error) {
-	// Apply the run-effects.
-	err = w.ApplyRunEffects(ctx, s.Deps, NewWorkflows(w))
-	if err != nil {
-		return
-	}
-
 	workflowOutput, err := w.ToOutput(ctx, s.Deps, NewWorkflows(w))
 	if err != nil {
 		return
