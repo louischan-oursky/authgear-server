@@ -110,8 +110,7 @@ func NewNonblockingEventService(
 		Sinks: []Sink{
 			hookSink,
 			auditSink,
-			// FIXME(workflow): due to lifecycle change, this sink does not see the changes.
-			// elasticSearchSink,
+			elasticSearchSink,
 		},
 	}
 }
