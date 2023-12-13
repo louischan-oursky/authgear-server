@@ -72,22 +72,31 @@ func (i *IntentCreateLoginID) ReactTo(ctx context.Context, deps *workflow.Depend
 				},
 			}
 
-			info, err := deps.Identities.New(i.UserID, spec, identity.NewIdentityOptions{
-				LoginIDEmailByPassBlocklistAllowlist: false,
+			var info *identity.Info
+			err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+				var err error
+				info, err = deps.Identities.New(i.UserID, spec, identity.NewIdentityOptions{
+					LoginIDEmailByPassBlocklistAllowlist: false,
+				})
+				if err != nil {
+					return err
+				}
+
+				duplicate, err := deps.Identities.CheckDuplicated(info)
+				if err != nil && !errors.Is(err, identity.ErrIdentityAlreadyExists) {
+					return err
+				}
+				// Either err == nil, or err == ErrIdentityAlreadyExists and duplicate is non-nil.
+				if err != nil {
+					spec := info.ToSpec()
+					otherSpec := duplicate.ToSpec()
+					return identityFillDetails(api.ErrDuplicatedIdentity, &spec, &otherSpec)
+				}
+
+				return nil
 			})
 			if err != nil {
 				return nil, err
-			}
-
-			duplicate, err := deps.Identities.CheckDuplicated(info)
-			if err != nil && !errors.Is(err, identity.ErrIdentityAlreadyExists) {
-				return nil, err
-			}
-			// Either err == nil, or err == ErrIdentityAlreadyExists and duplicate is non-nil.
-			if err != nil {
-				spec := info.ToSpec()
-				otherSpec := duplicate.ToSpec()
-				return nil, identityFillDetails(api.ErrDuplicatedIdentity, &spec, &otherSpec)
 			}
 
 			return workflow.NewNodeSimple(&NodeDoCreateIdentity{

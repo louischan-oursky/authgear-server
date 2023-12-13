@@ -62,7 +62,15 @@ func (i *IntentReauthForgotPassword) ReactTo(ctx context.Context, deps *workflow
 		var inputTakeForgotPasswordChannel inputTakeForgotPasswordChannel
 		if workflow.AsInput(input, &inputTakeForgotPasswordChannel) {
 			channel := inputTakeForgotPasswordChannel.GetForgotPasswordChannel()
-			node, err := i.selectLoginIDForChannel(workflows.Nearest, deps, channel)
+			var node *NodeForgotPasswordWithLoginID
+			err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+				var err error
+				node, err = i.selectLoginIDForChannel(workflows.Nearest, deps, channel)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -71,7 +79,15 @@ func (i *IntentReauthForgotPassword) ReactTo(ctx context.Context, deps *workflow
 	case 2:
 		var inputSendForgotPasswordCode inputSendForgotPasswordCode
 		if workflow.AsInput(input, &inputSendForgotPasswordCode) {
-			node, err := i.sendCode(ctx, workflows.Nearest, deps)
+			var node *NodeSendForgotPasswordCode
+			err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+				var err error
+				node, err = i.sendCode(ctx, workflows.Nearest, deps)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
 				return nil, err
 			}

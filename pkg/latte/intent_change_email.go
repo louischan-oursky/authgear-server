@@ -69,10 +69,19 @@ func (i *IntentChangeEmail) ReactTo(ctx context.Context, deps *workflow.Dependen
 					Value: loginID,
 				},
 			}
-			exactMatch, _, err := deps.Identities.SearchBySpec(spec)
+			var exactMatch *identity.Info
+			err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+				var err error
+				exactMatch, _, err = deps.Identities.SearchBySpec(spec)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
 				return nil, err
 			}
+
 			if exactMatch == nil || exactMatch.UserID != *userID {
 				return nil, api.ErrIdentityNotFound
 			}

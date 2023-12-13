@@ -42,15 +42,17 @@ func (n *NodeAuthenticateEmailLoginLink) ReactTo(ctx context.Context, deps *work
 	switch {
 	case workflow.AsInput(input, &inputResendOOBOTPCode):
 		info := n.Authenticator
-		err := (&SendOOBCode{
-			WorkflowID:        workflow.GetWorkflowID(ctx),
-			Deps:              deps,
-			Stage:             authenticatorKindToStage(info.Kind),
-			IsAuthenticating:  true,
-			AuthenticatorInfo: info,
-			OTPForm:           otp.FormLink,
-			IsResend:          true,
-		}).Do()
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			return (&SendOOBCode{
+				WorkflowID:        workflow.GetWorkflowID(ctx),
+				Deps:              deps,
+				Stage:             authenticatorKindToStage(info.Kind),
+				IsAuthenticating:  true,
+				AuthenticatorInfo: info,
+				OTPForm:           otp.FormLink,
+				IsResend:          true,
+			}).Do()
+		})
 		if err != nil {
 			return nil, err
 		}

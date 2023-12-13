@@ -56,11 +56,19 @@ func (i *IntentAuthenticate) ReactTo(ctx context.Context, deps *workflow.Depende
 		}
 
 		// TODO: account enumeration? although need OTP to proceed, login/signup is indicated in workflow data.
-
-		exactMatch, _, err := deps.Identities.SearchBySpec(spec)
+		var exactMatch *identity.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			exactMatch, _, err = deps.Identities.SearchBySpec(spec)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, err
 		}
+
 		if exactMatch == nil {
 			intent := &IntentSignup{}
 			intent.IsCaptchaProtected = i.IsCaptchaProtected

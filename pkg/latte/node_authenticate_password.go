@@ -39,7 +39,15 @@ func (n *NodeAuthenticatePassword) ReactTo(ctx context.Context, deps *workflow.D
 	var inputTakePassword inputTakePassword
 	switch {
 	case workflow.AsInput(input, &inputTakePassword):
-		info, err := n.getPasswordAuthenticator(deps)
+		var info *authenticator.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			info, err = n.getPasswordAuthenticator(deps)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		// The user doesn't have the password authenticator
 		// always returns invalid credentials error
 		if errors.Is(err, api.ErrNoAuthenticator) {

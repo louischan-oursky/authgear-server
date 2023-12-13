@@ -37,7 +37,15 @@ func (n *NodeChangePassword) ReactTo(ctx context.Context, deps *workflow.Depende
 	var inputChangePassword inputChangePassword
 	switch {
 	case workflow.AsInput(input, &inputChangePassword):
-		info, err := n.getPasswordAuthenticator(deps)
+		var info *authenticator.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			info, err = n.getPasswordAuthenticator(deps)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		// The user doesn't have the password authenticator
 		// always returns no password error
 		if errors.Is(err, api.ErrNoAuthenticator) {
@@ -54,10 +62,19 @@ func (n *NodeChangePassword) ReactTo(ctx context.Context, deps *workflow.Depende
 			return nil, api.ErrInvalidCredentials
 		}
 
-		changed, newInfo, err := deps.Authenticators.WithSpec(info, &authenticator.Spec{
-			Password: &authenticator.PasswordSpec{
-				PlainPassword: inputChangePassword.GetNewPassword(),
-			},
+		var changed bool
+		var newInfo *authenticator.Info
+		err = workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			changed, newInfo, err = deps.Authenticators.WithSpec(info, &authenticator.Spec{
+				Password: &authenticator.PasswordSpec{
+					PlainPassword: inputChangePassword.GetNewPassword(),
+				},
+			})
+			if err != nil {
+				return err
+			}
+			return nil
 		})
 		if err != nil {
 			return nil, err

@@ -63,13 +63,22 @@ func (i *IntentLogin) ReactTo(ctx context.Context, deps *workflow.Dependencies, 
 	switch len(workflows.Nearest.Nodes) {
 	case 0:
 		// 1st step: authenticate oob otp phone
-		phoneAuthenticator, err := i.getAuthenticator(deps,
-			authenticator.KeepPrimaryAuthenticatorOfIdentity(i.Identity),
-			authenticator.KeepType(model.AuthenticatorTypeOOBSMS),
-		)
+		var phoneAuthenticator *authenticator.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			phoneAuthenticator, err = i.getAuthenticator(deps,
+				authenticator.KeepPrimaryAuthenticatorOfIdentity(i.Identity),
+				authenticator.KeepType(model.AuthenticatorTypeOOBSMS),
+			)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, err
 		}
+
 		intent := &IntentAuthenticateOOBOTPPhone{
 			Authenticator: phoneAuthenticator,
 		}
@@ -83,10 +92,18 @@ func (i *IntentLogin) ReactTo(ctx context.Context, deps *workflow.Dependencies, 
 			typ := inputSelectAuthenticatorType.GetAuthenticatorType()
 			switch typ {
 			case model.AuthenticatorTypeOOBEmail:
-				emailAuthenticator, err := i.getAuthenticator(deps,
-					authenticator.KeepKind(authenticator.KindPrimary),
-					authenticator.KeepType(model.AuthenticatorTypeOOBEmail),
-				)
+				var emailAuthenticator *authenticator.Info
+				err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+					var err error
+					emailAuthenticator, err = i.getAuthenticator(deps,
+						authenticator.KeepKind(authenticator.KindPrimary),
+						authenticator.KeepType(model.AuthenticatorTypeOOBEmail),
+					)
+					if err != nil {
+						return err
+					}
+					return nil
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -185,7 +202,15 @@ func (i *IntentLogin) OutputData(ctx context.Context, deps *workflow.Dependencie
 		return nil, nil
 	}
 	userID := i.userID()
-	identities, err := deps.Identities.ListByUser(userID)
+	var identities []*identity.Info
+	err = workflow.WithRunEffects(ctx, deps, workflows, func() error {
+		var err error
+		identities, err = deps.Identities.ListByUser(userID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}

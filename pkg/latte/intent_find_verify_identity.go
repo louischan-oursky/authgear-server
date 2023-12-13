@@ -51,7 +51,17 @@ func (i *IntentFindVerifyIdentity) ReactTo(ctx context.Context, deps *workflow.D
 	switch {
 	case workflow.AsInput(input, &inputSelectClaim):
 		claimName, claimValue := inputSelectClaim.NameValue()
-		identities, err := deps.Identities.ListByClaim(claimName, claimValue)
+
+		var identities []*identity.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			identities, err = deps.Identities.ListByClaim(claimName, claimValue)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
 		if err != nil {
 			return nil, err
 		}

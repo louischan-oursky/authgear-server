@@ -52,14 +52,16 @@ func (i *IntentAuthenticateOOBOTPPhone) ReactTo(ctx context.Context, deps *workf
 
 	if _, found := workflow.FindSingleNode[*NodeAuthenticateOOBOTPPhone](workflows.Nearest); !found {
 		authenticator := i.Authenticator
-		err := (&SendOOBCode{
-			WorkflowID:        workflow.GetWorkflowID(ctx),
-			Deps:              deps,
-			Stage:             authenticatorKindToStage(authenticator.Kind),
-			IsAuthenticating:  true,
-			AuthenticatorInfo: authenticator,
-			OTPForm:           otp.FormCode,
-		}).Do()
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			return (&SendOOBCode{
+				WorkflowID:        workflow.GetWorkflowID(ctx),
+				Deps:              deps,
+				Stage:             authenticatorKindToStage(authenticator.Kind),
+				IsAuthenticating:  true,
+				AuthenticatorInfo: authenticator,
+				OTPForm:           otp.FormCode,
+			}).Do()
+		})
 		if err != nil {
 			return nil, err
 		}

@@ -59,14 +59,24 @@ func (n *NodeVerifyEmail) ReactTo(ctx context.Context, deps *workflow.Dependenci
 			return nil, err
 		}
 
-		verifiedClaim := deps.Verification.NewVerifiedClaim(n.UserID, string(model.ClaimEmail), n.Email)
+		var verifiedClaim *verification.Claim
+		err = workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			verifiedClaim = deps.Verification.NewVerifiedClaim(n.UserID, string(model.ClaimEmail), n.Email)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		return workflow.NewNodeSimple(&NodeVerifiedIdentity{
 			IdentityID:       n.IdentityID,
 			NewVerifiedClaim: verifiedClaim,
 		}), nil
 
 	case workflow.AsInput(input, &inputResendOOBOTPCode):
-		err := n.sendCode(ctx, deps)
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			return n.sendCode(ctx, deps)
+		})
 		if err != nil {
 			return nil, err
 		}

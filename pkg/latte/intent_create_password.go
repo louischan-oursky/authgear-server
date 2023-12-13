@@ -56,7 +56,15 @@ func (i *IntentCreatePassword) ReactTo(ctx context.Context, deps *workflow.Depen
 
 		authenticatorID := uuid.New()
 
-		info, err := deps.Authenticators.NewWithAuthenticatorID(authenticatorID, spec)
+		var info *authenticator.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			info, err = deps.Authenticators.NewWithAuthenticatorID(authenticatorID, spec)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, err
 		}

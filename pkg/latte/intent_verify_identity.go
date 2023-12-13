@@ -51,67 +51,78 @@ func (i *IntentVerifyIdentity) CanReactTo(ctx context.Context, deps *workflow.De
 }
 
 func (i *IntentVerifyIdentity) ReactTo(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows, input workflow.Input) (*workflow.Node, error) {
-	statuses, err := deps.Verification.GetIdentityVerificationStatus(i.Identity)
+	var node *workflow.Node
+	err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+		statuses, err := deps.Verification.GetIdentityVerificationStatus(i.Identity)
+		if err != nil {
+			return err
+		}
+
+		var status *verification.ClaimStatus
+		if len(statuses) > 0 {
+			status = &statuses[0]
+		}
+
+		if status == nil || !status.IsVerifiable() {
+			return api.ErrClaimNotVerifiable
+		}
+
+		if status.Verified || (i.IsFromSignUp && !status.RequiredToVerifyOnCreation) {
+			// Verified already; skip actual verification.
+			node = workflow.NewNodeSimple(&NodeVerifiedIdentity{
+				IdentityID:       i.Identity.ID,
+				NewVerifiedClaim: nil,
+			})
+			return nil
+		}
+
+		if i.IsCaptchaProtected && len(workflow.FindSubWorkflows[*IntentVerifyCaptcha](workflows.Nearest)) == 0 {
+			node = workflow.NewSubWorkflow(&IntentVerifyCaptcha{})
+			return nil
+		}
+
+		var nodeSimple interface {
+			workflow.NodeSimple
+			otpKind(deps *workflow.Dependencies) otp.Kind
+			otpTarget() string
+			sendCode(ctx context.Context, deps *workflow.Dependencies) error
+		}
+
+		switch model.ClaimName(status.Name) {
+		case model.ClaimEmail:
+			nodeSimple = &NodeVerifyEmail{
+				UserID:     i.Identity.UserID,
+				IdentityID: i.Identity.ID,
+				Email:      status.Value,
+			}
+
+		case model.ClaimPhoneNumber:
+			nodeSimple = &NodeVerifyPhoneSMS{
+				UserID:      i.Identity.UserID,
+				IdentityID:  i.Identity.ID,
+				PhoneNumber: status.Value,
+			}
+		}
+		if nodeSimple == nil {
+			return api.ErrClaimNotVerifiable
+		}
+
+		kind := nodeSimple.otpKind(deps)
+		err = nodeSimple.sendCode(ctx, deps)
+		if ratelimit.IsRateLimitErrorWithBucketName(err, kind.RateLimitTriggerCooldown(nodeSimple.otpTarget()).Name) {
+			// Ignore trigger cooldown rate limit error; continue the workflow
+		} else if err != nil {
+			return err
+		}
+
+		node = workflow.NewNodeSimple(nodeSimple)
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	var status *verification.ClaimStatus
-	if len(statuses) > 0 {
-		status = &statuses[0]
-	}
-
-	if status == nil || !status.IsVerifiable() {
-		return nil, api.ErrClaimNotVerifiable
-	}
-
-	if status.Verified || (i.IsFromSignUp && !status.RequiredToVerifyOnCreation) {
-		// Verified already; skip actual verification.
-		return workflow.NewNodeSimple(&NodeVerifiedIdentity{
-			IdentityID:       i.Identity.ID,
-			NewVerifiedClaim: nil,
-		}), nil
-	}
-
-	if i.IsCaptchaProtected && len(workflow.FindSubWorkflows[*IntentVerifyCaptcha](workflows.Nearest)) == 0 {
-		return workflow.NewSubWorkflow(&IntentVerifyCaptcha{}), nil
-	}
-
-	var node interface {
-		workflow.NodeSimple
-		otpKind(deps *workflow.Dependencies) otp.Kind
-		otpTarget() string
-		sendCode(ctx context.Context, deps *workflow.Dependencies) error
-	}
-	switch model.ClaimName(status.Name) {
-	case model.ClaimEmail:
-		node = &NodeVerifyEmail{
-			UserID:     i.Identity.UserID,
-			IdentityID: i.Identity.ID,
-			Email:      status.Value,
-		}
-
-	case model.ClaimPhoneNumber:
-		node = &NodeVerifyPhoneSMS{
-			UserID:      i.Identity.UserID,
-			IdentityID:  i.Identity.ID,
-			PhoneNumber: status.Value,
-		}
-	}
-
-	if node == nil {
-		return nil, api.ErrClaimNotVerifiable
-	}
-
-	kind := node.otpKind(deps)
-	err = node.sendCode(ctx, deps)
-	if ratelimit.IsRateLimitErrorWithBucketName(err, kind.RateLimitTriggerCooldown(node.otpTarget()).Name) {
-		// Ignore trigger cooldown rate limit error; continue the workflow
-	} else if err != nil {
-		return nil, err
-	}
-
-	return workflow.NewNodeSimple(node), nil
+	return node, nil
 }
 
 func (*IntentVerifyIdentity) GetEffects(ctx context.Context, deps *workflow.Dependencies, workflows workflow.Workflows) (effs []workflow.Effect, err error) {

@@ -60,7 +60,16 @@ func (i *IntentForgotPasswordV2) ReactTo(ctx context.Context, deps *workflow.Dep
 				},
 			}
 
-			exactMatch, _, err := deps.Identities.SearchBySpec(spec)
+			var exactMatch *identity.Info
+			err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+				var err error
+				exactMatch, _, err = deps.Identities.SearchBySpec(spec)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -79,7 +88,15 @@ func (i *IntentForgotPasswordV2) ReactTo(ctx context.Context, deps *workflow.Dep
 		var inputTakeForgotPasswordChannel inputTakeForgotPasswordChannel
 		if workflow.AsInput(input, &inputTakeForgotPasswordChannel) {
 			channel := inputTakeForgotPasswordChannel.GetForgotPasswordChannel()
-			node, err := i.sendCodeForChannel(workflows.Nearest, deps, channel)
+			var node *NodeSendForgotPasswordCode
+			err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+				var err error
+				node, err = i.sendCodeForChannel(workflows.Nearest, deps, channel)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
 				return nil, err
 			}

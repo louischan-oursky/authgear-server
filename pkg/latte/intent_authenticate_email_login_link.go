@@ -39,14 +39,16 @@ func (i *IntentAuthenticateEmailLoginLink) ReactTo(ctx context.Context, deps *wo
 	switch len(workflows.Nearest.Nodes) {
 	case 0:
 		authenticator := i.Authenticator
-		err := (&SendOOBCode{
-			WorkflowID:        workflow.GetWorkflowID(ctx),
-			Deps:              deps,
-			Stage:             authenticatorKindToStage(authenticator.Kind),
-			IsAuthenticating:  true,
-			AuthenticatorInfo: authenticator,
-			OTPForm:           otp.FormLink,
-		}).Do()
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			return (&SendOOBCode{
+				WorkflowID:        workflow.GetWorkflowID(ctx),
+				Deps:              deps,
+				Stage:             authenticatorKindToStage(authenticator.Kind),
+				IsAuthenticating:  true,
+				AuthenticatorInfo: authenticator,
+				OTPForm:           otp.FormLink,
+			}).Do()
+		})
 		if err != nil {
 			return nil, err
 		}

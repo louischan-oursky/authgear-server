@@ -47,7 +47,13 @@ func (i *IntentForgotPassword) ReactTo(ctx context.Context, deps *workflow.Depen
 	case workflow.AsInput(input, &inputTakeLoginID):
 		loginID := inputTakeLoginID.GetLoginID()
 		node := NodeSendForgotPasswordCode{LoginID: loginID}
-		err := node.sendCode(ctx, deps)
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			err := node.sendCode(ctx, deps)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		// We do not tell the user if the login ID was found
 		if err != nil && !errors.Is(err, forgotpassword.ErrUserNotFound) {
 			return nil, err

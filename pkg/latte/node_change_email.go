@@ -46,8 +46,16 @@ func (n *NodeChangeEmail) ReactTo(ctx context.Context, deps *workflow.Dependenci
 			},
 		}
 
-		newInfo, err := deps.Identities.UpdateWithSpec(n.IdentityBeforeUpdate, spec, identity.NewIdentityOptions{
-			LoginIDEmailByPassBlocklistAllowlist: false,
+		var newInfo *identity.Info
+		err := workflow.WithRunEffects(ctx, deps, workflows, func() error {
+			var err error
+			newInfo, err = deps.Identities.UpdateWithSpec(n.IdentityBeforeUpdate, spec, identity.NewIdentityOptions{
+				LoginIDEmailByPassBlocklistAllowlist: false,
+			})
+			if err != nil {
+				return err
+			}
+			return nil
 		})
 		if err != nil {
 			return nil, err
