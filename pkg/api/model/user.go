@@ -39,6 +39,12 @@ func (u *User) EndUserAccountID() string {
 	return ""
 }
 
+func (u *User) ToRef() *UserRef {
+	return &UserRef{
+		Meta: u.Meta,
+	}
+}
+
 type UserRef struct {
 	Meta
 }
