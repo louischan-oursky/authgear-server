@@ -23,6 +23,10 @@ func ConfigureWechatCallbackRoute(route httproute.Route) httproute.Route {
 		WithPathPattern("/sso/wechat/callback")
 }
 
+type WechatCallbackHandlerOAuthStateStore interface {
+	RecoverState(stateString string) (state *webappoauth.WebappOAuthState, err error)
+}
+
 // WechatCallbackHandler receives WeChat authorization result (code or error)
 // and set it into the web session.
 // Refreshing original auth ui WeChat auth page (/sso/wechat/auth/:alias) will
@@ -44,6 +48,7 @@ type WechatCallbackHandler struct {
 	ControllerFactory ControllerFactory
 	BaseViewModel     *viewmodels.BaseViewModeler
 	JSON              JSONResponseWriter
+	OAuthStateStore   WechatCallbackHandlerOAuthStateStore
 }
 
 func (h *WechatCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +65,7 @@ func (h *WechatCallbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	errorDescription := r.Form.Get("error_description")
 
 	updateWebSession := func() error {
-		outhState, err := webappoauth.DecodeWebappOAuthState(state)
+		outhState, err := h.OAuthStateStore.RecoverState(state)
 		if err != nil {
 			return err
 		}
