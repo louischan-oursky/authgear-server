@@ -100,6 +100,7 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 	databaseEnvironmentConfig := &environmentConfig.DatabaseConfig
 	handle := globaldb.NewHandle(pool, globalDatabaseCredentialsEnvironmentConfig, databaseEnvironmentConfig, logFactory)
 	trustProxy := environmentConfig.TrustProxy
+	appConfig := rootProvider.AppConfig
 	authgearConfig := rootProvider.AuthgearConfig
 	adminAPIConfig := rootProvider.AdminAPIConfig
 	controller := rootProvider.ConfigSourceController
@@ -108,8 +109,16 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 	adder := &authz.Adder{
 		Clock: clockClock,
 	}
-	appHostSuffixes := environmentConfig.AppHostSuffixes
-	appConfig := rootProvider.AppConfig
+	adminAPIService := &service.AdminAPIService{
+		AppConfig:      appConfig,
+		AuthgearConfig: authgearConfig,
+		AdminAPIConfig: adminAPIConfig,
+		ConfigSource:   configSource,
+		AuthzAdder:     adder,
+	}
+	appServiceLogger := service.NewAppServiceLogger(logFactory)
+	sqlBuilder := globaldb.NewSQLBuilder(globalDatabaseCredentialsEnvironmentConfig)
+	sqlExecutor := globaldb.NewSQLExecutor(handle)
 	configServiceLogger := service.NewConfigServiceLogger(logFactory)
 	domainImplementationType := rootProvider.DomainImplementation
 	kubernetesConfig := rootProvider.KubernetesConfig
@@ -127,28 +136,6 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 		DomainImplementation: domainImplementationType,
 		Kubernetes:           kubernetes,
 	}
-	sqlBuilder := globaldb.NewSQLBuilder(globalDatabaseCredentialsEnvironmentConfig)
-	sqlExecutor := globaldb.NewSQLExecutor(handle)
-	domainService := &service.DomainService{
-		Clock:          clockClock,
-		DomainConfig:   configService,
-		SQLBuilder:     sqlBuilder,
-		SQLExecutor:    sqlExecutor,
-		GlobalDatabase: handle,
-	}
-	defaultDomainService := &service.DefaultDomainService{
-		AppHostSuffixes: appHostSuffixes,
-		AppConfig:       appConfig,
-		Domains:         domainService,
-	}
-	adminAPIService := &service.AdminAPIService{
-		AuthgearConfig: authgearConfig,
-		AdminAPIConfig: adminAPIConfig,
-		ConfigSource:   configSource,
-		AuthzAdder:     adder,
-		DefaultDomains: defaultDomainService,
-	}
-	appServiceLogger := service.NewAppServiceLogger(logFactory)
 	httpClient := service.NewHTTPClient()
 	mailConfig := rootProvider.MailConfig
 	smtpLogger := smtp.NewLogger(logFactory)
@@ -202,6 +189,19 @@ func newGraphQLHandler(p *deps.RequestProvider) http.Handler {
 	authzService := &service.AuthzService{
 		Configs:       configService,
 		Collaborators: collaboratorService,
+	}
+	appHostSuffixes := environmentConfig.AppHostSuffixes
+	domainService := &service.DomainService{
+		Clock:          clockClock,
+		DomainConfig:   configService,
+		SQLBuilder:     sqlBuilder,
+		SQLExecutor:    sqlExecutor,
+		GlobalDatabase: handle,
+	}
+	defaultDomainService := &service.DefaultDomainService{
+		AppHostSuffixes: appHostSuffixes,
+		AppConfig:       appConfig,
+		Domains:         domainService,
 	}
 	managerFactoryLogger := factory.NewManagerFactoryLogger(logFactory)
 	appBaseResources := deps.ProvideAppBaseResources(rootProvider)
@@ -493,25 +493,12 @@ func newAdminAPIHandler(p *deps.RequestProvider) http.Handler {
 	adder := &authz.Adder{
 		Clock: clockClock,
 	}
-	appHostSuffixes := environmentConfig.AppHostSuffixes
-	domainService := &service.DomainService{
-		Clock:          clockClock,
-		DomainConfig:   configService,
-		SQLBuilder:     sqlBuilder,
-		SQLExecutor:    sqlExecutor,
-		GlobalDatabase: handle,
-	}
-	defaultDomainService := &service.DefaultDomainService{
-		AppHostSuffixes: appHostSuffixes,
-		AppConfig:       appConfig,
-		Domains:         domainService,
-	}
 	adminAPIService := &service.AdminAPIService{
+		AppConfig:      appConfig,
 		AuthgearConfig: authgearConfig,
 		AdminAPIConfig: adminAPIConfig,
 		ConfigSource:   configSource,
 		AuthzAdder:     adder,
-		DefaultDomains: defaultDomainService,
 	}
 	collaboratorService := &service.CollaboratorService{
 		Clock:          clockClock,

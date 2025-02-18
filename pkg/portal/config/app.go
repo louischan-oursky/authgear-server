@@ -1,5 +1,9 @@
 package config
 
+import (
+	"fmt"
+)
+
 type AppConfig struct {
 	HostSuffix string              `envconfig:"HOST_SUFFIX" default:".localhost:3002"`
 	IDPattern  string              `envconfig:"ID_PATTERN" default:"^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$"`
@@ -13,6 +17,13 @@ type AppConfig struct {
 	MaxOwnedApps int `envconfig:"MAX_OWNED_APPS" default:"-1"`
 	// DefaultPlan defines the default plan for apps during app creation
 	DefaultPlan string `envconfig:"DEFAULT_PLAN"`
+}
+
+func (c *AppConfig) GetLatestAppHost(appID string) string {
+	if c.HostSuffix == "" {
+		panic(fmt.Errorf("APP_HOST_SUFFIX is not configured"))
+	}
+	return appID + c.HostSuffix
 }
 
 type AppKubernetesConfig struct {

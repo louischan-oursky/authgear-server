@@ -63,7 +63,6 @@ type AppAuthzService interface {
 }
 
 type AppDefaultDomainService interface {
-	GetLatestAppHost(appID string) (string, error)
 	CreateAllDefaultDomains(ctx context.Context, appID string) error
 }
 
@@ -360,10 +359,7 @@ func (s *AppService) Create(ctx context.Context, userID string, id string) (*mod
 		WithField("app_id", id).
 		Info("creating app")
 
-	appHost, err := s.DefaultDomains.GetLatestAppHost(id)
-	if err != nil {
-		return nil, err
-	}
+	appHost := s.AppConfig.GetLatestAppHost(id)
 
 	defaultAppPlan, err := s.Plan.GetDefaultPlan(ctx)
 	if err != nil {

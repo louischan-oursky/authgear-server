@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -23,22 +22,6 @@ func TestDefaultDomainService(t *testing.T) {
 			AppConfig: &portalconfig.AppConfig{},
 			Domains:   domains,
 		}
-
-		Convey("GetLatestAppHost", func() {
-			test := func(suffix string, appID string, expected string) {
-				s.AppConfig.HostSuffix = suffix
-				actual, err := s.GetLatestAppHost(appID)
-				if expected == "" {
-					So(errors.Is(err, ErrHostSuffixNotConfigured), ShouldBeTrue)
-				} else {
-					So(actual, ShouldEqual, expected)
-				}
-			}
-
-			test("", "myapp", "")
-			test(".localhost", "myapp", "myapp.localhost")
-			test(".localhost:3100", "myapp", "myapp.localhost:3100")
-		})
 
 		Convey("CreateAllDefaultDomains", func() {
 			Convey("HostSuffix only", func() {

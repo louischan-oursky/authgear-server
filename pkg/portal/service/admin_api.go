@@ -20,16 +20,12 @@ type AuthzAdder interface {
 		hdr http.Header) (err error)
 }
 
-type AdminAPIDefaultDomainService interface {
-	GetLatestAppHost(appID string) (string, error)
-}
-
 type AdminAPIService struct {
+	AppConfig      *portalconfig.AppConfig
 	AuthgearConfig *portalconfig.AuthgearConfig
 	AdminAPIConfig *portalconfig.AdminAPIConfig
 	ConfigSource   *configsource.ConfigSource
 	AuthzAdder     AuthzAdder
-	DefaultDomains AdminAPIDefaultDomainService
 }
 
 type Usage string
@@ -84,10 +80,7 @@ func (s *AdminAPIService) Director(ctx context.Context, appID string, p string, 
 	}
 	endpoint.Path = p
 
-	host, err := s.DefaultDomains.GetLatestAppHost(appID)
-	if err != nil {
-		return
-	}
+	host := s.AppConfig.GetLatestAppHost(appID)
 
 	director = func(r *http.Request) {
 		// It is important to preserve raw query so that GraphiQL ?query=... is not broken.

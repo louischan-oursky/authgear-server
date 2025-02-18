@@ -62,7 +62,6 @@ var DependencySet = wire.NewSet(
 	wire.Bind(new(AppSecretVisitTokenStore), new(*appsecret.AppSecretVisitTokenStoreImpl)),
 	wire.Bind(new(AppTesterTokenStore), new(*tester.TesterStore)),
 	wire.Bind(new(AppDefaultDomainService), new(*DefaultDomainService)),
-	wire.Bind(new(AdminAPIDefaultDomainService), new(*DefaultDomainService)),
 	wire.Bind(new(DefaultDomainDomainService), new(*DomainService)),
 	wire.Bind(new(AuditServiceAppService), new(*AppService)),
 )

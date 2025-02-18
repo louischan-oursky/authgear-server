@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"net"
 
 	apimodel "github.com/authgear/authgear-server/pkg/api/model"
@@ -13,8 +12,6 @@ import (
 
 //go:generate mockgen -source=default_domain.go -destination=default_domain_mock_test.go -package service
 
-var ErrHostSuffixNotConfigured = errors.New("host suffix not configured")
-
 type DefaultDomainDomainService interface {
 	CreateDomain(ctx context.Context, appID string, domain string, isVerified bool, isCustom bool) (*apimodel.Domain, error)
 }
@@ -23,14 +20,6 @@ type DefaultDomainService struct {
 	AppHostSuffixes config.AppHostSuffixes
 	AppConfig       *portalconfig.AppConfig
 	Domains         DefaultDomainDomainService
-}
-
-// GetLatestAppHost does not need connection.
-func (s *DefaultDomainService) GetLatestAppHost(appID string) (string, error) {
-	if s.AppConfig.HostSuffix == "" {
-		return "", ErrHostSuffixNotConfigured
-	}
-	return s.makeHost(appID, s.AppConfig.HostSuffix), nil
 }
 
 func (s *DefaultDomainService) makeHost(appID string, suffix string) string {
@@ -47,11 +36,11 @@ func (s *DefaultDomainService) hostToDomain(host string) string {
 
 // CreateAllDefaultDomains assume acquired connection.
 func (s *DefaultDomainService) CreateAllDefaultDomains(ctx context.Context, appID string) error {
-	if s.AppConfig.HostSuffix == "" {
-		return ErrHostSuffixNotConfigured
+	var suffixes []string
+	if s.AppConfig.HostSuffix != "" {
+		suffixes = append(suffixes, s.AppConfig.HostSuffix)
 	}
 
-	suffixes := []string{s.AppConfig.HostSuffix}
 	for _, hostSuffix := range s.AppHostSuffixes {
 		suffixes = append(suffixes, hostSuffix)
 	}
