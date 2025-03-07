@@ -1,6 +1,6 @@
 .PHONY: check-tidy
 check-tidy:
-	git status --porcelain | grep '.*'; test $$? -eq 1
+	test -z "$(shell git status --porcelain)"
 
 .PHONY: fmt
 fmt:

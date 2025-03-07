@@ -119,7 +119,7 @@ check-tidy:
 	go mod tidy
 	# We wanted to run the following, but that requires SSH, which does not work for running CI for PRs.
 	# (cd custombuild && go mod tidy)
-	git status --porcelain | grep '.*'; test $$? -eq 1
+	test -z "$(shell git status --porcelain)"
 
 	$(MAKE) -C authui check-tidy
 	$(MAKE) -C portal check-tidy
