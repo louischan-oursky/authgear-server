@@ -66,6 +66,7 @@ type SetupApp struct {
 	AUTHGEAR_ONCE_LICENSE_KEY         string
 	AUTHGEAR_ONCE_MACHINE_FINGERPRINT string
 
+	SurveyEnded    bool
 	Questions      []Question
 	retainedValues RetainedValues
 
@@ -179,17 +180,20 @@ func (m SetupApp) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyCtrlC:
 			return m, SetupAppAbort
 		case tea.KeyEnter:
-			if m.RecoverableErr != nil {
-				m.RecoverableErr = nil
-				if m.RecoverableErrCmd != nil {
-					cmds = append(cmds, m.RecoverableErrCmd)
-					m.RecoverableErrCmd = nil
-				}
-			} else {
-				var cmd tea.Cmd
-				m, cmd = m.appendNextQuestion()
-				if cmd != nil {
-					cmds = append(cmds, cmd)
+			// Pressing enter during loading has no effect.
+			if !m.Loading && !m.SurveyEnded {
+				if m.RecoverableErr != nil {
+					m.RecoverableErr = nil
+					if m.RecoverableErrCmd != nil {
+						cmds = append(cmds, m.RecoverableErrCmd)
+						m.RecoverableErrCmd = nil
+					}
+				} else {
+					var cmd tea.Cmd
+					m, cmd = m.appendNextQuestion()
+					if cmd != nil {
+						cmds = append(cmds, cmd)
+					}
 				}
 			}
 		default:
@@ -214,6 +218,7 @@ func (m SetupApp) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		q.Model = picker
 		m.Questions = append(m.Questions, q)
 	case msgSetupAppEndSurvey:
+		m.SurveyEnded = true
 		return m, tea.Batch(
 			m.StartLoading("Activating license..."),
 			func() tea.Msg {
