@@ -131,6 +131,9 @@ const MFAConfigurationScreen = lazy(
 const SubscriptionScreen = lazy(
   async () => import("./graphql/portal/SubscriptionScreen")
 );
+const LicenseScreen = lazy(
+  async () => import("./graphql/portal/LicenseScreen")
+);
 const SMTPConfigurationScreen = lazy(
   async () => import("./graphql/portal/SMTPConfigurationScreen")
 );
@@ -715,6 +718,17 @@ const AppRoot: React.VFC = function AppRoot() {
               element={
                 <Suspense fallback={<ShowLoading />}>
                   <SubscriptionScreen />
+                </Suspense>
+              }
+            />
+          </Route>
+
+          <Route path="license">
+            <Route
+              index={true}
+              element={
+                <Suspense fallback={<ShowLoading />}>
+                  <LicenseScreen />
                 </Suspense>
               }
             />
