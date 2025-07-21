@@ -1,3 +1,7 @@
-## General instructions
+---
+alwaysApply: true
+---
+
+## General Instructions
 
 - Use `github.com/smartystreets/goconvey` to write Go unit tests.
