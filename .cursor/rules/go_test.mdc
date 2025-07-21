@@ -5,3 +5,4 @@ alwaysApply: true
 ## General Instructions
 
 - Use `github.com/smartystreets/goconvey` to write Go unit tests.
+- If you make changes to Go code that have tests, you always run `go test` to verify your changes do not break anything.
