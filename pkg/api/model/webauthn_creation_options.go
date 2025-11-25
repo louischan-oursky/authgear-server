@@ -6,7 +6,8 @@ import (
 )
 
 type WebAuthnCreationOptions struct {
-	PublicKey PublicKeyCredentialCreationOptions `json:"publicKey"`
+	PublicKey PublicKeyCredentialCreationOptions      `json:"publicKey"`
+	Mediation protocol.CredentialMediationRequirement `json:"mediation,omitempty"`
 }
 
 type PublicKeyCredentialCreationOptions struct {
