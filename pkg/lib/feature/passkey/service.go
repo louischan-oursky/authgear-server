@@ -107,6 +107,10 @@ func (s *Service) PeekAssertionResponse(ctx context.Context, assertionResponse [
 	}
 
 	credentialBytes := parsedAttestation.Response.AttestationObject.AuthData.AttData.CredentialPublicKey
+	// User verification is preferred so we do not require user verification here.
+	verifyUser := false
+	// Mediation is conditional sometimes so we do not verify user presence.
+	verifyUserPresence := false
 
 	err = parsedAssertion.Verify(
 		challengeString,                            // storedChallenge
@@ -114,8 +118,9 @@ func (s *Service) PeekAssertionResponse(ctx context.Context, assertionResponse [
 		[]string{config.RPOrigin},                  // rpOrigins
 		[]string{config.RPOrigin},                  // rpTopOrigins. Related to iframe. Since we do not expect being iframe by any website, the top origins is the same as rpOrigins.
 		protocol.TopOriginExplicitVerificationMode, // This means top origin must be listed in rpTopOrigins.
-		"",    // We do not support FIDO AppID extension
-		false, // User verification is preferred so we do not require user verification here.
+		"", // We do not support FIDO AppID extension
+		verifyUser,
+		verifyUserPresence,
 		credentialBytes,
 	)
 	if err != nil {
