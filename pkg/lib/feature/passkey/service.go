@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 
 	"github.com/go-webauthn/webauthn/protocol"
-	"github.com/go-webauthn/webauthn/webauthn"
 
 	"github.com/authgear/authgear-server/pkg/api/model"
 )
@@ -107,18 +106,17 @@ func (s *Service) PeekAssertionResponse(ctx context.Context, assertionResponse [
 		return
 	}
 
-	credential, err := webauthn.MakeNewCredential(parsedAttestation)
-	if err != nil {
-		return
-	}
+	credentialBytes := parsedAttestation.Response.AttestationObject.AuthData.AttData.CredentialPublicKey
 
 	err = parsedAssertion.Verify(
-		challengeString,
-		config.RPID,
-		[]string{config.RPOrigin},
+		challengeString,                            // storedChallenge
+		config.RPID,                                // relyingPartyID
+		[]string{config.RPOrigin},                  // rpOrigins
+		[]string{config.RPOrigin},                  // rpTopOrigins. Related to iframe. Since we do not expect being iframe by any website, the top origins is the same as rpOrigins.
+		protocol.TopOriginExplicitVerificationMode, // This means top origin must be listed in rpTopOrigins.
 		"",    // We do not support FIDO AppID extension
-		false, // user verification is preferred so we do not require user verification here.
-		credential.PublicKey,
+		false, // User verification is preferred so we do not require user verification here.
+		credentialBytes,
 	)
 	if err != nil {
 		return
